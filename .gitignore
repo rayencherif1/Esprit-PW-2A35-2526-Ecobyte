@@ -1,0 +1,21 @@
+# Environnement / secrets
+.env
+.env.local
+*.log
+
+# OS
+Thumbs.db
+Desktop.ini
+.DS_Store
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Dépendances front (si tu compiles Argon en local)
+node_modules/
+
+# Composer (si tu l’ajoutes plus tard)
+/vendor/
