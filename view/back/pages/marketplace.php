@@ -46,7 +46,7 @@
     </style>
 </head>
 <body class="m-0 font-sans text-base antialiased font-normal dark:bg-slate-900 leading-default bg-gray-50 text-slate-500">
-    <div class="absolute w-full bg-blue-500 dark:hidden min-h-75"></div>
+    <div class="absolute w-full dark:hidden min-h-75" style="background: linear-gradient(90deg, #059669, #10b981);"></div>
 
     <!-- SIDEBAR -->
     <aside class="fixed inset-y-0 flex-wrap items-center justify-between block w-full p-0 my-4 overflow-y-auto antialiased transition-transform duration-200 -translate-x-full bg-white border-0 shadow-xl dark:shadow-none dark:bg-slate-850 xl:ml-6 max-w-64 ease-nav-brand rounded-2xl xl:left-0 xl:translate-x-0">
@@ -58,10 +58,10 @@
         <hr class="h-px mt-0 bg-transparent bg-gradient-to-r from-transparent via-black/40 to-transparent" />
         <div class="items-center block w-auto max-h-screen overflow-auto h-sidenav grow basis-full">
             <ul class="flex flex-col pl-0 mb-0">
-                <li class="mt-0.5 w-full"><a class="py-2.7 bg-blue-500/13 text-sm my-0 mx-2 flex items-center rounded-lg px-4 font-semibold text-slate-700" href="/marketplace/view/back/pages/marketplace.php"><div class="mr-2 flex h-8 w-8 items-center justify-center"><i class="text-sm leading-normal text-blue-500 ni ni-shop"></i></div><span>Marketplace</span></a></li>
+                <li class="mt-0.5 w-full"><a class="py-2.7 bg-emerald-500/30 text-sm my-0 mx-2 flex items-center rounded-lg px-4 font-semibold text-slate-700" href="/marketplace/view/back/pages/marketplace.php"><div class="mr-2 flex h-8 w-8 items-center justify-center"><i class="text-sm leading-normal text-emerald-500 ni ni-shop"></i></div><span>Marketplace</span></a></li>
                 <li class="mt-0.5 w-full"><a class="py-2.7 text-sm my-0 mx-2 flex items-center px-4 text-slate-500" href="#"><div class="mr-2 flex h-8 w-8 items-center justify-center"><i class="text-sm leading-normal text-orange-500 ni ni-hat-3"></i></div><span>Coaching</span></a></li>
                 <li class="mt-0.5 w-full"><a class="py-2.7 text-sm my-0 mx-2 flex items-center px-4 text-slate-500" href="#"><div class="mr-2 flex h-8 w-8 items-center justify-center"><i class="text-sm leading-normal text-red-500 ni ni-alert"></i></div><span>Allergie</span></a></li>
-                <li class="mt-0.5 w-full"><a class="py-2.7 text-sm my-0 mx-2 flex items-center px-4 text-slate-500" href="#"><div class="mr-2 flex h-8 w-8 items-center justify-center"><i class="text-sm leading-normal text-cyan-500 ni ni-blog"></i></div><span>Blog</span></a></li>
+                <li class="mt-0.5 w-full"><a class="py-2.7 text-sm my-0 mx-2 flex items-center px-4 text-slate-500" href="#"><div class="mr-2 flex h-8 w-8 items-center justify-center"><i class="text-sm leading-normal text-emerald-500 ni ni-blog"></i></div><span>Blog</span></a></li>
                 <li class="mt-0.5 w-full"><a class="py-2.7 text-sm my-0 mx-2 flex items-center px-4 text-slate-500" href="#"><div class="mr-2 flex h-8 w-8 items-center justify-center"><i class="text-sm leading-normal text-emerald-500 ni ni-book-bookmark"></i></div><span>Recette</span></a></li>
                 <li class="mt-0.5 w-full"><a class="py-2.7 text-sm my-0 mx-2 flex items-center px-4 text-slate-500" href="#"><div class="mr-2 flex h-8 w-8 items-center justify-center"><i class="text-sm leading-normal text-purple-500 ni ni-single-02"></i></div><span>User</span></a></li>
                 <li class="mt-0.5 w-full"><a class="py-2.7 text-sm my-0 mx-2 flex items-center px-4 text-slate-500" href="/marketplace/index.php?controller=auth&action=logout"><div class="mr-2 flex h-8 w-8 items-center justify-center"><i class="text-sm leading-normal text-slate-400 ni ni-button-power"></i></div><span>Déconnexion</span></a></li>

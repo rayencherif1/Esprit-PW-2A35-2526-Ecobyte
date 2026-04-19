@@ -1,58 +1,10 @@
 -- ========================================
--- Création de la base de données et tables
+-- Recettes + Instructions (jointure 1–1)
+-- Base MySQL : mes_recettes (identique à config.php → DB_NAME)
 -- ========================================
-
--- Créer la base de données
 CREATE DATABASE IF NOT EXISTS mes_recettes CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-
--- Utiliser la base de données
 USE mes_recettes;
 
--- ========================================
--- Table des utilisateurs
--- ========================================
-CREATE TABLE IF NOT EXISTS users (
-    id INT PRIMARY KEY AUTO_INCREMENT,
-    nom VARCHAR(100) NOT NULL,
-    prenom VARCHAR(100) NOT NULL,
-    email VARCHAR(120) NOT NULL UNIQUE,
-    telephone VARCHAR(20),
-    date_creation TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    INDEX idx_email (email)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
--- ========================================
--- Table des profils
--- ========================================
-CREATE TABLE IF NOT EXISTS profils (
-    id INT PRIMARY KEY AUTO_INCREMENT,
-    user_id INT NOT NULL UNIQUE,
-    bio TEXT,
-    adresse VARCHAR(200),
-    ville VARCHAR(100),
-    code_postal VARCHAR(10),
-    date_creation TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-    INDEX idx_user_id (user_id)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
--- ========================================
--- Données de test (optionnel)
--- ========================================
-INSERT INTO users (nom, prenom, email, telephone) VALUES 
-('Dupont', 'Jean', 'jean.dupont@example.com', '+33612345678'),
-('Martin', 'Marie', 'marie.martin@example.com', '+33687654321'),
-('Durand', 'Pierre', 'pierre.durand@example.com', '+33623456789');
-
-INSERT INTO profils (user_id, bio, adresse, ville, code_postal) VALUES 
-(1, 'Développeur passionné', '123 Rue de Paris', 'Paris', '75001'),
-(2, 'Designer créatif', '456 Avenue de Lyon', 'Lyon', '69000'),
-(3, 'Chef de projet', '789 Boulevard de Marseille', 'Marseille', '13000');
-
--- ========================================
--- Recettes + Instructions (jointure 1–1 via recette_id)
--- (fichier dédié : database_recettes_instructions.sql)
--- ========================================
 CREATE TABLE IF NOT EXISTS recettes (
     id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     nom VARCHAR(180) NOT NULL,
@@ -66,6 +18,7 @@ CREATE TABLE IF NOT EXISTS recettes (
     INDEX idx_recettes_type (type)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+-- Une fiche instruction liée à une recette (recette_id UNIQUE = relation 1–1)
 CREATE TABLE IF NOT EXISTS instructions (
     id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     recette_id INT UNSIGNED NULL,
@@ -83,6 +36,7 @@ CREATE TABLE IF NOT EXISTS instructions (
     UNIQUE KEY uq_instructions_recette (recette_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+-- Données initiales (ids fixes pour rester alignés avec les anciennes données de session)
 INSERT INTO recettes (id, nom, type, calories, temps_preparation, difficulte, impact_carbone, image) VALUES
 (1, 'Citron', 'Petit déjeuner', 60, 5, '★★', '0.1 kg', '/recette/public/image/citron.jpg'),
 (2, 'Curry', 'Déjeuner', 520, 40, '★★★★', '2.2 kg', '/recette/public/image/curry.jpg'),

@@ -44,7 +44,7 @@ $errors = $errors ?? [];
                 <div class="col-sm-4 col-lg-3 text-center text-sm-start">
                     <div class="main-logo">
                         <a href="?section=front">
-                            <img src="view/front/images/logo.png" alt="logo" class="img-fluid" style="max-height: 45px;">
+                            <img src="/recette/public/image/logo.png" alt="logo" class="img-fluid" style="max-height: 45px;">
                         </a>
                     </div>
                 </div>

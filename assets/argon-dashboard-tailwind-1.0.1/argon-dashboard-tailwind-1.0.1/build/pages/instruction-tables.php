@@ -1,7 +1,23 @@
 <?php
-require_once __DIR__ . '/../../../../../controller/RecetteController.php';
-$controller = new RecetteController();
-$recettes = $controller->afficherRecettes();
+require_once __DIR__ . '/../../../../../controller/InstructionController.php';
+
+function instruction_resume(string $text, int $max = 56): string
+{
+    $text = trim($text);
+    if ($text === '') {
+        return '';
+    }
+    if (function_exists('mb_strlen') && mb_strlen($text) > $max) {
+        return mb_substr($text, 0, $max) . '…';
+    }
+    if (strlen($text) > $max) {
+        return substr($text, 0, $max) . '…';
+    }
+    return $text;
+}
+
+$controller = new InstructionController();
+$rows = $controller->listAll();
 $message = $_GET['message'] ?? null;
 ?>
 <!DOCTYPE html>
@@ -12,14 +28,14 @@ $message = $_GET['message'] ?? null;
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="apple-touch-icon" sizes="76x76" href="../assets/img/apple-icon.png" />
     <link rel="icon" type="image/png" href="../assets/img/favicon.png" />
-    <title>Recettes - Argon Dashboard</title>
+    <title>Instructions - Argon Dashboard</title>
     <link href="https://fonts.googleapis.com/css?family=Open+Sans:300,400,600,700" rel="stylesheet" />
     <script src="https://kit.fontawesome.com/42d5adcbca.js" crossorigin="anonymous"></script>
     <link href="../assets/css/nucleo-icons.css" rel="stylesheet" />
     <link href="../assets/css/nucleo-svg.css" rel="stylesheet" />
     <link href="../assets/css/argon-dashboard-tailwind.css?v=1.0.1" rel="stylesheet" />
     <style>
-      #search-recette:focus {
+      #search-instruction:focus {
         outline: none;
         border-color: #10b981 !important;
         box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2);
@@ -47,7 +63,7 @@ $message = $_GET['message'] ?? null;
             </a>
           </li>
           <li class="mt-0.5 w-full">
-            <a class="py-2.7 bg-emerald-500/30 text-sm my-0 mx-2 flex items-center whitespace-nowrap rounded-lg px-4 font-semibold text-slate-700 transition-colors" href="tables.php">
+            <a class="py-2.7 text-sm my-0 mx-2 flex items-center whitespace-nowrap px-4 transition-colors text-slate-700" href="tables.php">
               <div class="mr-2 flex h-8 w-8 items-center justify-center rounded-lg">
                 <i class="relative top-0 text-sm leading-normal text-orange-500 ni ni-calendar-grid-58"></i>
               </div>
@@ -55,7 +71,7 @@ $message = $_GET['message'] ?? null;
             </a>
           </li>
           <li class="mt-0.5 w-full">
-            <a class="py-2.7 text-sm my-0 mx-2 flex items-center whitespace-nowrap px-4 transition-colors text-slate-700" href="instruction-tables.php">
+            <a class="py-2.7 bg-emerald-500/30 text-sm my-0 mx-2 flex items-center whitespace-nowrap rounded-lg px-4 font-semibold text-slate-700 transition-colors" href="instruction-tables.php">
               <div class="mr-2 flex h-8 w-8 items-center justify-center rounded-lg">
                 <i class="fas fa-book-open relative top-0 text-sm leading-normal text-emerald-500"></i>
               </div>
@@ -74,19 +90,19 @@ $message = $_GET['message'] ?? null;
               <div class="p-6 pb-0 mb-0 border-b-0 rounded-t-2xl">
                 <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                   <div>
-                    <h6>Gestion des recettes</h6>
-                    <p class="mb-0 text-sm leading-normal text-slate-400">Tableau de bord back office pour la gestion des recettes.</p>
+                    <h6>Gestion des instructions</h6>
+                    <p class="mb-0 text-sm leading-normal text-slate-400">Image, nom, ingredients, preparation, nombre d'etapes et temps total.</p>
                   </div>
-                  <a href="recette-form.php" class="inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold shadow-md transition" style="background-color: #10b981; color: #ffffff;">
+                  <a href="instruction-form.php" class="inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold shadow-md transition" style="background-color: #10b981; color: #ffffff;">
                     <span style="font-size: 18px; font-weight: 700; line-height: 1;">+</span>
                     <span>Ajouter</span>
                   </a>
                 </div>
                 <?php if ($message) : ?>
                   <div class="mt-4 rounded-2xl border border-emerald-200 bg-emerald-50 px-6 py-4 text-sm text-emerald-800">
-                    <?php if ($message === 'ajoute') : ?>Recette ajoutee avec succes.<?php endif; ?>
-                    <?php if ($message === 'modifie') : ?>Recette modifiee avec succes.<?php endif; ?>
-                    <?php if ($message === 'supprime') : ?>Recette supprimee avec succes.<?php endif; ?>
+                    <?php if ($message === 'ajoute') : ?>Fiche instruction ajoutee avec succes.<?php endif; ?>
+                    <?php if ($message === 'modifie') : ?>Fiche instruction modifiee avec succes.<?php endif; ?>
+                    <?php if ($message === 'supprime') : ?>Fiche instruction supprimee avec succes.<?php endif; ?>
                   </div>
                 <?php endif; ?>
               </div>
@@ -94,55 +110,51 @@ $message = $_GET['message'] ?? null;
               <div class="px-6 mt-4 mb-4">
                 <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                   <div class="flex w-full items-center gap-3">
-                    <label class="text-sm font-semibold text-slate-600" for="search-recette">Recherche</label>
-                    <input id="search-recette" type="text" placeholder="Rechercher une recette..." class="flex-1 rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm text-slate-700 outline-none transition duration-200" />
+                    <label class="text-sm font-semibold text-slate-600" for="search-instruction">Recherche</label>
+                    <input id="search-instruction" type="text" placeholder="Rechercher..." class="flex-1 rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm text-slate-700 outline-none transition duration-200" />
                   </div>
                 </div>
               </div>
 
               <div class="flex-auto px-0 pt-0 pb-2">
                 <div class="p-0 overflow-x-auto">
-                  <table id="recette-table" class="items-center w-full mb-0 align-top border-collapse text-slate-500">
+                  <table id="instruction-table" class="items-center w-full mb-0 align-top border-collapse text-slate-500">
                     <thead class="align-bottom">
                       <tr>
                         <th class="px-6 py-3 font-bold text-left uppercase align-middle bg-transparent border-b text-xxs whitespace-nowrap text-slate-400 opacity-70">Image</th>
                         <th class="px-6 py-3 font-bold text-left uppercase align-middle bg-transparent border-b text-xxs whitespace-nowrap text-slate-400 opacity-70">Nom</th>
-                        <th class="px-6 py-3 font-bold text-left uppercase align-middle bg-transparent border-b text-xxs whitespace-nowrap text-slate-400 opacity-70">Type</th>
-                        <th class="px-6 py-3 font-bold text-center uppercase align-middle bg-transparent border-b text-xxs whitespace-nowrap text-slate-400 opacity-70">Calories</th>
+                        <th class="px-6 py-3 font-bold text-left uppercase align-middle bg-transparent border-b text-xxs whitespace-nowrap text-slate-400 opacity-70">Ingredients</th>
+                        <th class="px-6 py-3 font-bold text-left uppercase align-middle bg-transparent border-b text-xxs whitespace-nowrap text-slate-400 opacity-70">Preparation</th>
+                        <th class="px-6 py-3 font-bold text-center uppercase align-middle bg-transparent border-b text-xxs whitespace-nowrap text-slate-400 opacity-70">Etapes</th>
                         <th class="px-6 py-3 font-bold text-center uppercase align-middle bg-transparent border-b text-xxs whitespace-nowrap text-slate-400 opacity-70">Temps</th>
-                        <th class="px-6 py-3 font-bold text-center uppercase align-middle bg-transparent border-b text-xxs whitespace-nowrap text-slate-400 opacity-70">Difficulte</th>
-                        <th class="px-6 py-3 font-bold text-center uppercase align-middle bg-transparent border-b text-xxs whitespace-nowrap text-slate-400 opacity-70">Impact</th>
                         <th class="px-6 py-3 font-semibold capitalize align-middle bg-transparent border-b whitespace-nowrap text-slate-400 opacity-70">Actions</th>
                       </tr>
                     </thead>
                     <tbody>
-                      <?php foreach ($recettes as $recette) : ?>
+                      <?php foreach ($rows as $r) : ?>
                         <tr>
                           <td class="p-2 align-middle bg-transparent border-b whitespace-nowrap">
-                            <img src="<?= htmlspecialchars($recette['image']) ?>" alt="<?= htmlspecialchars($recette['nom']) ?>" class="h-12 w-12 rounded-xl object-cover border border-slate-200" />
+                            <img src="<?= htmlspecialchars($r['image']) ?>" alt="<?= htmlspecialchars($r['nom']) ?>" class="h-12 w-12 rounded-xl object-cover border border-slate-200" />
                           </td>
                           <td class="p-2 align-middle bg-transparent border-b whitespace-nowrap">
-                            <span class="text-sm font-semibold"><?= htmlspecialchars($recette['nom']) ?></span>
+                            <span class="text-sm font-semibold"><?= htmlspecialchars($r['nom']) ?></span>
                           </td>
-                          <td class="p-2 align-middle bg-transparent border-b whitespace-nowrap">
-                            <span class="text-sm"><?= htmlspecialchars($recette['type']) ?></span>
+                          <td class="p-2 align-middle bg-transparent border-b max-w-xs">
+                            <span class="text-sm"><?= htmlspecialchars(instruction_resume($r['ingredients'] ?? '', 64)) ?></span>
                           </td>
-                          <td class="p-2 text-center align-middle bg-transparent border-b whitespace-nowrap">
-                            <span class="text-sm"><?= htmlspecialchars($recette['calories']) ?></span>
-                          </td>
-                          <td class="p-2 text-center align-middle bg-transparent border-b whitespace-nowrap">
-                            <span class="text-sm"><?= htmlspecialchars($recette['tempsPreparation']) ?> min</span>
+                          <td class="p-2 align-middle bg-transparent border-b max-w-xs">
+                            <span class="text-sm"><?= htmlspecialchars(instruction_resume($r['preparation'] ?? '', 64)) ?></span>
                           </td>
                           <td class="p-2 text-center align-middle bg-transparent border-b whitespace-nowrap">
-                            <span class="text-sm"><?= htmlspecialchars($recette['difficulte']) ?></span>
+                            <span class="text-sm font-semibold"><?= htmlspecialchars((string) $r['nombreEtapes']) ?></span>
                           </td>
                           <td class="p-2 text-center align-middle bg-transparent border-b whitespace-nowrap">
-                            <span class="text-sm"><?= htmlspecialchars($recette['impactCarbone']) ?></span>
+                            <span class="text-sm"><?= htmlspecialchars((string) $r['temps']) ?> min</span>
                           </td>
                           <td class="p-2 align-middle bg-transparent border-b whitespace-nowrap">
                             <div class="flex justify-center gap-2">
-                              <a href="recette-form.php?id=<?= urlencode($recette['id']) ?>" class="inline-flex items-center justify-center rounded-full px-3 py-2 text-xs font-semibold transition hover:opacity-90" style="background-color: #047857; color: #ffffff;"><span aria-hidden="true">&#x270F;&#xFE0F;</span></a>
-                              <a href="/recette/controller/RecetteController.php?delete=<?= urlencode($recette['id']) ?>" class="inline-flex items-center justify-center rounded-full px-3 py-2 text-xs font-semibold transition hover:opacity-90" style="background-color: #ef4444; color: #ffffff;" onclick="return confirm('Voulez-vous supprimer cette recette ?');"><span aria-hidden="true">&#x274C;</span></a>
+                              <a href="instruction-form.php?id=<?= urlencode($r['id']) ?>" class="inline-flex items-center justify-center rounded-full px-3 py-2 text-xs font-semibold transition hover:opacity-90" style="background-color: #047857; color: #ffffff;"><span aria-hidden="true">&#x270F;&#xFE0F;</span></a>
+                              <a href="/recette/controller/InstructionController.php?delete_instruction=<?= urlencode($r['id']) ?>" class="inline-flex items-center justify-center rounded-full px-3 py-2 text-xs font-semibold transition hover:opacity-90" style="background-color: #ef4444; color: #ffffff;" onclick="return confirm('Voulez-vous supprimer cette fiche ?');"><span aria-hidden="true">&#x274C;</span></a>
                             </div>
                           </td>
                         </tr>
@@ -159,13 +171,12 @@ $message = $_GET['message'] ?? null;
 
     <script>
       document.addEventListener('DOMContentLoaded', function () {
-        const searchInput = document.getElementById('search-recette');
-        const tableRows = document.querySelectorAll('#recette-table tbody tr');
+        const searchInput = document.getElementById('search-instruction');
+        const tableRows = document.querySelectorAll('#instruction-table tbody tr');
         searchInput.addEventListener('input', function () {
           const query = this.value.toLowerCase();
           tableRows.forEach((row) => {
-            const text = row.textContent.toLowerCase();
-            row.style.display = text.includes(query) ? '' : 'none';
+            row.style.display = row.textContent.toLowerCase().includes(query) ? '' : 'none';
           });
         });
       });

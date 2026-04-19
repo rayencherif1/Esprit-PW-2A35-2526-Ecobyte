@@ -15,7 +15,7 @@
     <link href="view/back/build/assets/css/argon-dashboard-tailwind.css?v=1.0.1" rel="stylesheet" />
 </head>
 <body class="m-0 font-sans text-base antialiased font-normal dark:bg-slate-900 leading-default bg-gray-50 text-slate-500">
-    <div class="absolute w-full bg-blue-500 dark:hidden min-h-75"></div>
+    <div class="absolute w-full dark:hidden min-h-75" style="background: linear-gradient(90deg, #059669, #10b981);"></div>
 
     <?php include __DIR__ . '/sidebar.php'; ?>
 
@@ -34,7 +34,7 @@
                     <div class="relative flex flex-col min-w-0 mb-6 break-words bg-white border-0 border-transparent border-solid shadow-xl dark:bg-slate-850 dark:shadow-dark-xl rounded-2xl bg-clip-border">
                         <div class="p-6 pb-0 mb-0 border-b-0 border-b-solid rounded-t-2xl border-b-transparent flex justify-between items-center">
                             <h6 class="dark:text-white">Liste des Utilisateurs</h6>
-                            <a href="?section=back&action=addUser" class="inline-block px-4 py-2 text-xs font-bold text-center text-white uppercase align-middle transition-all bg-blue-500 rounded-lg shadow-md hover:-translate-y-px">
+                            <a href="?section=back&action=addUser" class="inline-block px-4 py-2 text-xs font-bold text-center text-white uppercase align-middle transition-all rounded-lg shadow-md hover:-translate-y-px" style="background-color: #10b981;">
                                 Ajouter un utilisateur
                             </a>
                         </div>
@@ -79,7 +79,7 @@
                                                     <span class="text-xs font-semibold leading-tight dark:text-white dark:opacity-80 text-slate-400"><?php echo $u['date_creation'] ?? '-'; ?></span>
                                                 </td>
                                                 <td class="p-2 align-middle bg-transparent border-b dark:border-white/40 whitespace-nowrap shadow-transparent text-center">
-                                                    <a href="?section=back&action=editUser&id=<?php echo $u['id']; ?>" class="text-xs font-bold text-blue-500 mr-2">Modifier</a>
+                                                    <a href="?section=back&action=editUser&id=<?php echo $u['id']; ?>" class="text-xs font-bold text-emerald-500 mr-2">Modifier</a>
                                                     <a href="?section=back&action=deleteUser&id=<?php echo $u['id']; ?>" class="text-xs font-bold text-red-500" onclick="return confirm('Supprimer cet utilisateur ?')">Supprimer</a>
                                                 </td>
                                             </tr>

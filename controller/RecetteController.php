@@ -3,98 +3,48 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
-require_once(__DIR__ . '/../model/Recette.php');
+require_once __DIR__ . '/../model/RecetteRepository.php';
+require_once __DIR__ . '/InstructionController.php';
 
-class RecetteController {
-    private function getDefaultRecettes() {
-        return [
-            [
-                "id" => 1,
-                "nom" => "Citron",
-                "type" => "Petit déjeuner",
-                "calories" => 60,
-                "tempsPreparation" => 5,
-                "difficulte" => "★★",
-                "impactCarbone" => "0.1 kg",
-                "image" => "/recette/public/image/citron.jpg"
-            ],
-            [
-                "id" => 2,
-                "nom" => "Curry",
-                "type" => "Déjeuner",
-                "calories" => 520,
-                "tempsPreparation" => 40,
-                "difficulte" => "★★★★",
-                "impactCarbone" => "2.2 kg",
-                "image" => "/recette/public/image/curry.jpg"
-            ],
-            [
-                "id" => 3,
-                "nom" => "Pain",
-                "type" => "Petit déjeuner",
-                "calories" => 250,
-                "tempsPreparation" => 20,
-                "difficulte" => "★★",
-                "impactCarbone" => "0.5 kg",
-                "image" => "/recette/public/image/pain.jpg"
-            ],
-            [
-                "id" => 4,
-                "nom" => "Salade",
-                "type" => "Déjeuner",
-                "calories" => 180,
-                "tempsPreparation" => 15,
-                "difficulte" => "★",
-                "impactCarbone" => "0.2 kg",
-                "image" => "/recette/public/image/salade.jpg"
-            ],
-            [
-                "id" => 5,
-                "nom" => "Soupe",
-                "type" => "Dîner",
-                "calories" => 150,
-                "tempsPreparation" => 25,
-                "difficulte" => "★★",
-                "impactCarbone" => "0.3 kg",
-                "image" => "/recette/public/image/soupe.jpg"
-            ]
-        ];
+class RecetteController
+{
+    private const REDIRECT_TABLES = '/recette/assets/argon-dashboard-tailwind-1.0.1/argon-dashboard-tailwind-1.0.1/build/pages/tables.php';
+    private const REDIRECT_FORM = '/recette/assets/argon-dashboard-tailwind-1.0.1/argon-dashboard-tailwind-1.0.1/build/pages/recette-form.php';
+
+    private RecetteRepository $recettes;
+
+    public function __construct(?RecetteRepository $recettes = null)
+    {
+        $this->recettes = $recettes ?? new RecetteRepository();
     }
 
-    private function ensureRecettes() {
-        if (!isset($_SESSION['recettes'])) {
-            $_SESSION['recettes'] = $this->getDefaultRecettes();
-        }
+    public function afficherRecettes(): array
+    {
+        return $this->recettes->findAll();
     }
 
-    public function afficherRecettes() {
-        $this->ensureRecettes();
-        return $_SESSION['recettes'];
+    public function getRecetteById(int $id): ?array
+    {
+        return $this->recettes->findById($id);
     }
 
-    public function getRecetteById(int $id) {
-        $this->ensureRecettes();
-        foreach ($_SESSION['recettes'] as $recette) {
-            if ($recette['id'] === $id) {
-                return $recette;
+    public function deleteRecette(int $id): void
+    {
+        $this->recettes->delete($id);
+        $this->redirect(self::REDIRECT_TABLES . '?message=supprime');
+    }
+
+    public function saveRecette(array $data): void
+    {
+        if (!$this->isValidRecetteData($data)) {
+            $redirectUrl = self::REDIRECT_FORM . '?message=invalide';
+            if (isset($data['id']) && $data['id'] !== '') {
+                $redirectUrl .= '&id=' . urlencode((string) $data['id']);
             }
+            $this->redirect($redirectUrl);
         }
-        return null;
-    }
 
-    public function deleteRecette(int $id) {
-        $this->ensureRecettes();
-        $_SESSION['recettes'] = array_values(array_filter($_SESSION['recettes'], function ($recette) use ($id) {
-            return $recette['id'] !== $id;
-        }));
-        $this->redirect('/recette/assets/argon-dashboard-tailwind-1.0.1/argon-dashboard-tailwind-1.0.1/build/pages/tables.php?message=supprime');
-    }
-
-    public function saveRecette(array $data) {
-        $this->ensureRecettes();
-
-        $recette = [
-            'id' => isset($data['id']) && $data['id'] !== '' ? (int) $data['id'] : $this->getNextId(),
+        $payload = [
             'nom' => trim($data['nom'] ?? ''),
             'type' => trim($data['type'] ?? ''),
             'calories' => (int) ($data['calories'] ?? 0),
@@ -104,32 +54,58 @@ class RecetteController {
             'image' => trim($data['image']) ?: '/recette/public/image/salade.jpg',
         ];
 
+        $idFromPost = isset($data['id']) && $data['id'] !== '' ? (int) $data['id'] : null;
         $updated = false;
-        foreach ($_SESSION['recettes'] as $index => $item) {
-            if ($item['id'] === $recette['id']) {
-                $_SESSION['recettes'][$index] = $recette;
-                $updated = true;
-                break;
+
+        if ($idFromPost !== null && $idFromPost > 0) {
+            $existing = $this->recettes->findById($idFromPost);
+            if ($existing === null) {
+                $this->redirect(self::REDIRECT_FORM . '?message=invalide');
             }
+            $this->recettes->update($idFromPost, $payload);
+            $finalId = $idFromPost;
+            $updated = true;
+        } else {
+            $finalId = $this->recettes->insert($payload);
         }
 
-        if (!$updated) {
-            $_SESSION['recettes'][] = $recette;
+        $recette = $this->recettes->findById($finalId);
+        if ($recette !== null) {
+            (new InstructionController())->syncFromRecette($recette);
         }
 
         $message = $updated ? 'modifie' : 'ajoute';
-        $this->redirect('/recette/assets/argon-dashboard-tailwind-1.0.1/argon-dashboard-tailwind-1.0.1/build/pages/tables.php?message=' . $message);
+        $this->redirect(self::REDIRECT_TABLES . '?message=' . $message);
     }
 
-    private function getNextId(): int {
-        $this->ensureRecettes();
-        $ids = array_column($_SESSION['recettes'], 'id');
-        return $ids ? max($ids) + 1 : 1;
-    }
-
-    private function redirect(string $url) {
+    private function redirect(string $url): void
+    {
         header('Location: ' . $url);
         exit;
+    }
+
+    private function isValidRecetteData(array $data): bool
+    {
+        $requiredFields = ['nom', 'type', 'difficulte', 'impactCarbone', 'image'];
+        foreach ($requiredFields as $field) {
+            if (!isset($data[$field]) || trim((string) $data[$field]) === '') {
+                return false;
+            }
+        }
+
+        if (!isset($data['calories'], $data['tempsPreparation'])) {
+            return false;
+        }
+
+        if (!is_numeric($data['calories']) || !is_numeric($data['tempsPreparation'])) {
+            return false;
+        }
+
+        if ((int) $data['calories'] < 0 || (int) $data['tempsPreparation'] < 0) {
+            return false;
+        }
+
+        return true;
     }
 }
 

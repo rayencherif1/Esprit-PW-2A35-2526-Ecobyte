@@ -5,7 +5,7 @@
  */
 
 define('DB_HOST', 'localhost');
-define('DB_NAME', 'rayench_db');
+define('DB_NAME', 'recette');
 define('DB_USER', 'root');
 define('DB_PASSWORD', '');
 define('DB_PORT', '3306');

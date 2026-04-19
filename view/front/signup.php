@@ -37,7 +37,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     <div class="card-body p-5">
                         <div class="text-center mb-4">
                             <a href="?section=front">
-                                <img src="view/front/images/logo.png" alt="logo" class="img-fluid" style="max-height: 50px;">
+                                <img src="/recette/public/image/logo.png" alt="logo" class="img-fluid" style="max-height: 50px;">
                             </a>
                             <h2 class="mt-3">Créer un compte</h2>
                         </div>

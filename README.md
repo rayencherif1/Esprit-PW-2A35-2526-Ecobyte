@@ -15,7 +15,7 @@ Cette application est une implémentation complète du pattern MVC (Model-View-C
 ## 🗂️ Structure du Projet
 
 ```
-rayench/
+recette/
 ├── index.php                 # Point d'entrée principal + Routeur
 ├── config.php                # Configuration PDO et classe Database
 ├── database.sql              # Script SQL pour créer tables
@@ -50,7 +50,7 @@ Exécutez le script SQL dans PhpMyAdmin ou MySQL:
 Ou via ligne de commande:
 
 ```bash
-mysql -u root < C:\xampp\htdocs\rayench\database.sql
+mysql -u root < C:\xampp\htdocs\recette\database.sql
 ```
 
 ### 2. Configurer `config.php`
@@ -59,7 +59,7 @@ Modifiez les variables de connexion si nécessaire:
 
 ```php
 define('DB_HOST', 'localhost');
-define('DB_NAME', 'rayench_db');
+define('DB_NAME', 'mes_recettes');
 define('DB_USER', 'root');
 define('DB_PASSWORD', '');
 define('DB_PORT', '3306');
@@ -68,7 +68,7 @@ define('DB_PORT', '3306');
 ### 3. Accéder à l'application
 
 ```
-http://localhost/rayench/
+http://localhost/recette/
 ```
 
 ---
