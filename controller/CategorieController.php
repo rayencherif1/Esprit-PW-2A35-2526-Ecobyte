@@ -9,20 +9,32 @@ class CategorieController {
         $this->categorieModel = new Categorie();
     }
     
-    // Afficher la liste des catégories
+    // Vérifier si l'utilisateur est connecté
+    private function checkAuth() {
+        session_start();
+        if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
+            header('Location: /marketplace/index.php?controller=auth&action=login');
+            exit();
+        }
+    }
+    
+    // Afficher la liste des catégories (redirection vers Argon)
     public function index() {
+        $this->checkAuth();
         header('Location: /marketplace/view/back/pages/marketplace.php');
         exit();
     }
     
     // Afficher le formulaire d'ajout
     public function create() {
+        $this->checkAuth();
         header('Location: /marketplace/view/back/pages/marketplace.php?action=add_category');
         exit();
     }
     
     // Enregistrer une nouvelle catégorie
     public function store() {
+        $this->checkAuth();
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $nom = $_POST['nom'] ?? '';
             $description = $_POST['description'] ?? '';
@@ -37,6 +49,7 @@ class CategorieController {
     
     // Afficher le formulaire de modification
     public function edit() {
+        $this->checkAuth();
         $id = $_GET['id'] ?? 0;
         header('Location: /marketplace/view/back/pages/marketplace.php?action=edit_category&id=' . $id);
         exit();
@@ -44,6 +57,7 @@ class CategorieController {
     
     // Mettre à jour une catégorie
     public function update() {
+        $this->checkAuth();
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $id = $_POST['id'] ?? 0;
             $nom = $_POST['nom'] ?? '';
@@ -56,6 +70,7 @@ class CategorieController {
     
     // Supprimer une catégorie
     public function delete() {
+        $this->checkAuth();
         $id = $_GET['id'] ?? 0;
         $this->categorieModel->delete($id);
         header('Location: /marketplace/view/back/pages/marketplace.php');

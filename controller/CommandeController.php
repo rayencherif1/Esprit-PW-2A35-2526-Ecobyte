@@ -12,28 +12,44 @@ class CommandeController {
         $this->produitModel = new Produit();
     }
     
-    // ========== BACK OFFICE ==========
+    // Vérifier si l'utilisateur est connecté (pour Back Office)
+    private function checkAuth() {
+        session_start();
+        if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
+            header('Location: /marketplace/index.php?controller=auth&action=login');
+            exit();
+        }
+    }
     
+    // ========== BACK OFFICE (protégé) ==========
+    
+    // Afficher la liste des commandes
     public function index() {
+        $this->checkAuth();
         header('Location: /marketplace/view/back/pages/marketplace.php');
         exit();
     }
     
+    // Afficher le détail d'une commande
     public function detail() {
+        $this->checkAuth();
         $id = $_GET['id'] ?? 0;
         header('Location: /marketplace/view/back/pages/marketplace.php?action=detail_commande&id=' . $id);
         exit();
     }
     
+    // Supprimer une commande
     public function delete() {
+        $this->checkAuth();
         $id = $_GET['id'] ?? 0;
         $this->commandeModel->delete($id);
         header('Location: /marketplace/view/back/pages/marketplace.php');
         exit();
     }
     
-    // ========== FRONT OFFICE ==========
+    // ========== FRONT OFFICE (public) ==========
     
+    // Afficher le panier
     public function panier() {
         session_start();
         $panier = $_SESSION['panier'] ?? [];
@@ -53,6 +69,7 @@ class CommandeController {
         require_once __DIR__ . '/../view/front/panier.php';
     }
     
+    // Ajouter au panier
     public function addToPanier() {
         session_start();
         $produit_id = $_GET['id'] ?? 0;
@@ -72,6 +89,7 @@ class CommandeController {
         exit();
     }
     
+    // Retirer du panier
     public function removeFromPanier() {
         session_start();
         $produit_id = $_GET['id'] ?? 0;
@@ -84,6 +102,7 @@ class CommandeController {
         exit();
     }
     
+    // Valider la commande
     public function checkout() {
         session_start();
         
@@ -93,9 +112,15 @@ class CommandeController {
             $panier = $_SESSION['panier'] ?? [];
             
             $errors = [];
-            if(empty($client_nom)) $errors[] = "Le nom est obligatoire";
-            if(empty($client_email) || !filter_var($client_email, FILTER_VALIDATE_EMAIL)) $errors[] = "Email valide obligatoire";
-            if(empty($panier)) $errors[] = "Votre panier est vide";
+            if(empty($client_nom)) {
+                $errors[] = "Le nom est obligatoire";
+            }
+            if(empty($client_email) || !filter_var($client_email, FILTER_VALIDATE_EMAIL)) {
+                $errors[] = "Email valide obligatoire";
+            }
+            if(empty($panier)) {
+                $errors[] = "Votre panier est vide";
+            }
             
             if(empty($errors)) {
                 $total = 0;
@@ -130,10 +155,18 @@ class CommandeController {
         }
     }
     
+    // Récupérer toutes les commandes
     public function getAllCommandes() {
         return $this->commandeModel->getAll();
     }
     
+    // ========== MÉTHODE MANQUANTE AJOUTÉE ==========
+    // Récupérer les produits d'une commande spécifique
+    public function getProduitsByCommandeId($commande_id) {
+        return $this->commandeModel->getProduitsByCommandeId($commande_id);
+    }
+    
+    // Page de confirmation
     public function confirmation() {
         $id = $_GET['id'] ?? 0;
         $commande = $this->commandeModel->getById($id);

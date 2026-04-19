@@ -12,8 +12,17 @@
         .btn-remove:hover { background: #c82333; color: white; }
         .btn-checkout { background: #28a745; color: white; padding: 10px 20px; border-radius: 30px; border: none; }
         .btn-checkout:hover { background: #218838; color: white; }
-        .logo-text { font-size: 1.8rem; font-weight: bold; color: #2c5e2e; text-decoration: none; }
-        .logo-text:hover { color: #1e4a1e; }
+        .logo-text {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: #2c5e2e;
+            text-decoration: none;
+        }
+        .logo-text:hover {
+            color: #1e4a1e;
+        }
+        .error-message { color: red; font-size: 12px; margin-top: 5px; display: none; }
+        .error-border { border-color: red !important; }
     </style>
 </head>
 <body>
@@ -22,10 +31,10 @@
     <div class="container-fluid">
         <div class="row py-3 border-bottom align-items-center">
             <div class="col-sm-4">
-                <a href="/marketplace/view/front/index.php" class="logo-text">🌿 EcoBite</a>
+                <a href="/marketplace/view/front/index2.php" class="logo-text">🌿 EcoBite</a>
             </div>
             <div class="col-sm-8 text-end">
-                <a href="/marketplace/view/front/index.php" class="btn btn-outline-secondary rounded-pill">← Continuer mes achats</a>
+                <a href="/marketplace/view/front/index2.php" class="btn btn-outline-secondary rounded-pill">← Continuer mes achats</a>
             </div>
         </div>
     </div>
@@ -38,7 +47,7 @@
         <div class="alert alert-info text-center">
             Votre panier est vide.
             <br><br>
-            <a href="/marketplace/view/front/index.php" class="btn btn-primary rounded-pill px-4">Découvrir nos produits</a>
+            <a href="/marketplace/view/front/index2.php" class="btn btn-primary rounded-pill px-4">Découvrir nos produits</a>
         </div>
     <?php else: ?>
         <div class="table-responsive">
@@ -82,14 +91,15 @@
             <div class="col-md-6 mx-auto">
                 <div class="card p-4 shadow-sm">
                     <h4 class="mb-3 text-center">📦 Informations de livraison</h4>
-                    <form method="POST" action="/marketplace/index.php?controller=commande&action=checkout">
+                    <div id="checkoutError" class="error-message"></div>
+                    <form id="checkoutForm" method="POST" action="/marketplace/index.php?controller=commande&action=checkout" onsubmit="return validateCheckout()">
                         <div class="mb-3">
                             <label class="form-label">Nom complet</label>
-                            <input type="text" name="client_nom" class="form-control" required>
+                            <input type="text" name="client_nom" id="client_nom" class="form-control">
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Email</label>
-                            <input type="email" name="client_email" class="form-control" required>
+                            <input type="email" name="client_email" id="client_email" class="form-control">
                         </div>
                         <button type="submit" class="btn btn-checkout w-100">Valider ma commande</button>
                     </form>
@@ -106,5 +116,38 @@
 </footer>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+    function validateCheckout() {
+        let nom = document.getElementById('client_nom').value.trim();
+        let email = document.getElementById('client_email').value.trim();
+        let errorDiv = document.getElementById('checkoutError');
+        
+        // Réinitialiser
+        errorDiv.style.display = 'none';
+        errorDiv.innerHTML = '';
+        
+        let errors = [];
+        
+        if (nom === '') {
+            errors.push('Le nom est obligatoire');
+        }
+        
+        if (email === '') {
+            errors.push('L\'email est obligatoire');
+        } else if (!email.includes('@') || !email.includes('.')) {
+            errors.push('Email invalide (doit contenir @ et .)');
+        }
+        
+        if (errors.length > 0) {
+            errorDiv.innerHTML = '❌ ' + errors.join('<br>❌ ');
+            errorDiv.style.display = 'block';
+            return false;
+        }
+        
+        return true;
+    }
+</script>
+
 </body>
 </html>
