@@ -1,0 +1,90 @@
+<?php
+
+declare(strict_types=1);
+
+require_once __DIR__ . '/includes/auth.php';
+require_once __DIR__ . '/../controller/post.controller.php';
+
+require_once __DIR__ . '/includes/layout.php';
+
+$message = '';
+$error = '';
+if (isset($_GET['created'])) {
+    $message = 'Article publié.';
+} elseif (isset($_GET['updated'])) {
+    $message = 'Article mis à jour.';
+} elseif (isset($_GET['deleted'])) {
+    $message = 'Article supprimé.';
+}
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_id'])) {
+    $id = (int) $_POST['delete_id'];
+    if ($id > 0) {
+        try {
+            $postC = new PostC();
+            $postC->deletePost($id);
+            header('Location: posts.php?deleted=1');
+            exit;
+        } catch (Exception $e) {
+            $error = $e->getMessage();
+        }
+    }
+}
+
+$postC = new PostC();
+$liste = $postC->listPost();
+$rows = $liste->fetchAll(PDO::FETCH_ASSOC);
+
+admin_layout_start('Gestion des articles', 'posts');
+?>
+        <h1>Mes articles</h1>
+        <p class="muted" style="margin-top:-8px;margin-bottom:16px;">Créez, modifiez ou supprimez le contenu de vos posts. Les visiteurs voient le résultat sur le blog public.</p>
+
+        <?php if ($message !== '') { ?>
+            <div class="ok"><?= htmlspecialchars($message, ENT_QUOTES, 'UTF-8') ?></div>
+        <?php } ?>
+        <?php if ($error !== '') { ?>
+            <div class="err"><?= htmlspecialchars($error, ENT_QUOTES, 'UTF-8') ?></div>
+        <?php } ?>
+
+        <div class="card">
+            <?php if (count($rows) === 0) { ?>
+                <p>Aucun article pour le moment. <a href="add_post.php">Créer un article</a></p>
+            <?php } else { ?>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Titre</th>
+                            <th>Catégorie</th>
+                            <th>Date</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php foreach ($rows as $row) {
+                            $id = (int) $row['id'];
+                            $titre = (string) ($row['titre'] ?? '');
+                            $cat = (string) ($row['categorie'] ?? '');
+                            $date = (string) ($row['datePublication'] ?? '');
+                            ?>
+                            <tr>
+                                <td><strong><?= htmlspecialchars($titre, ENT_QUOTES, 'UTF-8') ?></strong></td>
+                                <td><?= $cat !== '' ? htmlspecialchars($cat, ENT_QUOTES, 'UTF-8') : '—' ?></td>
+                                <td><?= $date !== '' ? htmlspecialchars($date, ENT_QUOTES, 'UTF-8') : '—' ?></td>
+                                <td>
+                                    <div class="row-actions">
+                                        <a href="edit_post.php?id=<?= $id ?>">Modifier le contenu</a>
+                                        <form method="post" action="" style="display:inline;" onsubmit="return confirm('Supprimer cet article ?');">
+                                            <input type="hidden" name="delete_id" value="<?= $id ?>">
+                                            <button type="submit" class="btn btn-danger" style="margin-top:0;padding:6px 12px;font-size:0.85rem;">Supprimer</button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                        <?php } ?>
+                    </tbody>
+                </table>
+            <?php } ?>
+        </div>
+<?php
+admin_layout_end();

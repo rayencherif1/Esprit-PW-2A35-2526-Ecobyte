@@ -1,0 +1,15 @@
+CREATE DATABASE IF NOT EXISTS ecobyte;
+USE ecobyte;
+
+CREATE TABLE IF NOT EXISTS reply (
+  id INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  contenu TEXT NOT NULL,
+  datePublication DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  post_id INT UNSIGNED NOT NULL,
+  PRIMARY KEY (id),
+  KEY idx_reply_post_id (post_id),
+  CONSTRAINT fk_reply_post FOREIGN KEY (post_id) REFERENCES post (id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+SHOW TABLES LIKE 'reply';
+
