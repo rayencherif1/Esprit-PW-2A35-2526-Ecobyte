@@ -6,13 +6,18 @@ class Reply
     private ?string $contenu = null;
     private ?string $datePublication = null;
     private ?int $postId = null;
+    private ?int $likes = 0;
+    private ?bool $userLiked = false;
+    private ?int $parentReplyId = null;
 
-    public function __construct($id = null, $contenu = null, $datePublication = null, $postId = null)
+    public function __construct($id = null, $contenu = null, $datePublication = null, $postId = null, $likes = 0, $parentReplyId = null)
     {
         $this->id = $id;
         $this->contenu = $contenu;
         $this->datePublication = $datePublication;
         $this->postId = $postId;
+        $this->likes = $likes;
+        $this->parentReplyId = $parentReplyId;
     }
 
     public function getId()
@@ -50,6 +55,39 @@ class Reply
     public function setPostId($postId)
     {
         $this->postId = $postId;
+        return $this;
+    }
+
+    public function getLikes()
+    {
+        return $this->likes;
+    }
+
+    public function setLikes($likes)
+    {
+        $this->likes = $likes;
+        return $this;
+    }
+
+    public function getUserLiked()
+    {
+        return $this->userLiked;
+    }
+
+    public function setUserLiked($userLiked)
+    {
+        $this->userLiked = $userLiked;
+        return $this;
+    }
+
+    public function getParentReplyId()
+    {
+        return $this->parentReplyId;
+    }
+
+    public function setParentReplyId($parentReplyId)
+    {
+        $this->parentReplyId = $parentReplyId;
         return $this;
     }
 }

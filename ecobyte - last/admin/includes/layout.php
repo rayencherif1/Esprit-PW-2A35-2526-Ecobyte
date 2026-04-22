@@ -56,13 +56,13 @@ function admin_layout_start(string $pageTitle, string $active = 'posts'): void
 </head>
 <body>
     <div class="shell">
-        <nav class="nav" aria-label="Administration">
+        <nav class="nav" aria-label="Administration" id="admin-nav">
             <a href="posts.php" class="<?= ($active === 'posts' || $active === 'edit') ? 'active' : '' ?>">Mes articles</a>
-            <a href="add_post.php" class="<?= $active === 'add' ? 'active' : '' ?>">Nouvel article</a>
-            <a href="replies.php" class="<?= $active === 'replies' ? 'active' : '' ?>">Réponses</a>
-            <span class="spacer"></span>
-            <a href="../blog.php">Voir le blog public</a>
         </nav>
+        <div style="margin: 18px 0 18px 2px; display: flex; gap: 18px; align-items: center; font-size: 1rem;">
+            <a href="add_post.php" class="<?= $active === 'add' ? 'active' : '' ?>" style="color: #2563eb; text-decoration: underline; font-weight: 500;">Nouvel article</a>
+            <a href="replies.php" class="<?= $active === 'replies' ? 'active' : '' ?>" style="color: #2563eb; text-decoration: underline; font-weight: 500;">Réponses</a>
+        </div>
     <?php
 }
 

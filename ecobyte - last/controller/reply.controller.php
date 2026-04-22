@@ -21,13 +21,15 @@ class ReplyC
     public function addReply($reply): void
     {
         try {
-            $sql = 'INSERT INTO reply (id, contenu, post_id) VALUES (NULL, :contenu, :post_id)';
+            $parentId = $reply->getParentReplyId();
+            $sql = 'INSERT INTO reply (id, contenu, post_id, parent_reply_id) VALUES (NULL, :contenu, :post_id, :parent_id)';
             $db = config::getConnexion();
 
             $query = $db->prepare($sql);
             $query->execute([
                 'contenu' => $reply->getContenu(),
                 'post_id' => $reply->getPostId(),
+                'parent_id' => $parentId > 0 ? $parentId : null,
             ]);
         } catch (PDOException $e) {
             if (($e->getCode() ?? '') === '42S02') {
@@ -92,6 +94,31 @@ class ReplyC
         }
     }
 
+    /**
+     * Liste pour le back-office filtrée par article (avec titre du post).
+     * @return array<int,array<string,mixed>>
+     */
+    public function listRepliesWithPostByPostId(int $postId): array
+    {
+        try {
+            $db = config::getConnexion();
+            $stmt = $db->prepare(
+                'SELECT r.*, p.titre AS post_titre
+                 FROM reply r
+                 JOIN post p ON p.id = r.post_id
+                 WHERE r.post_id = :post_id
+                 ORDER BY r.datePublication DESC, r.id DESC'
+            );
+            $stmt->execute(['post_id' => $postId]);
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (PDOException $e) {
+            if (($e->getCode() ?? '') === '42S02') {
+                return [];
+            }
+            throw $e;
+        }
+    }
+
     public function updateReply($reply, $id): void
     {
         $this->requireAdmin();
@@ -146,6 +173,104 @@ class ReplyC
             }
             throw $e;
         }
+    }
+
+    /**
+     * Ajouter un like à un commentaire.
+     */
+    public function addLike(int $replyId): bool
+    {
+        try {
+            $db = config::getConnexion();
+            $ip = $this->getClientIP();
+
+            // Vérifier si l'utilisateur a déjà liké
+            $check = $db->prepare('SELECT id FROM reply_reaction WHERE reply_id = :reply_id AND ip_address = :ip');
+            $check->execute(['reply_id' => $replyId, 'ip' => $ip]);
+            if ($check->fetch()) {
+                return false; // Déjà liké
+            }
+
+            // Ajouter la réaction
+            $stmt = $db->prepare('INSERT INTO reply_reaction (reply_id, ip_address) VALUES (:reply_id, :ip)');
+            $stmt->execute(['reply_id' => $replyId, 'ip' => $ip]);
+
+            // Incrémenter le compteur
+            $update = $db->prepare('UPDATE reply SET likes = likes + 1 WHERE id = :id');
+            $update->execute(['id' => $replyId]);
+
+            return true;
+        } catch (PDOException $e) {
+            if (($e->getCode() ?? '') === '42S02') {
+                return false;
+            }
+            throw $e;
+        }
+    }
+
+    /**
+     * Retirer un like d'un commentaire.
+     */
+    public function removeLike(int $replyId): bool
+    {
+        try {
+            $db = config::getConnexion();
+            $ip = $this->getClientIP();
+
+            // Vérifier si l'utilisateur a liké
+            $check = $db->prepare('SELECT id FROM reply_reaction WHERE reply_id = :reply_id AND ip_address = :ip');
+            $check->execute(['reply_id' => $replyId, 'ip' => $ip]);
+            if (!$check->fetch()) {
+                return false; // Pas de like à retirer
+            }
+
+            // Supprimer la réaction
+            $stmt = $db->prepare('DELETE FROM reply_reaction WHERE reply_id = :reply_id AND ip_address = :ip');
+            $stmt->execute(['reply_id' => $replyId, 'ip' => $ip]);
+
+            // Décrémenter le compteur
+            $update = $db->prepare('UPDATE reply SET likes = GREATEST(likes - 1, 0) WHERE id = :id');
+            $update->execute(['id' => $replyId]);
+
+            return true;
+        } catch (PDOException $e) {
+            if (($e->getCode() ?? '') === '42S02') {
+                return false;
+            }
+            throw $e;
+        }
+    }
+
+    /**
+     * Vérifier si l'utilisateur a liké un commentaire.
+     */
+    public function userHasLiked(int $replyId): bool
+    {
+        try {
+            $db = config::getConnexion();
+            $ip = $this->getClientIP();
+            $stmt = $db->prepare('SELECT id FROM reply_reaction WHERE reply_id = :reply_id AND ip_address = :ip');
+            $stmt->execute(['reply_id' => $replyId, 'ip' => $ip]);
+            return (bool) $stmt->fetch();
+        } catch (PDOException $e) {
+            return false;
+        }
+    }
+
+    /**
+     * Obtenir l'adresse IP du client.
+     */
+    private function getClientIP(): string
+    {
+        $ip = '';
+        if (!empty($_SERVER['HTTP_CLIENT_IP'])) {
+            $ip = $_SERVER['HTTP_CLIENT_IP'];
+        } elseif (!empty($_SERVER['HTTP_X_FORWARDED_FOR'])) {
+            $ip = $_SERVER['HTTP_X_FORWARDED_FOR'];
+        } elseif (!empty($_SERVER['REMOTE_ADDR'])) {
+            $ip = $_SERVER['REMOTE_ADDR'];
+        }
+        return $ip ?: 'unknown';
     }
 }
 

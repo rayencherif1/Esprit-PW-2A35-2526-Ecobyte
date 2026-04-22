@@ -2,6 +2,7 @@
 
 require_once __DIR__ . '/controller/post.controller.php';
 require_once __DIR__ . '/controller/reply.controller.php';
+require_once __DIR__ . '/model/reply.php';
 
 if (session_status() !== PHP_SESSION_ACTIVE) {
     session_start();
@@ -14,8 +15,31 @@ $replyC = new ReplyC();
 // Suppression depuis le front-office (POST)
 $flashMessage = '';
 $flashError = '';
+$pendingReplyPostId = 0;
+$pendingReplyContent = '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    if (isset($_POST['delete_id'])) {
+    if (isset($_POST['add_reply'])) {
+        $postId = (int) ($_POST['post_id'] ?? 0);
+        $contenu = trim((string) ($_POST['contenu'] ?? ''));
+        $parentReplyId = (int) ($_POST['parent_reply_id'] ?? 0);
+        $pendingReplyPostId = $postId;
+        $pendingReplyContent = (string) ($_POST['contenu'] ?? '');
+
+        if ($postId <= 0) {
+            $flashError = 'Article invalide.';
+        } elseif ($contenu === '') {
+            $flashError = 'Le contenu est obligatoire.';
+        } else {
+            try {
+                $reply = new Reply(null, $contenu, null, $postId, 0, $parentReplyId);
+                $replyC->addReply($reply);
+                header('Location: blog.php?reply_created=1#post-' . $postId);
+                exit;
+            } catch (Exception $e) {
+                $flashError = $e->getMessage();
+            }
+        }
+    } elseif (isset($_POST['delete_id'])) {
         $id = (int) $_POST['delete_id'];
         if ($id > 0) {
             try {
@@ -44,13 +68,43 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $flashError = $e->getMessage();
             }
         }
+    } elseif (isset($_POST['like_reply_id'])) {
+        $rid = (int) $_POST['like_reply_id'];
+        $postId = (int) ($_POST['like_post_id'] ?? 0);
+        if ($rid > 0) {
+            try {
+                $replyC->addLike($rid);
+                header('Location: blog.php' . ($postId > 0 ? '?liked=1#reply-' . $rid : '?liked=1'));
+                exit;
+            } catch (Exception $e) {
+                $flashError = $e->getMessage();
+            }
+        }
+    } elseif (isset($_POST['unlike_reply_id'])) {
+        $rid = (int) $_POST['unlike_reply_id'];
+        $postId = (int) ($_POST['like_post_id'] ?? 0);
+        if ($rid > 0) {
+            try {
+                $replyC->removeLike($rid);
+                header('Location: blog.php' . ($postId > 0 ? '?unliked=1#reply-' . $rid : '?unliked=1'));
+                exit;
+            } catch (Exception $e) {
+                $flashError = $e->getMessage();
+            }
+        }
     }
 }
 
 if (isset($_GET['deleted'])) {
     $flashMessage = 'Article supprimé.';
+} elseif (isset($_GET['reply_created'])) {
+    $flashMessage = 'Réponse publiée.';
 } elseif (isset($_GET['reply_deleted'])) {
     $flashMessage = 'Réponse supprimée.';
+} elseif (isset($_GET['liked'])) {
+    $flashMessage = 'Merci pour votre like !';
+} elseif (isset($_GET['unliked'])) {
+    $flashMessage = 'Like retiré.';
 }
 
 try {
@@ -192,6 +246,27 @@ try {
       .replies { margin-top: 14px; }
       .replies-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 10px; }
       .replies-title { margin: 0; font-size: 13px; font-weight: 800; color: #0f172a; letter-spacing: 0.2px; }
+      .reply-form {
+        border: 1px solid rgba(148, 163, 184, 0.25);
+        background: rgba(248, 250, 252, 0.8);
+        border-radius: 14px;
+        padding: 12px;
+        margin-top: 10px;
+      }
+      .reply-form textarea{
+        width: 100%;
+        min-height: 90px;
+        resize: vertical;
+        border-radius: 12px;
+        border: 1px solid rgba(148, 163, 184, 0.35);
+        padding: 10px 12px;
+        font: inherit;
+        line-height: 1.5;
+        background: rgba(255, 255, 255, 0.92);
+        color: #0f172a;
+      }
+      .reply-form textarea:focus { outline: none; border-color: rgba(37, 99, 235, 0.55); box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.12); }
+      .reply-form-actions { display: flex; gap: 10px; justify-content: flex-end; flex-wrap: wrap; margin-top: 10px; }
       .reply {
         border: 1px solid rgba(148, 163, 184, 0.25);
         background: rgba(248, 250, 252, 0.8);
@@ -200,9 +275,12 @@ try {
         margin-top: 10px;
       }
       .reply-meta { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; color: #64748b; font-size: 12.5px; }
+      .like-count { color: #2563eb; font-weight: 600; }
       .reply-content { margin-top: 8px; color: #334155; line-height: 1.55; font-size: 14px; }
-      .reply-actions { margin-top: 10px; display: flex; gap: 10px; justify-content: flex-end; flex-wrap: wrap; }
+      .reply-actions { margin-top: 10px; display: flex; gap: 10px; justify-content: flex-start; flex-wrap: wrap; }
       .btn-sm { padding: 7px 10px; font-size: 12.5px; border-radius: 10px; }
+      .btn-liked { background: rgba(239, 68, 68, 0.1); border-color: rgba(239, 68, 68, 0.3); color: #dc2626; }
+      .reply-nested { margin-left: 24px; border-left: 3px solid rgba(99, 102, 241, 0.25); background: rgba(249, 250, 251, 0.9); }
     </style>
   </head>
   <body>
@@ -284,32 +362,131 @@ try {
                     <a class="btn btn-sm" href="ajouter_reply.php?post_id=<?= $id ?>">Répondre</a>
                   </div>
 
-                  <?php if (count($replies) === 0) { ?>
+                  <form class="reply-form" method="post" action="blog.php#post-<?= $id ?>">
+                    <input type="hidden" name="add_reply" value="1">
+                    <input type="hidden" name="post_id" value="<?= $id ?>">
+                    <textarea name="contenu" placeholder="Écrivez un commentaire…"><?= htmlspecialchars($pendingReplyPostId === $id ? $pendingReplyContent : '', ENT_QUOTES, 'UTF-8') ?></textarea>
+                    <div class="reply-form-actions">
+                      <button type="submit" class="btn btn-sm">Publier</button>
+                    </div>
+                  </form>
+
+                  <?php 
+                    // Séparer les réponses principales et les réponses imbriquées
+                    $topReplies = [];
+                    $nestedReplies = [];
+                    foreach ($replies as $reply) {
+                        $parentId = (int) ($reply['parent_reply_id'] ?? 0);
+                        if ($parentId === 0) {
+                            $topReplies[] = $reply;
+                        } else {
+                            $nestedReplies[$parentId][] = $reply;
+                        }
+                    }
+                  ?>
+                  <?php if (count($topReplies) === 0) { ?>
                     <div class="reply">
                       <div class="reply-content">Aucune réponse pour le moment.</div>
                     </div>
                   <?php } else { ?>
-                    <?php foreach ($replies as $reply) {
+                    <?php foreach ($topReplies as $reply) {
                         $rid = (int) ($reply['id'] ?? 0);
                         $rcontenu = (string) ($reply['contenu'] ?? '');
                         $rdate = (string) ($reply['datePublication'] ?? '');
+                        $rlikes = (int) ($reply['likes'] ?? 0);
+                        $userLiked = $rid > 0 && $replyC->userHasLiked($rid);
+                        $childReplies = $nestedReplies[$rid] ?? [];
                         ?>
                       <div class="reply"<?= $rid > 0 ? ' id="reply-' . $rid . '"' : '' ?>>
                         <div class="reply-meta">
                           <?php if ($rdate !== '') { ?><span><?= htmlspecialchars($rdate, ENT_QUOTES, 'UTF-8') ?></span><?php } ?>
+                          <?php if ($rid > 0) { ?>
+                            <span class="like-count"><?= $rlikes ?> j'aime</span>
+                          <?php } ?>
                         </div>
                         <div class="reply-content"><?= nl2br(htmlspecialchars($rcontenu, ENT_QUOTES, 'UTF-8')) ?></div>
-                        <?php if ($rid > 0 && $isAdmin) { ?>
+                        <?php if ($rid > 0) { ?>
                           <div class="reply-actions">
-                            <a class="btn btn-sm" href="modifier_reply.php?id=<?= $rid ?>">Modifier</a>
-                            <form method="post" action="" style="display:inline;" onsubmit="return confirm('Supprimer cette réponse ?');">
-                              <input type="hidden" name="delete_reply_id" value="<?= $rid ?>">
-                              <input type="hidden" name="reply_post_id" value="<?= $id ?>">
-                              <button type="submit" class="btn btn-sm btn-danger">Supprimer</button>
+                            <button type="button" class="btn btn-sm" onclick="document.getElementById('reply-form-<?= $rid ?>').style.display='block'">💬 Répondre</button>
+                            <?php if ($userLiked) { ?>
+                              <form method="post" action="" style="display:inline;">
+                                <input type="hidden" name="unlike_reply_id" value="<?= $rid ?>">
+                                <input type="hidden" name="like_post_id" value="<?= $id ?>">
+                                <button type="submit" class="btn btn-sm btn-liked">❤️ J'aime</button>
+                              </form>
+                            <?php } else { ?>
+                              <form method="post" action="" style="display:inline;">
+                                <input type="hidden" name="like_reply_id" value="<?= $rid ?>">
+                                <input type="hidden" name="like_post_id" value="<?= $id ?>">
+                                <button type="submit" class="btn btn-sm">🤍 J'aime</button>
+                              </form>
+                            <?php } ?>
+                            <?php if ($isAdmin) { ?>
+                              <a class="btn btn-sm" href="modifier_reply.php?id=<?= $rid ?>">Modifier</a>
+                              <form method="post" action="" style="display:inline;" onsubmit="return confirm('Supprimer cette réponse ?');">
+                                <input type="hidden" name="delete_reply_id" value="<?= $rid ?>">
+                                <input type="hidden" name="reply_post_id" value="<?= $id ?>">
+                                <button type="submit" class="btn btn-sm btn-danger">Supprimer</button>
+                              </form>
+                            <?php } ?>
+                          </div>
+                          <div id="reply-form-<?= $rid ?>" class="reply-form" style="display:none; margin-top:10px;">
+                            <form method="post" action="blog.php#post-<?= $id ?>">
+                              <input type="hidden" name="add_reply" value="1">
+                              <input type="hidden" name="post_id" value="<?= $id ?>">
+                              <input type="hidden" name="parent_reply_id" value="<?= $rid ?>">
+                              <textarea name="contenu" placeholder="Répondre à ce commentaire…" required></textarea>
+                              <div class="reply-form-actions">
+                                <button type="button" class="btn btn-sm" onclick="document.getElementById('reply-form-<?= $rid ?>').style.display='none'">Annuler</button>
+                                <button type="submit" class="btn btn-sm">Envoyer</button>
+                              </div>
                             </form>
                           </div>
                         <?php } ?>
                       </div>
+                      <?php foreach ($childReplies as $childReply) {
+                          $childId = (int) ($childReply['id'] ?? 0);
+                          $childContenu = (string) ($childReply['contenu'] ?? '');
+                          $childDate = (string) ($childReply['datePublication'] ?? '');
+                          $childLikes = (int) ($childReply['likes'] ?? 0);
+                          $childUserLiked = $childId > 0 && $replyC->userHasLiked($childId);
+                          ?>
+                        <div class="reply reply-nested"<?= $childId > 0 ? ' id="reply-' . $childId . '"' : '' ?>>
+                          <div class="reply-meta">
+                            <span>↳ Réponse</span>
+                            <?php if ($childDate !== '') { ?><span><?= htmlspecialchars($childDate, ENT_QUOTES, 'UTF-8') ?></span><?php } ?>
+                            <?php if ($childId > 0) { ?>
+                              <span class="like-count"><?= $childLikes ?> j'aime</span>
+                            <?php } ?>
+                          </div>
+                          <div class="reply-content"><?= nl2br(htmlspecialchars($childContenu, ENT_QUOTES, 'UTF-8')) ?></div>
+                          <?php if ($childId > 0) { ?>
+                            <div class="reply-actions">
+                              <?php if ($childUserLiked) { ?>
+                                <form method="post" action="" style="display:inline;">
+                                  <input type="hidden" name="unlike_reply_id" value="<?= $childId ?>">
+                                  <input type="hidden" name="like_post_id" value="<?= $id ?>">
+                                  <button type="submit" class="btn btn-sm btn-liked">❤️ J'aime</button>
+                                </form>
+                              <?php } else { ?>
+                                <form method="post" action="" style="display:inline;">
+                                  <input type="hidden" name="like_reply_id" value="<?= $childId ?>">
+                                  <input type="hidden" name="like_post_id" value="<?= $id ?>">
+                                  <button type="submit" class="btn btn-sm">🤍 J'aime</button>
+                                </form>
+                              <?php } ?>
+                              <?php if ($isAdmin) { ?>
+                                <a class="btn btn-sm" href="modifier_reply.php?id=<?= $childId ?>">Modifier</a>
+                                <form method="post" action="" style="display:inline;" onsubmit="return confirm('Supprimer cette réponse ?');">
+                                  <input type="hidden" name="delete_reply_id" value="<?= $childId ?>">
+                                  <input type="hidden" name="reply_post_id" value="<?= $id ?>">
+                                  <button type="submit" class="btn btn-sm btn-danger">Supprimer</button>
+                                </form>
+                              <?php } ?>
+                            </div>
+                          <?php } ?>
+                        </div>
+                      <?php } ?>
                     <?php } ?>
                   <?php } ?>
                 </div>

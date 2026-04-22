@@ -68,12 +68,17 @@ admin_layout_start('Gestion des articles', 'posts');
                             $date = (string) ($row['datePublication'] ?? '');
                             ?>
                             <tr>
-                                <td><strong><?= htmlspecialchars($titre, ENT_QUOTES, 'UTF-8') ?></strong></td>
+                                <td>
+                                    <a href="replies.php?post_id=<?= $id ?>" style="color:#2563eb;text-decoration:none;cursor:pointer;">
+                                        <strong><?= htmlspecialchars($titre, ENT_QUOTES, 'UTF-8') ?></strong>
+                                    </a>
+                                </td>
                                 <td><?= $cat !== '' ? htmlspecialchars($cat, ENT_QUOTES, 'UTF-8') : '—' ?></td>
                                 <td><?= $date !== '' ? htmlspecialchars($date, ENT_QUOTES, 'UTF-8') : '—' ?></td>
                                 <td>
                                     <div class="row-actions">
-                                        <a href="edit_post.php?id=<?= $id ?>">Modifier le contenu</a>
+                                        <a href="edit_post.php?id=<?= $id ?>" class="btn" style="margin-top:0;padding:6px 12px;font-size:0.85rem;">Modifier le contenu</a>
+                                        <a href="replies.php?post_id=<?= $id ?>" class="btn btn-ghost" style="margin-top:0;padding:6px 12px;font-size:0.85rem;text-decoration:none;display:inline-block;">Voir réponses</a>
                                         <form method="post" action="" style="display:inline;" onsubmit="return confirm('Supprimer cet article ?');">
                                             <input type="hidden" name="delete_id" value="<?= $id ?>">
                                             <button type="submit" class="btn btn-danger" style="margin-top:0;padding:6px 12px;font-size:0.85rem;">Supprimer</button>

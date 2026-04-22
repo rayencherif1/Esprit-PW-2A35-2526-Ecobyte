@@ -31,7 +31,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_id'])) {
 }
 
 $replyC = new ReplyC();
-$rows = $replyC->listRepliesWithPost();
+$postIdFilter = (int) ($_GET['post_id'] ?? 0);
+$rows = $postIdFilter > 0
+    ? $replyC->listRepliesWithPostByPostId($postIdFilter)
+    : $replyC->listRepliesWithPost();
 
 admin_layout_start('Gestion des réponses', 'replies');
 ?>
@@ -39,6 +42,9 @@ admin_layout_start('Gestion des réponses', 'replies');
         <p class="muted" style="margin-top:-8px;margin-bottom:16px;">Gérez les commentaires/réponses des visiteurs. Une réponse est liée à un article.</p>
         <p style="margin-top:-8px;margin-bottom:16px;">
             <a class="btn" href="add_reply.php" style="margin-top:0;">Ajouter une réponse</a>
+            <?php if ($postIdFilter > 0) { ?>
+                <a class="btn btn-ghost" href="replies.php" style="margin-top:0;margin-left:8px;text-decoration:none;display:inline-block;">Tout afficher</a>
+            <?php } ?>
         </p>
 
         <?php if ($message !== '') { ?>
@@ -64,17 +70,22 @@ admin_layout_start('Gestion des réponses', 'replies');
                     <tbody>
                         <?php foreach ($rows as $row) {
                             $id = (int) ($row['id'] ?? 0);
+                            $postId = (int) ($row['post_id'] ?? 0);
                             $postTitre = (string) ($row['post_titre'] ?? '');
                             $contenu = (string) ($row['contenu'] ?? '');
                             $date = (string) ($row['datePublication'] ?? '');
                             ?>
                             <tr>
-                                <td><strong><?= htmlspecialchars($postTitre, ENT_QUOTES, 'UTF-8') ?></strong></td>
+                                <td>
+                                    <a href="replies.php?post_id=<?= $postId ?>" style="color:#2563eb;text-decoration:none;cursor:pointer;">
+                                        <strong><?= htmlspecialchars($postTitre, ENT_QUOTES, 'UTF-8') ?></strong>
+                                    </a>
+                                </td>
                                 <td><?= nl2br(htmlspecialchars($contenu, ENT_QUOTES, 'UTF-8')) ?></td>
                                 <td><?= $date !== '' ? htmlspecialchars($date, ENT_QUOTES, 'UTF-8') : '—' ?></td>
                                 <td>
                                     <div class="row-actions">
-                                        <a href="edit_reply.php?id=<?= $id ?>">Modifier</a>
+                                        <a href="edit_reply.php?id=<?= $id ?>" class="btn" style="margin-top:0;padding:6px 12px;font-size:0.85rem;">Modifier</a>
                                         <form method="post" action="" style="display:inline;" onsubmit="return confirm('Supprimer cette réponse ?');">
                                             <input type="hidden" name="delete_id" value="<?= $id ?>">
                                             <button type="submit" class="btn btn-danger" style="margin-top:0;padding:6px 12px;font-size:0.85rem;">Supprimer</button>
