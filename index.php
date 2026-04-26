@@ -7,6 +7,7 @@ require_once 'controller/ProduitController.php';
 require_once 'controller/CategorieController.php';
 require_once 'controller/CommandeController.php';
 require_once 'controller/AuthController.php';
+require_once 'controller/FavorisController.php';  // AJOUT OBLIGATOIRE
 
 $controller = $_GET['controller'] ?? 'produit';
 $action = $_GET['action'] ?? 'front';
@@ -23,6 +24,9 @@ switch($controller) {
         break;
     case 'auth':
         $controllerInstance = new AuthController();
+        break;
+    case 'favoris':
+        $controllerInstance = new FavorisController();
         break;
     default:
         $controllerInstance = new ProduitController();

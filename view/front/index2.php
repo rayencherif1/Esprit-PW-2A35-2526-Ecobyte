@@ -1,7 +1,33 @@
 <?php
 require_once __DIR__ . '/../../controller/ProduitController.php';
+require_once __DIR__ . '/../../controller/FavorisController.php';
+require_once __DIR__ . '/../../model/Produit.php';
+
 $produitController = new ProduitController();
 $produits = $produitController->getAllProduits();
+
+// Récupérer les IDs des favoris en une seule requête
+session_start();
+$user_id = $_SESSION['user_id'] ?? 1;
+
+// Connexion directe à la base de données (sans passer par FavorisController)
+try {
+    $db = new PDO('mysql:host=localhost;dbname=marketplace;charset=utf8', 'root', '');
+    $db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+} catch(PDOException $e) {
+    $favorisIds = [];
+    $db = null;
+}
+
+$favorisIds = [];
+if ($db) {
+    $sql = "SELECT produit_id FROM favoris WHERE user_id = :user_id";
+    $stmt = $db->prepare($sql);
+    $stmt->execute(['user_id' => $user_id]);
+    $favorisIds = $stmt->fetchAll(PDO::FETCH_COLUMN);
+}
+
+session_write_close(); // Fermer la session
 ?>
 <!DOCTYPE html>
 <html lang="fr">
@@ -32,6 +58,39 @@ $produits = $produitController->getAllProduits();
         .logo-img {
             height: 50px;
             width: auto;
+        }
+        .btn-wishlist.active svg {
+            fill: red;
+            color: red;
+        }
+        .product-qty {
+            width: 110px;
+            flex-wrap: nowrap;
+        }
+        .product-qty .form-control {
+            width: 40px !important;
+            text-align: center;
+            padding: 0;
+        }
+        .product-qty .btn {
+            padding: 4px 8px;
+        }
+        .add-to-cart-btn {
+            background: #28a745;
+            color: white;
+            border: none;
+            border-radius: 20px;
+            padding: 5px 12px;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .add-to-cart-btn:hover {
+            background: #1e7e34;
+            color: white;
+        }
+        .btn-wishlist {
+            cursor: pointer;
         }
     </style>
 </head>
@@ -78,6 +137,9 @@ $produits = $produitController->getAllProduits();
         </div>
         <a href="/marketplace/index.php?controller=commande&action=panier" class="btn btn-outline-success rounded-pill">
           <svg width="20" height="20"><use xlink:href="#cart"></use></svg> Panier
+        </a>
+        <a href="/marketplace/index.php?controller=favoris&action=index" class="btn btn-outline-danger rounded-pill" title="Mes favoris">
+          ❤️ Favoris
         </a>
         <a href="/marketplace/view/back/pages/marketplace.php" class="admin-icon" title="Administration">
           <svg width="20" height="20"><use xlink:href="#lock"></use></svg>
@@ -169,9 +231,14 @@ $produits = $produitController->getAllProduits();
         <div class="tab-pane fade show active">
           <div class="product-grid row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 row-cols-xl-5">
             <?php foreach(array_slice($produits, 0, 8) as $produit): ?>
+            <?php $isFavori = in_array($produit['id'], $favorisIds); ?>
             <div class="col">
               <div class="product-item">
-                <a href="#" class="btn-wishlist"><svg width="24" height="24"><use xlink:href="#heart"></use></svg></a>
+                <a href="javascript:void(0)" class="btn-wishlist <?= $isFavori ? 'active' : '' ?>" onclick="addToFavoris(<?= $produit['id'] ?>, this)">
+                  <svg width="24" height="24" viewBox="0 0 24 24" <?= $isFavori ? 'fill="red"' : 'fill="none"' ?> stroke="currentColor" stroke-width="2">
+                    <path d="M20.16 4.61A6.27 6.27 0 0 0 12 4a6.27 6.27 0 0 0-8.16 9.48l7.45 7.45a1 1 0 0 0 1.42 0l7.45-7.45a6.27 6.27 0 0 0 0-8.87Z"/>
+                  </svg>
+                </a>
                 <figure><a href="#"><img src="images/thumb-bananas.png" class="tab-image"></a></figure>
                 <h3><?= htmlspecialchars($produit['nom']) ?></h3>
                 <span class="qty"><?= $produit['stock'] ?> unités</span>
@@ -179,11 +246,21 @@ $produits = $produitController->getAllProduits();
                 <span class="price"><?= number_format($produit['prix'],2) ?> €</span>
                 <div class="d-flex align-items-center justify-content-between">
                   <div class="input-group product-qty">
-                    <span class="input-group-btn"><button class="quantity-left-minus btn btn-danger btn-number" data-type="minus"><svg width="16" height="16"><use xlink:href="#minus"></use></svg></button></span>
-                    <input type="text" name="quantity" class="form-control input-number" value="1">
-                    <span class="input-group-btn"><button class="quantity-right-plus btn btn-success btn-number" data-type="plus"><svg width="16" height="16"><use xlink:href="#plus"></use></svg></button></span>
+                    <span class="input-group-btn">
+                      <button class="quantity-left-minus btn btn-danger btn-number" data-type="minus" data-id="<?= $produit['id'] ?>">
+                        <svg width="14" height="14"><use xlink:href="#minus"></use></svg>
+                      </button>
+                    </span>
+                    <input type="text" name="quantity" class="form-control input-number text-center" value="1" data-id="<?= $produit['id'] ?>" style="width: 40px;">
+                    <span class="input-group-btn">
+                      <button class="quantity-right-plus btn btn-success btn-number" data-type="plus" data-id="<?= $produit['id'] ?>">
+                        <svg width="14" height="14"><use xlink:href="#plus"></use></svg>
+                      </button>
+                    </span>
                   </div>
-                  <a href="/marketplace/index.php?controller=commande&action=addToPanier&id=<?= $produit['id'] ?>" class="nav-link">Ajouter <svg width="20" height="20"><use xlink:href="#cart"></use></svg></a>
+                  <button class="add-to-cart-btn" data-id="<?= $produit['id'] ?>">
+                    Ajouter <svg width="16" height="16"><use xlink:href="#cart"></use></svg>
+                  </button>
                 </div>
               </div>
             </div>
@@ -211,8 +288,13 @@ $produits = $produitController->getAllProduits();
     <div class="products-carousel swiper">
       <div class="swiper-wrapper">
         <?php foreach($produits as $produit): ?>
+        <?php $isFavori = in_array($produit['id'], $favorisIds); ?>
         <div class="product-item swiper-slide">
-          <a href="#" class="btn-wishlist"><svg width="24" height="24"><use xlink:href="#heart"></use></svg></a>
+          <a href="javascript:void(0)" class="btn-wishlist <?= $isFavori ? 'active' : '' ?>" onclick="addToFavoris(<?= $produit['id'] ?>, this)">
+            <svg width="24" height="24" viewBox="0 0 24 24" <?= $isFavori ? 'fill="red"' : 'fill="none"' ?> stroke="currentColor" stroke-width="2">
+              <path d="M20.16 4.61A6.27 6.27 0 0 0 12 4a6.27 6.27 0 0 0-8.16 9.48l7.45 7.45a1 1 0 0 0 1.42 0l7.45-7.45a6.27 6.27 0 0 0 0-8.87Z"/>
+            </svg>
+          </a>
           <figure><a href="#"><img src="images/thumb-tomatoes.png" class="tab-image"></a></figure>
           <h3><?= htmlspecialchars($produit['nom']) ?></h3>
           <span class="qty"><?= $produit['stock'] ?> unités</span>
@@ -220,11 +302,21 @@ $produits = $produitController->getAllProduits();
           <span class="price"><?= number_format($produit['prix'],2) ?> €</span>
           <div class="d-flex align-items-center justify-content-between">
             <div class="input-group product-qty">
-              <span class="input-group-btn"><button class="quantity-left-minus btn btn-danger btn-number" data-type="minus"><svg width="16" height="16"><use xlink:href="#minus"></use></svg></button></span>
-              <input type="text" name="quantity" class="form-control input-number" value="1">
-              <span class="input-group-btn"><button class="quantity-right-plus btn btn-success btn-number" data-type="plus"><svg width="16" height="16"><use xlink:href="#plus"></use></svg></button></span>
+              <span class="input-group-btn">
+                <button class="quantity-left-minus btn btn-danger btn-number" data-type="minus" data-id="<?= $produit['id'] ?>">
+                  <svg width="14" height="14"><use xlink:href="#minus"></use></svg>
+                </button>
+              </span>
+              <input type="text" name="quantity" class="form-control input-number text-center" value="1" data-id="<?= $produit['id'] ?>" style="width: 40px;">
+              <span class="input-group-btn">
+                <button class="quantity-right-plus btn btn-success btn-number" data-type="plus" data-id="<?= $produit['id'] ?>">
+                  <svg width="14" height="14"><use xlink:href="#plus"></use></svg>
+                </button>
+              </span>
             </div>
-            <a href="/marketplace/index.php?controller=commande&action=addToPanier&id=<?= $produit['id'] ?>" class="nav-link">Ajouter <svg width="20" height="20"><use xlink:href="#cart"></use></svg></a>
+            <button class="add-to-cart-btn" data-id="<?= $produit['id'] ?>">
+              Ajouter <svg width="16" height="16"><use xlink:href="#cart"></use></svg>
+            </button>
           </div>
         </div>
         <?php endforeach; ?>
@@ -270,5 +362,71 @@ $produits = $produitController->getAllProduits();
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/js/bootstrap.bundle.min.js"></script>
 <script src="js/plugins.js"></script>
 <script src="js/script.js"></script>
+
+<script>
+// Gestion des quantités
+document.addEventListener('DOMContentLoaded', function() {
+    // Boutons +
+    document.querySelectorAll('.quantity-right-plus').forEach(button => {
+        button.addEventListener('click', function(e) {
+            e.preventDefault();
+            let input = this.closest('.product-qty').querySelector('.input-number');
+            let currentValue = parseInt(input.value);
+            if (!isNaN(currentValue)) {
+                input.value = currentValue + 1;
+            } else {
+                input.value = 1;
+            }
+        });
+    });
+    
+    // Boutons -
+    document.querySelectorAll('.quantity-left-minus').forEach(button => {
+        button.addEventListener('click', function(e) {
+            e.preventDefault();
+            let input = this.closest('.product-qty').querySelector('.input-number');
+            let currentValue = parseInt(input.value);
+            if (!isNaN(currentValue) && currentValue > 1) {
+                input.value = currentValue - 1;
+            } else {
+                input.value = 1;
+            }
+        });
+    });
+    
+    // Boutons Ajouter au panier
+    document.querySelectorAll('.add-to-cart-btn').forEach(button => {
+        button.addEventListener('click', function(e) {
+            e.preventDefault();
+            let productId = this.dataset.id;
+            let qtyInput = this.closest('.product-item').querySelector('.input-number');
+            let quantity = qtyInput ? qtyInput.value : 1;
+            window.location.href = `/marketplace/index.php?controller=commande&action=addToPanier&id=${productId}&quantite=${quantity}`;
+        });
+    });
+});
+
+// Fonction pour ajouter/retirer des favoris via AJAX
+function addToFavoris(produitId, element) {
+    fetch(`/marketplace/index.php?controller=favoris&action=add&id=${produitId}`)
+        .then(function(response) {
+            return response.text();
+        })
+        .then(function() {
+            // Toggle l'état du cœur
+            if (element.classList.contains('active')) {
+                element.classList.remove('active');
+                element.querySelector('svg').setAttribute('fill', 'none');
+            } else {
+                element.classList.add('active');
+                element.querySelector('svg').setAttribute('fill', 'red');
+            }
+        })
+        .catch(function(error) {
+            console.error('Erreur:', error);
+        });
+}
+</script>
+
 </body>
 </html>

@@ -48,6 +48,8 @@
         .order-table th, .order-table td { border: 1px solid #ddd; padding: 8px; }
         .error-message { color: red; font-size: 12px; margin-top: 5px; display: none; }
         .error-border { border-color: red !important; }
+        .required-star { color: red; margin-left: 3px; }
+        .form-group label { font-weight: 500; }
     </style>
 </head>
 <body class="m-0 font-sans text-base antialiased font-normal dark:bg-slate-900 leading-default bg-gray-50 text-slate-500">
@@ -55,6 +57,7 @@
 
     <!-- CHARGEMENT DES DONNÉES -->
     <?php
+    session_start();
     require_once '../../../controller/ProduitController.php';
     require_once '../../../controller/CategorieController.php';
     require_once '../../../controller/CommandeController.php';
@@ -82,6 +85,11 @@
             ];
         }
     }
+    
+    // Messages de succès/erreur
+    $successMessage = $_SESSION['success_message'] ?? '';
+    $errorMessage = $_SESSION['error_message'] ?? '';
+    unset($_SESSION['success_message'], $_SESSION['error_message']);
     ?>
 
     <!-- SIDEBAR -->
@@ -124,7 +132,54 @@
             </div>
         </nav>
 
-        <!-- SECTION PRODUITS (sans colonne ID) -->
+        <!-- SECTION CATÉGORIES (en haut) -->
+        <div class="w-full px-6 py-6 mx-auto">
+            <?php if(!empty($successMessage)): ?>
+            <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4">
+                <?= htmlspecialchars($successMessage) ?>
+            </div>
+            <?php endif; ?>
+            <?php if(!empty($errorMessage)): ?>
+            <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+                <?= htmlspecialchars($errorMessage) ?>
+            </div>
+            <?php endif; ?>
+            <div class="flex flex-wrap -mx-3">
+                <div class="flex-none w-full max-w-full px-3">
+                    <div class="relative flex flex-col min-w-0 mb-6 break-words bg-white border-0 border-transparent border-solid shadow-xl dark:bg-slate-850 dark:shadow-dark-xl rounded-2xl bg-clip-border">
+                        <div class="p-6 pb-0 mb-0 border-b-0 border-b-solid rounded-t-2xl border-b-transparent flex justify-between items-center">
+                            <h6 class="dark:text-white">📁 Catégories</h6>
+                            <button class="btn-action" style="background:#28a745;" onclick="openModal('addCategoryModal')">+ Ajouter une catégorie</button>
+                        </div>
+                        <div class="flex-auto px-0 pt-0 pb-2">
+                            <div class="p-0 overflow-x-auto">
+                                <table class="table-crud">
+                                    <thead>
+                                        <tr>
+                                            <th>Nom</th><th>Description</th><th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <?php foreach($categories as $c): ?>
+                                        <tr>
+                                            <td><?= htmlspecialchars($c['nom']) ?></td>
+                                            <td><?= htmlspecialchars($c['description']) ?></td>
+                                            <td>
+                                                <button class="btn-action warning" onclick="openEditCategoryModal(<?= $c['id'] ?>, '<?= htmlspecialchars($c['nom']) ?>', '<?= htmlspecialchars($c['description']) ?>')">Modifier</button>
+                                                <a href="/marketplace/index.php?controller=categorie&action=delete&id=<?= $c['id'] ?>" class="btn-action danger" onclick="return confirm('Supprimer cette catégorie ?')">Supprimer</a>
+                                            </td>
+                                        </tr>
+                                        <?php endforeach; ?>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SECTION PRODUITS (en dessous) -->
         <div class="w-full px-6 py-6 mx-auto">
             <div class="flex flex-wrap -mx-3">
                 <div class="flex-none w-full max-w-full px-3">
@@ -151,7 +206,7 @@
                                                 <td><?= htmlspecialchars($p['categorie_nom'] ?? '—') ?></td>
                                                 <td>
                                                     <button class="btn-action warning" onclick="openEditProductModal(<?= $p['id'] ?>, '<?= htmlspecialchars($p['nom']) ?>', <?= $p['prix'] ?>, <?= $p['stock'] ?>, '<?= htmlspecialchars($p['description']) ?>', <?= $p['categorie_id'] ?? 'null' ?>)">Modifier</button>
-                                                    <a href="/marketplace/index.php?controller=produit&action=delete&id=<?= $p['id'] ?>" class="btn-action danger" onclick="return confirm('Supprimer ?')">Supprimer</a>
+                                                    <a href="/marketplace/index.php?controller=produit&action=delete&id=<?= $p['id'] ?>" class="btn-action danger" onclick="return confirm('Supprimer ce produit ?')">Supprimer</a>
                                                 </td>
                                                 <td>
                                                     <button class="btn-action info" onclick="toggleOrders(<?= $p['id'] ?>)">📋 Voir commandes</button>
@@ -162,12 +217,17 @@
                                                     <?php if (!empty($commandesParProduit[$p['id']])): ?>
                                                         <table class="order-table">
                                                             <thead>
-                                                                <tr><th>Commande ID</th><th>Client</th><th>Email</th><th>Date</th><th>Total (€)</th><th>Quantité</th></tr>
+                                                                <tr>
+                                                                    <th>Client</th>
+                                                                    <th>Email</th>
+                                                                    <th>Date</th>
+                                                                    <th>Total (€)</th>
+                                                                    <th>Quantité</th>
+                                                                </tr>
                                                             </thead>
                                                             <tbody>
                                                                 <?php foreach ($commandesParProduit[$p['id']] as $ord): ?>
                                                                     <tr>
-                                                                        <td><?= $ord['id'] ?></td>
                                                                         <td><?= htmlspecialchars($ord['client']) ?></td>
                                                                         <td><?= htmlspecialchars($ord['email']) ?></td>
                                                                         <td><?= $ord['date'] ?></td>
@@ -192,43 +252,6 @@
             </div>
         </div>
 
-        <!-- SECTION CATÉGORIES (sans colonne ID) -->
-        <div class="w-full px-6 py-6 mx-auto">
-            <div class="flex flex-wrap -mx-3">
-                <div class="flex-none w-full max-w-full px-3">
-                    <div class="relative flex flex-col min-w-0 mb-6 break-words bg-white border-0 border-transparent border-solid shadow-xl dark:bg-slate-850 dark:shadow-dark-xl rounded-2xl bg-clip-border">
-                        <div class="p-6 pb-0 mb-0 border-b-0 border-b-solid rounded-t-2xl border-b-transparent flex justify-between items-center">
-                            <h6 class="dark:text-white">📁 Catégories</h6>
-                            <button class="btn-action" style="background:#28a745;" onclick="openModal('addCategoryModal')">+ Ajouter une catégorie</button>
-                        </div>
-                        <div class="flex-auto px-0 pt-0 pb-2">
-                            <div class="p-0 overflow-x-auto">
-                                <table class="table-crud">
-                                    <thead>
-                                        <tr>
-                                            <th>Nom</th><th>Description</th><th>Actions</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <?php foreach($categories as $c): ?>
-                                        <tr>
-                                            <td><?= htmlspecialchars($c['nom']) ?></td>
-                                            <td><?= htmlspecialchars($c['description']) ?></td>
-                                            <td>
-                                                <button class="btn-action warning" onclick="openEditCategoryModal(<?= $c['id'] ?>, '<?= htmlspecialchars($c['nom']) ?>', '<?= htmlspecialchars($c['description']) ?>')">Modifier</button>
-                                                <a href="/marketplace/index.php?controller=categorie&action=delete&id=<?= $c['id'] ?>" class="btn-action danger" onclick="return confirm('Supprimer ?')">Supprimer</a>
-                                            </td>
-                                        </tr>
-                                        <?php endforeach; ?>
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
         <footer class="pt-4">
             <div class="w-full px-6 mx-auto">
                 <div class="text-sm leading-normal text-center text-slate-500">
@@ -238,29 +261,44 @@
         </footer>
     </main>
 
-    <!-- MODAL AJOUT PRODUIT (sans required HTML) -->
+    <!-- MODAL AJOUT PRODUIT -->
     <div id="addProductModal" class="form-modal">
         <div class="form-modal-content">
             <span class="close-modal" onclick="closeModal('addProductModal')">&times;</span>
             <h3>Ajouter un produit</h3>
             <div id="addProductError" class="error-message"></div>
             <form id="addProductForm" action="/marketplace/index.php?controller=produit&action=store" method="POST" onsubmit="return validateAddProduct()">
-                <input type="text" name="nom" id="add_nom" placeholder="Nom du produit">
-                <input type="number" name="prix" id="add_prix" step="0.01" placeholder="Prix">
-                <input type="number" name="stock" id="add_stock" placeholder="Stock" value="0">
-                <textarea name="description" id="add_description" placeholder="Description"></textarea>
-                <select name="categorie_id" id="add_categorie_id">
-                    <option value="">-- Aucune catégorie --</option>
-                    <?php foreach($categories as $cat): ?>
-                    <option value="<?= $cat['id'] ?>"><?= htmlspecialchars($cat['nom']) ?></option>
-                    <?php endforeach; ?>
-                </select>
+                <div class="form-group">
+                    <label>Nom du produit <span class="required-star">*</span></label>
+                    <input type="text" name="nom" id="add_nom" placeholder="Nom du produit">
+                </div>
+                <div class="form-group">
+                    <label>Prix (€) <span class="required-star">*</span></label>
+                    <input type="number" name="prix" id="add_prix" step="0.01" placeholder="Prix">
+                </div>
+                <div class="form-group">
+                    <label>Stock</label>
+                    <input type="number" name="stock" id="add_stock" placeholder="Stock" value="0">
+                </div>
+                <div class="form-group">
+                    <label>Description</label>
+                    <textarea name="description" id="add_description" placeholder="Description"></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Catégorie <span class="required-star">*</span></label>
+                    <select name="categorie_id" id="add_categorie_id">
+                        <option value="">-- Sélectionnez une catégorie --</option>
+                        <?php foreach($categories as $cat): ?>
+                        <option value="<?= $cat['id'] ?>"><?= htmlspecialchars($cat['nom']) ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
                 <button type="submit" class="btn-action">Ajouter</button>
             </form>
         </div>
     </div>
 
-    <!-- MODAL MODIFICATION PRODUIT (sans required HTML) -->
+    <!-- MODAL MODIFICATION PRODUIT -->
     <div id="editProductModal" class="form-modal">
         <div class="form-modal-content">
             <span class="close-modal" onclick="closeModal('editProductModal')">&times;</span>
@@ -268,36 +306,57 @@
             <div id="editProductError" class="error-message"></div>
             <form id="editProductForm" action="/marketplace/index.php?controller=produit&action=update" method="POST" onsubmit="return validateEditProduct()">
                 <input type="hidden" name="id" id="edit_product_id">
-                <input type="text" name="nom" id="edit_product_nom" placeholder="Nom du produit">
-                <input type="number" name="prix" step="0.01" id="edit_product_prix" placeholder="Prix">
-                <input type="number" name="stock" id="edit_product_stock" placeholder="Stock">
-                <textarea name="description" id="edit_product_description" placeholder="Description"></textarea>
-                <select name="categorie_id" id="edit_product_categorie_id">
-                    <option value="">-- Aucune catégorie --</option>
-                    <?php foreach($categories as $cat): ?>
-                    <option value="<?= $cat['id'] ?>"><?= htmlspecialchars($cat['nom']) ?></option>
-                    <?php endforeach; ?>
-                </select>
+                <div class="form-group">
+                    <label>Nom du produit <span class="required-star">*</span></label>
+                    <input type="text" name="nom" id="edit_product_nom" placeholder="Nom du produit">
+                </div>
+                <div class="form-group">
+                    <label>Prix (€) <span class="required-star">*</span></label>
+                    <input type="number" name="prix" step="0.01" id="edit_product_prix" placeholder="Prix">
+                </div>
+                <div class="form-group">
+                    <label>Stock</label>
+                    <input type="number" name="stock" id="edit_product_stock" placeholder="Stock">
+                </div>
+                <div class="form-group">
+                    <label>Description</label>
+                    <textarea name="description" id="edit_product_description" placeholder="Description"></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Catégorie <span class="required-star">*</span></label>
+                    <select name="categorie_id" id="edit_product_categorie_id">
+                        <option value="">-- Sélectionnez une catégorie --</option>
+                        <?php foreach($categories as $cat): ?>
+                        <option value="<?= $cat['id'] ?>"><?= htmlspecialchars($cat['nom']) ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
                 <button type="submit" class="btn-action">Mettre à jour</button>
             </form>
         </div>
     </div>
 
-    <!-- MODAL AJOUT CATÉGORIE (sans required HTML) -->
+    <!-- MODAL AJOUT CATÉGORIE -->
     <div id="addCategoryModal" class="form-modal">
         <div class="form-modal-content">
             <span class="close-modal" onclick="closeModal('addCategoryModal')">&times;</span>
             <h3>Ajouter une catégorie</h3>
             <div id="addCategoryError" class="error-message"></div>
             <form id="addCategoryForm" action="/marketplace/index.php?controller=categorie&action=store" method="POST" onsubmit="return validateAddCategory()">
-                <input type="text" name="nom" id="add_cat_nom" placeholder="Nom de la catégorie">
-                <textarea name="description" id="add_cat_description" placeholder="Description"></textarea>
+                <div class="form-group">
+                    <label>Nom de la catégorie <span class="required-star">*</span></label>
+                    <input type="text" name="nom" id="add_cat_nom" placeholder="Nom de la catégorie">
+                </div>
+                <div class="form-group">
+                    <label>Description</label>
+                    <textarea name="description" id="add_cat_description" placeholder="Description"></textarea>
+                </div>
                 <button type="submit" class="btn-action">Ajouter</button>
             </form>
         </div>
     </div>
 
-    <!-- MODAL MODIFICATION CATÉGORIE (sans required HTML) -->
+    <!-- MODAL MODIFICATION CATÉGORIE -->
     <div id="editCategoryModal" class="form-modal">
         <div class="form-modal-content">
             <span class="close-modal" onclick="closeModal('editCategoryModal')">&times;</span>
@@ -305,8 +364,14 @@
             <div id="editCategoryError" class="error-message"></div>
             <form id="editCategoryForm" action="/marketplace/index.php?controller=categorie&action=update" method="POST" onsubmit="return validateEditCategory()">
                 <input type="hidden" name="id" id="edit_category_id">
-                <input type="text" name="nom" id="edit_category_nom" placeholder="Nom">
-                <textarea name="description" id="edit_category_description" placeholder="Description"></textarea>
+                <div class="form-group">
+                    <label>Nom <span class="required-star">*</span></label>
+                    <input type="text" name="nom" id="edit_category_nom" placeholder="Nom">
+                </div>
+                <div class="form-group">
+                    <label>Description</label>
+                    <textarea name="description" id="edit_category_description" placeholder="Description"></textarea>
+                </div>
                 <button type="submit" class="btn-action">Mettre à jour</button>
             </form>
         </div>
@@ -342,12 +407,15 @@
             }
         }
         
-        // Validation JavaScript (sans HTML5)
+        // Validation AJOUT PRODUIT avec catégorie obligatoire
         function validateAddProduct() {
             let nom = document.getElementById('add_nom').value.trim();
             let prix = document.getElementById('add_prix').value;
             let stock = document.getElementById('add_stock').value;
+            let categorieId = document.getElementById('add_categorie_id').value;
             let errorDiv = document.getElementById('addProductError');
+            
+            errorDiv.innerHTML = '';
             
             if (nom === '') {
                 errorDiv.innerHTML = '❌ Le nom du produit est obligatoire';
@@ -361,6 +429,11 @@
             }
             if (stock !== '' && parseInt(stock) < 0) {
                 errorDiv.innerHTML = '❌ Le stock ne peut pas être négatif';
+                errorDiv.style.display = 'block';
+                return false;
+            }
+            if (categorieId === '') {
+                errorDiv.innerHTML = '❌ Veuillez sélectionner une catégorie';
                 errorDiv.style.display = 'block';
                 return false;
             }
@@ -368,11 +441,15 @@
             return true;
         }
         
+        // Validation MODIFICATION PRODUIT avec catégorie obligatoire
         function validateEditProduct() {
             let nom = document.getElementById('edit_product_nom').value.trim();
             let prix = document.getElementById('edit_product_prix').value;
             let stock = document.getElementById('edit_product_stock').value;
+            let categorieId = document.getElementById('edit_product_categorie_id').value;
             let errorDiv = document.getElementById('editProductError');
+            
+            errorDiv.innerHTML = '';
             
             if (nom === '') {
                 errorDiv.innerHTML = '❌ Le nom du produit est obligatoire';
@@ -386,6 +463,11 @@
             }
             if (stock !== '' && parseInt(stock) < 0) {
                 errorDiv.innerHTML = '❌ Le stock ne peut pas être négatif';
+                errorDiv.style.display = 'block';
+                return false;
+            }
+            if (categorieId === '') {
+                errorDiv.innerHTML = '❌ Veuillez sélectionner une catégorie';
                 errorDiv.style.display = 'block';
                 return false;
             }
@@ -422,7 +504,6 @@
         window.onclick = function(event) {
             if (event.target.classList.contains('form-modal')) {
                 event.target.classList.remove('active');
-                // Réinitialiser les erreurs
                 let errors = document.querySelectorAll('.error-message');
                 errors.forEach(e => e.style.display = 'none');
             }

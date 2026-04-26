@@ -3,83 +3,118 @@
 require_once __DIR__ . '/../model/Categorie.php';
 
 class CategorieController {
-    private $categorieModel;
+    private $db;
     
     public function __construct() {
-        $this->categorieModel = new Categorie();
+        $categorie = new Categorie();
+        $this->db = $categorie->getDb();
     }
     
-    // Vérifier si l'utilisateur est connecté
-    private function checkAuth() {
-        session_start();
-        if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
-            header('Location: /marketplace/index.php?controller=auth&action=login');
-            exit();
-        }
+    // Récupérer toutes les catégories
+    public function getAllCategories() {
+        $sql = "SELECT * FROM categories ORDER BY id DESC";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute();
+        return $stmt->fetchAll();
     }
     
-    // Afficher la liste des catégories (redirection vers Argon)
+    // Récupérer une catégorie par son ID
+    public function getCategorieById($id) {
+        $sql = "SELECT * FROM categories WHERE id = :id";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute(['id' => $id]);
+        return $stmt->fetch();
+    }
+    
+    // Ajouter une catégorie
+    public function createCategorie($nom, $description) {
+        $sql = "INSERT INTO categories (nom, description) VALUES (:nom, :description)";
+        $stmt = $this->db->prepare($sql);
+        return $stmt->execute([
+            'nom' => $nom,
+            'description' => $description
+        ]);
+    }
+    
+    // Modifier une catégorie
+    public function updateCategorie($id, $nom, $description) {
+        $sql = "UPDATE categories SET nom = :nom, description = :description WHERE id = :id";
+        $stmt = $this->db->prepare($sql);
+        return $stmt->execute([
+            'id' => $id,
+            'nom' => $nom,
+            'description' => $description
+        ]);
+    }
+    
+    // Supprimer une catégorie
+    public function deleteCategorie($id) {
+        $sql = "DELETE FROM categories WHERE id = :id";
+        $stmt = $this->db->prepare($sql);
+        return $stmt->execute(['id' => $id]);
+    }
+    
+    // ========== MÉTHODES POUR LE ROUTEUR ==========
+    
     public function index() {
-        $this->checkAuth();
         header('Location: /marketplace/view/back/pages/marketplace.php');
         exit();
     }
     
-    // Afficher le formulaire d'ajout
     public function create() {
-        $this->checkAuth();
         header('Location: /marketplace/view/back/pages/marketplace.php?action=add_category');
         exit();
     }
     
-    // Enregistrer une nouvelle catégorie
     public function store() {
-        $this->checkAuth();
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $nom = $_POST['nom'] ?? '';
             $description = $_POST['description'] ?? '';
             
             if (!empty($nom)) {
-                $this->categorieModel->create($nom, $description);
+                try {
+                    $this->createCategorie($nom, $description);
+                    $_SESSION['success_message'] = 'Catégorie ajoutée avec succès!';
+                } catch (Exception $e) {
+                    $_SESSION['error_message'] = 'Erreur lors de l\'ajout de la catégorie: ' . $e->getMessage();
+                }
+            } else {
+                $_SESSION['error_message'] = 'Le nom de la catégorie est obligatoire';
             }
-            header('Location: /marketplace/view/back/pages/marketplace.php');
-            exit();
         }
+        header('Location: /marketplace/view/back/pages/marketplace.php');
+        exit();
     }
     
-    // Afficher le formulaire de modification
     public function edit() {
-        $this->checkAuth();
         $id = $_GET['id'] ?? 0;
         header('Location: /marketplace/view/back/pages/marketplace.php?action=edit_category&id=' . $id);
         exit();
     }
     
-    // Mettre à jour une catégorie
     public function update() {
-        $this->checkAuth();
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $id = $_POST['id'] ?? 0;
             $nom = $_POST['nom'] ?? '';
             $description = $_POST['description'] ?? '';
-            $this->categorieModel->update($id, $nom, $description);
-            header('Location: /marketplace/view/back/pages/marketplace.php');
-            exit();
+            
+            if (!empty($nom) && $id > 0) {
+                $this->updateCategorie($id, $nom, $description);
+            }
         }
-    }
-    
-    // Supprimer une catégorie
-    public function delete() {
-        $this->checkAuth();
-        $id = $_GET['id'] ?? 0;
-        $this->categorieModel->delete($id);
         header('Location: /marketplace/view/back/pages/marketplace.php');
         exit();
     }
     
-    // Récupérer toutes les catégories
-    public function getAllCategories() {
-        return $this->categorieModel->getAll();
+    public function delete() {
+        $id = $_GET['id'] ?? 0;
+        
+        if ($id > 0) {
+            $this->deleteCategorie($id);
+        }
+        
+        header('Location: /marketplace/view/back/pages/marketplace.php');
+        exit();
     }
 }
 ?>
