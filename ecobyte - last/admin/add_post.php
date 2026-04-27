@@ -78,7 +78,8 @@ admin_layout_start('Nouvel article', 'add');
                 <input type="date" id="datePublication" name="datePublication" value="<?= htmlspecialchars($datePublication, ENT_QUOTES, 'UTF-8') ?>">
 
                 <label for="image">Image</label>
-                <input type="file" id="image" name="image" accept="image/*">
+                <label for="image" class="btn" style="cursor: pointer; display: inline-block;">Choisir une image</label>
+                <input type="file" id="image" name="image" accept="image/*" style="display: none;">
 
                 <label for="contenu">Contenu de l’article</label>
                 <textarea id="contenu" name="contenu" placeholder="Écrivez le texte complet ici…"><?= htmlspecialchars($contenu, ENT_QUOTES, 'UTF-8') ?></textarea>

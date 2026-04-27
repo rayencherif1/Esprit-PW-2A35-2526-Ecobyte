@@ -25,13 +25,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $pendingReplyPostId = $postId;
         $pendingReplyContent = (string) ($_POST['contenu'] ?? '');
 
+        // Gestion de l'upload d'image
+        $imagePath = null;
+        if (isset($_FILES['image']) && $_FILES['image']['error'] === UPLOAD_ERR_OK) {
+            $uploadDir = __DIR__ . '/view/uploads/';
+            if (!is_dir($uploadDir)) {
+                mkdir($uploadDir, 0755, true);
+            }
+            
+            $fileName = uniqid() . '_' . basename($_FILES['image']['name']);
+            $targetFile = $uploadDir . $fileName;
+            
+            if (move_uploaded_file($_FILES['image']['tmp_name'], $targetFile)) {
+                $imagePath = 'view/uploads/' . $fileName;
+            }
+        } else {
+            // Debug: voir pourquoi l'upload ne fonctionne pas
+            $uploadError = isset($_FILES['image']) ? $_FILES['image']['error'] : 'pas de fichier';
+        }
+
         if ($postId <= 0) {
             $flashError = 'Article invalide.';
-        } elseif ($contenu === '') {
-            $flashError = 'Le contenu est obligatoire.';
+        } elseif ($contenu === '' && $imagePath === null) {
+            $flashError = 'Le contenu ou une image est obligatoire.';
         } else {
             try {
-                $reply = new Reply(null, $contenu, null, $postId, 0, $parentReplyId);
+                $reply = new Reply(null, $contenu, $imagePath, null, $postId, 0, $parentReplyId);
                 $replyC->addReply($reply);
                 header('Location: blog.php?reply_created=1#post-' . $postId);
                 exit;
@@ -108,11 +127,21 @@ if (isset($_GET['deleted'])) {
 }
 
 try {
-    $posts = $postC->listPost();
+    $searchQuery = trim((string) ($_GET['search'] ?? ''));
+    $filterCategory = trim((string) ($_GET['category'] ?? ''));
+    if ($searchQuery !== '') {
+        $posts = $postC->searchPosts($searchQuery);
+    } elseif ($filterCategory !== '') {
+        $posts = $postC->filterPostsByCategory($filterCategory);
+    } else {
+        $posts = $postC->listPost()->fetchAll(PDO::FETCH_ASSOC);
+    }
+    $categories = $postC->getCategories();
 } catch (Exception $e) {
     http_response_code(500);
     $error = $e->getMessage();
     $posts = [];
+    $categories = [];
 }
 
 ?>
@@ -297,6 +326,19 @@ try {
           <a class="primary" href="ajouter_post.php">Ajouter un article</a>
           <a href="view/Front office/FoodMart-1.0.0/FoodMart-1.0.0/index.html">Retour au site</a>
         </nav>
+        <form method="get" action="" style="display:flex;gap:8px;">
+          <input type="text" name="search" value="<?= htmlspecialchars($searchQuery, ENT_QUOTES, 'UTF-8') ?>" placeholder="Rechercher..." style="padding:9px 12px;border:1px solid rgba(148,163,184,0.35);border-radius:12px;background:rgba(255,255,255,0.9);font-size:14px;">
+          <select name="category" onchange="this.form.submit()" style="padding:9px 12px;border:1px solid rgba(148,163,184,0.35);border-radius:12px;background:rgba(255,255,255,0.9);font-size:14px;">
+            <option value="">Toutes les catégories</option>
+            <?php foreach ($categories as $cat) { ?>
+              <option value="<?= htmlspecialchars($cat, ENT_QUOTES, 'UTF-8') ?>" <?= $filterCategory === $cat ? 'selected' : '' ?>><?= htmlspecialchars($cat, ENT_QUOTES, 'UTF-8') ?></option>
+            <?php } ?>
+          </select>
+          <button type="submit" class="btn" style="padding:9px 12px;font-size:14px;">Filtrer</button>
+          <?php if ($searchQuery !== '' || $filterCategory !== '') { ?>
+            <a href="blog.php" class="btn" style="padding:9px 12px;font-size:14px;text-decoration:none;background:#e2e8f0;color:#0f172a;">Effacer</a>
+          <?php } ?>
+        </form>
       </div>
     </header>
 
@@ -362,11 +404,12 @@ try {
                     <a class="btn btn-sm" href="ajouter_reply.php?post_id=<?= $id ?>">Répondre</a>
                   </div>
 
-                  <form class="reply-form" method="post" action="blog.php#post-<?= $id ?>">
+                  <form class="reply-form" method="post" action="blog.php#post-<?= $id ?>" enctype="multipart/form-data">
                     <input type="hidden" name="add_reply" value="1">
                     <input type="hidden" name="post_id" value="<?= $id ?>">
-                    <textarea name="contenu" placeholder="Écrivez un commentaire…"><?= htmlspecialchars($pendingReplyPostId === $id ? $pendingReplyContent : '', ENT_QUOTES, 'UTF-8') ?></textarea>
-                    <div class="reply-form-actions">
+                    <textarea name="contenu" placeholder="Écrivez un commentaire…"><?= htmlspecialchars($pendingReplyPostId === $id ? $pendingReplyContent : '', ENT_QUOTES, 'UTF-8') ?></textarea>                    <label style="display:block;margin-top:8px;font-size:12.5px;font-weight:600;">Image (optionnel)</label>
+                    <label for="image-<?= $id ?>" class="btn btn-sm" style="cursor: pointer; display: inline-block; margin-top:4px;">Choisir une image</label>
+                    <input type="file" id="image-<?= $id ?>" name="image" accept="image/*" style="display: none;">                    <div class="reply-form-actions">
                       <button type="submit" class="btn btn-sm">Publier</button>
                     </div>
                   </form>
@@ -392,6 +435,7 @@ try {
                     <?php foreach ($topReplies as $reply) {
                         $rid = (int) ($reply['id'] ?? 0);
                         $rcontenu = (string) ($reply['contenu'] ?? '');
+                        $rimage = (string) ($reply['image'] ?? '');
                         $rdate = (string) ($reply['datePublication'] ?? '');
                         $rlikes = (int) ($reply['likes'] ?? 0);
                         $userLiked = $rid > 0 && $replyC->userHasLiked($rid);
@@ -405,6 +449,9 @@ try {
                           <?php } ?>
                         </div>
                         <div class="reply-content"><?= nl2br(htmlspecialchars($rcontenu, ENT_QUOTES, 'UTF-8')) ?></div>
+                        <?php if ($rimage !== '') { ?>
+                          <img src="<?= htmlspecialchars($rimage, ENT_QUOTES, 'UTF-8') ?>" alt="Image" style="max-width:100%;border-radius:8px;margin-top:8px;">
+                        <?php } ?>
                         <?php if ($rid > 0) { ?>
                           <div class="reply-actions">
                             <button type="button" class="btn btn-sm" onclick="document.getElementById('reply-form-<?= $rid ?>').style.display='block'">💬 Répondre</button>
@@ -431,11 +478,14 @@ try {
                             <?php } ?>
                           </div>
                           <div id="reply-form-<?= $rid ?>" class="reply-form" style="display:none; margin-top:10px;">
-                            <form method="post" action="blog.php#post-<?= $id ?>">
+                            <form method="post" action="blog.php#post-<?= $id ?>" enctype="multipart/form-data">
                               <input type="hidden" name="add_reply" value="1">
                               <input type="hidden" name="post_id" value="<?= $id ?>">
                               <input type="hidden" name="parent_reply_id" value="<?= $rid ?>">
                               <textarea name="contenu" placeholder="Répondre à ce commentaire…" required></textarea>
+                              <label style="display:block;margin-top:8px;font-size:12.5px;font-weight:600;">Image (optionnel)</label>
+                              <label for="image-<?= $rid ?>" class="btn btn-sm" style="cursor: pointer; display: inline-block; margin-top:4px;">Choisir une image</label>
+                              <input type="file" id="image-<?= $rid ?>" name="image" accept="image/*" style="display: none;">
                               <div class="reply-form-actions">
                                 <button type="button" class="btn btn-sm" onclick="document.getElementById('reply-form-<?= $rid ?>').style.display='none'">Annuler</button>
                                 <button type="submit" class="btn btn-sm">Envoyer</button>
@@ -447,6 +497,7 @@ try {
                       <?php foreach ($childReplies as $childReply) {
                           $childId = (int) ($childReply['id'] ?? 0);
                           $childContenu = (string) ($childReply['contenu'] ?? '');
+                          $childImage = (string) ($childReply['image'] ?? '');
                           $childDate = (string) ($childReply['datePublication'] ?? '');
                           $childLikes = (int) ($childReply['likes'] ?? 0);
                           $childUserLiked = $childId > 0 && $replyC->userHasLiked($childId);
@@ -460,6 +511,9 @@ try {
                             <?php } ?>
                           </div>
                           <div class="reply-content"><?= nl2br(htmlspecialchars($childContenu, ENT_QUOTES, 'UTF-8')) ?></div>
+                          <?php if ($childImage !== '') { ?>
+                            <img src="<?= htmlspecialchars($childImage, ENT_QUOTES, 'UTF-8') ?>" alt="Image" style="max-width:100%;border-radius:8px;margin-top:8px;">
+                          <?php } ?>
                           <?php if ($childId > 0) { ?>
                             <div class="reply-actions">
                               <?php if ($childUserLiked) { ?>

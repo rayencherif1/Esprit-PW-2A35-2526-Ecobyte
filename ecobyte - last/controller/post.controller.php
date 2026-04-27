@@ -158,4 +158,65 @@ class PostC
             throw $e;
         }
     }
+
+    function getMostCommentedPosts(int $limit = 10)
+    {
+        $sql = "SELECT p.id, p.titre, COUNT(r.id) as reply_count 
+                FROM post p 
+                LEFT JOIN reply r ON p.id = r.post_id 
+                GROUP BY p.id 
+                ORDER BY reply_count DESC 
+                LIMIT :limit";
+        $db = config::getConnexion();
+        
+        try {
+            $stmt = $db->prepare($sql);
+            $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
+            $stmt->execute();
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (Exception $e) {
+            die('Erreur: ' . $e->getMessage());
+        }
+    }
+
+    function searchPosts(string $query)
+    {
+        $sql = "SELECT * FROM post WHERE titre LIKE :query OR contenu LIKE :query OR categorie LIKE :query ORDER BY datePublication DESC";
+        $db = config::getConnexion();
+        
+        try {
+            $stmt = $db->prepare($sql);
+            $stmt->execute(['query' => '%' . $query . '%']);
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (Exception $e) {
+            die('Erreur: ' . $e->getMessage());
+        }
+    }
+
+    function getCategories()
+    {
+        $sql = "SELECT DISTINCT categorie FROM post WHERE categorie IS NOT NULL AND categorie != '' ORDER BY categorie";
+        $db = config::getConnexion();
+        
+        try {
+            $stmt = $db->query($sql);
+            return $stmt->fetchAll(PDO::FETCH_COLUMN);
+        } catch (Exception $e) {
+            die('Erreur: ' . $e->getMessage());
+        }
+    }
+
+    function filterPostsByCategory(string $category)
+    {
+        $sql = "SELECT * FROM post WHERE categorie = :category ORDER BY datePublication DESC";
+        $db = config::getConnexion();
+        
+        try {
+            $stmt = $db->prepare($sql);
+            $stmt->execute(['category' => $category]);
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (Exception $e) {
+            die('Erreur: ' . $e->getMessage());
+        }
+    }
 }

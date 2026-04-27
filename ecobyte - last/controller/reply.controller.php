@@ -22,12 +22,13 @@ class ReplyC
     {
         try {
             $parentId = $reply->getParentReplyId();
-            $sql = 'INSERT INTO reply (id, contenu, post_id, parent_reply_id) VALUES (NULL, :contenu, :post_id, :parent_id)';
+            $sql = 'INSERT INTO reply (id, contenu, image, post_id, parent_reply_id) VALUES (NULL, :contenu, :image, :post_id, :parent_id)';
             $db = config::getConnexion();
 
             $query = $db->prepare($sql);
             $query->execute([
                 'contenu' => $reply->getContenu(),
+                'image' => $reply->getImage(),
                 'post_id' => $reply->getPostId(),
                 'parent_id' => $parentId > 0 ? $parentId : null,
             ]);

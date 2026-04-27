@@ -4,16 +4,18 @@ class Reply
 {
     private ?int $id = null;
     private ?string $contenu = null;
+    private ?string $image = null;
     private ?string $datePublication = null;
     private ?int $postId = null;
     private ?int $likes = 0;
     private ?bool $userLiked = false;
     private ?int $parentReplyId = null;
 
-    public function __construct($id = null, $contenu = null, $datePublication = null, $postId = null, $likes = 0, $parentReplyId = null)
+    public function __construct($id = null, $contenu = null, $image = null, $datePublication = null, $postId = null, $likes = 0, $parentReplyId = null)
     {
         $this->id = $id;
         $this->contenu = $contenu;
+        $this->image = $image;
         $this->datePublication = $datePublication;
         $this->postId = $postId;
         $this->likes = $likes;
@@ -33,6 +35,17 @@ class Reply
     public function setContenu($contenu)
     {
         $this->contenu = $contenu;
+        return $this;
+    }
+
+    public function getImage()
+    {
+        return $this->image;
+    }
+
+    public function setImage($image)
+    {
+        $this->image = $image;
         return $this;
     }
 

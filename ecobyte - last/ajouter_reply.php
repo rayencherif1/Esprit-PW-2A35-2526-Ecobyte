@@ -25,11 +25,27 @@ $error = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $contenu = trim((string) ($_POST['contenu'] ?? ''));
+    
+    // Gestion de l'upload d'image
+    $imagePath = null;
+    if (isset($_FILES['image']) && $_FILES['image']['error'] === UPLOAD_ERR_OK) {
+        $uploadDir = __DIR__ . '/view/uploads/';
+        if (!is_dir($uploadDir)) {
+            mkdir($uploadDir, 0755, true);
+        }
+        
+        $fileName = uniqid() . '_' . basename($_FILES['image']['name']);
+        $targetFile = $uploadDir . $fileName;
+        
+        if (move_uploaded_file($_FILES['image']['tmp_name'], $targetFile)) {
+            $imagePath = 'view/uploads/' . $fileName;
+        }
+    }
 
     if ($contenu === '') {
         $error = 'Le contenu est obligatoire.';
     } else {
-        $reply = new Reply(null, $contenu, null, $postId);
+        $reply = new Reply(null, $contenu, $imagePath, null, $postId);
         try {
             $replyC = new ReplyC();
             $replyC->addReply($reply);
@@ -88,9 +104,13 @@ $postTitre = (string) ($post['titre'] ?? '');
             <?php if ($error !== '') { ?>
                 <div class="err"><?= htmlspecialchars($error, ENT_QUOTES, 'UTF-8') ?></div>
             <?php } ?>
-            <form method="post" action="">
+            <form method="post" action="" enctype="multipart/form-data">
                 <label for="contenu">Commentaire / Réponse *</label>
                 <textarea id="contenu" name="contenu" placeholder="Écrivez votre réponse…"><?= htmlspecialchars($contenu, ENT_QUOTES, 'UTF-8') ?></textarea>
+
+                <label for="image">Image</label>
+                <label for="image" class="btn" style="cursor: pointer; display: inline-block;">Choisir une image</label>
+                <input type="file" id="image" name="image" accept="image/*" style="display: none;">
 
                 <button type="submit" class="btn">Publier</button>
                 <a href="blog.php#post-<?= $postId ?>" class="btn-ghost">Annuler</a>

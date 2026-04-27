@@ -14,6 +14,7 @@ function admin_layout_start(string $pageTitle, string $active = 'posts'): void
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title><?= htmlspecialchars($pageTitle, ENT_QUOTES, 'UTF-8') ?> — Ecobyte</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         * { box-sizing: border-box; }
         body { font-family: system-ui, sans-serif; background: #f1f5f9; color: #0f172a; margin: 0; padding: 0; min-height: 100vh; }
