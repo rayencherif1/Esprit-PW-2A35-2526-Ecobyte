@@ -86,6 +86,16 @@
         }
     }
     
+    // Calcul des statistiques
+    $totalProduits = count($produits);
+    $totalCategories = count($categories);
+    $totalCommandes = count($commandes);
+    $revenuTotal = array_sum(array_column($commandes, 'total'));
+    $produitsRupture = 0;
+    foreach($produits as $p) {
+        if($p['stock'] <= 0) $produitsRupture++;
+    }
+    
     // Messages de succès/erreur
     $successMessage = $_SESSION['success_message'] ?? '';
     $errorMessage = $_SESSION['error_message'] ?? '';
@@ -131,6 +141,97 @@
                 </div>
             </div>
         </nav>
+
+        <!-- STATISTIQUES -->
+        <div class="w-full px-6 py-6 mx-auto">
+            <div class="flex flex-wrap -mx-3">
+                <div class="w-full max-w-full px-3 mb-6 sm:w-1/2 sm:flex-none xl:mb-0 xl:w-1/4">
+                    <div class="relative flex flex-col min-w-0 break-words bg-white shadow-xl dark:bg-slate-850 dark:shadow-dark-xl rounded-2xl bg-clip-border">
+                        <div class="flex-auto p-4">
+                            <div class="flex flex-row -mx-3">
+                                <div class="flex-none w-2/3 max-w-full px-3">
+                                    <div>
+                                        <p class="mb-0 font-sans text-sm font-semibold leading-normal uppercase dark:text-white dark:opacity-60">Total Produits</p>
+                                        <h5 class="mb-2 font-bold dark:text-white"><?= $totalProduits ?></h5>
+                                        <p class="mb-0 dark:text-white dark:opacity-60">
+                                            <span class="text-sm font-bold leading-normal text-red-500"><?= $produitsRupture ?></span> en rupture
+                                        </p>
+                                    </div>
+                                </div>
+                                <div class="px-3 text-right basis-1/3">
+                                    <div class="inline-block w-12 h-12 text-center rounded-circle bg-gradient-to-tl from-blue-500 to-violet-500">
+                                        <i class="ni leading-none ni-box-2 text-lg relative top-3.5 text-white"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="w-full max-w-full px-3 mb-6 sm:w-1/2 sm:flex-none xl:mb-0 xl:w-1/4">
+                    <div class="relative flex flex-col min-w-0 break-words bg-white shadow-xl dark:bg-slate-850 dark:shadow-dark-xl rounded-2xl bg-clip-border">
+                        <div class="flex-auto p-4">
+                            <div class="flex flex-row -mx-3">
+                                <div class="flex-none w-2/3 max-w-full px-3">
+                                    <div>
+                                        <p class="mb-0 font-sans text-sm font-semibold leading-normal uppercase dark:text-white dark:opacity-60">Catégories</p>
+                                        <h5 class="mb-2 font-bold dark:text-white"><?= $totalCategories ?></h5>
+                                        <p class="mb-0 dark:text-white dark:opacity-60">Actives sur le site</p>
+                                    </div>
+                                </div>
+                                <div class="px-3 text-right basis-1/3">
+                                    <div class="inline-block w-12 h-12 text-center rounded-circle bg-gradient-to-tl from-emerald-500 to-teal-400">
+                                        <i class="ni leading-none ni-paper-diploma text-lg relative top-3.5 text-white"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="w-full max-w-full px-3 mb-6 sm:w-1/2 sm:flex-none xl:mb-0 xl:w-1/4">
+                    <div class="relative flex flex-col min-w-0 break-words bg-white shadow-xl dark:bg-slate-850 dark:shadow-dark-xl rounded-2xl bg-clip-border">
+                        <div class="flex-auto p-4">
+                            <div class="flex flex-row -mx-3">
+                                <div class="flex-none w-2/3 max-w-full px-3">
+                                    <div>
+                                        <p class="mb-0 font-sans text-sm font-semibold leading-normal uppercase dark:text-white dark:opacity-60">Commandes</p>
+                                        <h5 class="mb-2 font-bold dark:text-white"><?= $totalCommandes ?></h5>
+                                        <p class="mb-0 dark:text-white dark:opacity-60">Total reçues</p>
+                                    </div>
+                                </div>
+                                <div class="px-3 text-right basis-1/3">
+                                    <div class="inline-block w-12 h-12 text-center rounded-circle bg-gradient-to-tl from-orange-500 to-yellow-500">
+                                        <i class="ni leading-none ni-cart text-lg relative top-3.5 text-white"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="w-full max-w-full px-3 sm:w-1/2 sm:flex-none xl:w-1/4">
+                    <div class="relative flex flex-col min-w-0 break-words bg-white shadow-xl dark:bg-slate-850 dark:shadow-dark-xl rounded-2xl bg-clip-border">
+                        <div class="flex-auto p-4">
+                            <div class="flex flex-row -mx-3">
+                                <div class="flex-none w-2/3 max-w-full px-3">
+                                    <div>
+                                        <p class="mb-0 font-sans text-sm font-semibold leading-normal uppercase dark:text-white dark:opacity-60">Revenus</p>
+                                        <h5 class="mb-2 font-bold dark:text-white"><?= number_format($revenuTotal, 2) ?> DT</h5>
+                                        <p class="mb-0 dark:text-white dark:opacity-60">Chiffre d'affaires</p>
+                                    </div>
+                                </div>
+                                <div class="px-3 text-right basis-1/3">
+                                    <div class="inline-block w-12 h-12 text-center rounded-circle bg-gradient-to-tl from-red-600 to-orange-600">
+                                        <i class="ni leading-none ni-money-coins text-lg relative top-3.5 text-white"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
 
         <!-- SECTION CATÉGORIES (en haut) -->
         <div class="w-full px-6 py-6 mx-auto">
@@ -193,7 +294,7 @@
                                 <table class="table-crud">
                                     <thead>
                                         <tr>
-                                            <th>Nom</th><th>Prix (€)</th><th>Stock</th><th>Catégorie</th><th>Actions</th>
+                                            <th>Nom</th><th>Prix (DT)</th><th>Stock</th><th>Catégorie</th><th>Actions</th>
                                             <th>Commandes</th>
                                         </tr>
                                     </thead>
@@ -201,7 +302,7 @@
                                         <?php foreach($produits as $p): ?>
                                             <tr>
                                                 <td><?= htmlspecialchars($p['nom']) ?></td>
-                                                <td><?= number_format($p['prix'], 2) ?> €</td>
+                                                <td><?= number_format($p['prix'], 2) ?> DT</td>
                                                 <td><?= $p['stock'] ?></td>
                                                 <td><?= htmlspecialchars($p['categorie_nom'] ?? '—') ?></td>
                                                 <td>
@@ -221,7 +322,7 @@
                                                                     <th>Client</th>
                                                                     <th>Email</th>
                                                                     <th>Date</th>
-                                                                    <th>Total (€)</th>
+                                                                    <th>Total (DT)</th>
                                                                     <th>Quantité</th>
                                                                 </tr>
                                                             </thead>
@@ -231,7 +332,7 @@
                                                                         <td><?= htmlspecialchars($ord['client']) ?></td>
                                                                         <td><?= htmlspecialchars($ord['email']) ?></td>
                                                                         <td><?= $ord['date'] ?></td>
-                                                                        <td><?= number_format($ord['total'], 2) ?> €</td>
+                                                                        <td><?= number_format($ord['total'], 2) ?> DT</td>
                                                                         <td><?= $ord['quantite'] ?></td>
                                                                     </tr>
                                                                 <?php endforeach; ?>
@@ -273,7 +374,7 @@
                     <input type="text" name="nom" id="add_nom" placeholder="Nom du produit">
                 </div>
                 <div class="form-group">
-                    <label>Prix (€) <span class="required-star">*</span></label>
+                    <label>Prix (DT) <span class="required-star">*</span></label>
                     <input type="number" name="prix" id="add_prix" step="0.01" placeholder="Prix">
                 </div>
                 <div class="form-group">
@@ -311,7 +412,7 @@
                     <input type="text" name="nom" id="edit_product_nom" placeholder="Nom du produit">
                 </div>
                 <div class="form-group">
-                    <label>Prix (€) <span class="required-star">*</span></label>
+                    <label>Prix (DT) <span class="required-star">*</span></label>
                     <input type="number" name="prix" step="0.01" id="edit_product_prix" placeholder="Prix">
                 </div>
                 <div class="form-group">

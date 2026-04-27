@@ -1,10 +1,85 @@
 <?php
 require_once __DIR__ . '/../../controller/ProduitController.php';
 require_once __DIR__ . '/../../controller/FavorisController.php';
+require_once __DIR__ . '/../../controller/CategorieController.php';
 require_once __DIR__ . '/../../model/Produit.php';
 
+$categorieController = new CategorieController();
+$categories = $categorieController->getAllCategories();
+
 $produitController = new ProduitController();
-$produits = $produitController->getAllProduits();
+$selected_category_name = 'Produits tendances';
+
+if (isset($_GET['search']) && !empty(trim($_GET['search']))) {
+    $produits = $produitController->searchProduits(trim($_GET['search']));
+    $selected_category_name = 'Résultats pour : "' . htmlspecialchars(trim($_GET['search'])) . '"';
+} elseif (isset($_GET['filter']) && !empty($_GET['filter'])) {
+    if ($_GET['filter'] == 'promo') {
+        $produits = $produitController->getProduitsEnPromo();
+        $selected_category_name = 'Produits en promotion';
+    } elseif ($_GET['filter'] == 'tendances') {
+        $produits = $produitController->getProduitsTendances();
+        $selected_category_name = 'Produits tendances';
+    } elseif ($_GET['filter'] == 'nouveautes') {
+        $produits = $produitController->getNouveauxProduits();
+        $selected_category_name = 'Nouveautés';
+    } else {
+        $produits = $produitController->getAllProduits();
+    }
+} elseif (isset($_GET['categorie_id']) && !empty($_GET['categorie_id'])) {
+    $produits = $produitController->getProduitsByCategorie($_GET['categorie_id']);
+    
+    // Trouver le nom de la catégorie pour l'affichage
+    foreach ($categories as $cat) {
+        if ($cat['id'] == $_GET['categorie_id']) {
+            $selected_category_name = 'Produits : ' . htmlspecialchars($cat['nom']);
+            break;
+        }
+    }
+} else {
+    $produits = $produitController->getAllProduits();
+}
+
+// Fonction pour déterminer l'icône de la catégorie
+function getCategoryIcon($nom) {
+    $nomLower = strtolower(trim($nom));
+    if (strpos($nomLower, 'fruit') !== false || strpos($nomLower, 'légume') !== false || strpos($nomLower, 'legume') !== false) {
+        return 'images/icon-vegetables-broccoli.png';
+    } elseif (strpos($nomLower, 'boulangerie') !== false || strpos($nomLower, 'pain') !== false || strpos($nomLower, 'viennoiserie') !== false) {
+        return 'images/icon-bread-baguette.png';
+    } elseif (strpos($nomLower, 'jus') !== false || strpos($nomLower, 'smoothie') !== false || strpos($nomLower, 'boisson') !== false) {
+        return 'images/icon-soft-drinks-bottle.png';
+    } elseif (strpos($nomLower, 'épicerie') !== false || strpos($nomLower, 'epicerie') !== false || strpos($nomLower, 'fine') !== false) {
+        return 'images/icon-wine-glass-bottle.png';
+    } elseif (strpos($nomLower, 'frais') !== false || strpos($nomLower, 'viande') !== false || strpos($nomLower, 'fromage') !== false) {
+        return 'images/icon-animal-products-drumsticks.png';
+    } else {
+        return '';
+    }
+}
+
+// Fonction pour déterminer une image cohérente pour les produits
+function getProductImage($nom) {
+    $nomLower = strtolower(trim($nom));
+    if (strpos($nomLower, 'boisson') !== false || strpos($nomLower, 'jus') !== false || strpos($nomLower, 'smoothie') !== false || strpos($nomLower, 'guarana') !== false) {
+        return 'images/product-thumb-1.png';
+    } elseif (strpos($nomLower, 'dattes') !== false || strpos($nomLower, 'pâte') !== false || strpos($nomLower, 'barre') !== false) {
+        return 'images/thumb-biscuits.png';
+    } elseif (strpos($nomLower, 'banane') !== false) {
+        return 'images/thumb-bananas.png';
+    } elseif (strpos($nomLower, 'tomate') !== false) {
+        return 'images/thumb-tomatoes.png';
+    } elseif (strpos($nomLower, 'lait') !== false || strpos($nomLower, 'milk') !== false) {
+        return 'images/thumb-milk.png';
+    } elseif (strpos($nomLower, 'poudre') !== false || strpos($nomLower, 'collagène') !== false || strpos($nomLower, 'glutamine') !== false || strpos($nomLower, 'électrolytes') !== false || strpos($nomLower, 'kreatine') !== false) {
+        // Une image par défaut pour les poudres/suppléments (on utilise une image de pot ou générique si possible)
+        // Faute de pot de poudre, on utilise l'image du lait ou avocat comme fallback "santé"
+        return 'images/thumb-milk.png'; 
+    } else {
+        // Image par défaut générique
+        return 'images/product-thumb-11.jpg'; // Essai d'une image générique
+    }
+}
 
 // Récupérer les IDs des favoris en une seule requête
 session_start();
@@ -28,6 +103,11 @@ if ($db) {
 }
 
 session_write_close(); // Fermer la session
+
+// Récupérer les 3 premières catégories pour les bannières publicitaires
+$catPromo1 = $categories[0] ?? ['nom' => 'Alimentation saine', 'description' => 'Des produits frais, locaux et de saison pour une alimentation saine.'];
+$catPromo2 = $categories[1] ?? ['nom' => 'Produits Bio', 'description' => ''];
+$catPromo3 = $categories[2] ?? ['nom' => 'Suppléments', 'description' => ''];
 ?>
 <!DOCTYPE html>
 <html lang="fr">
@@ -92,6 +172,22 @@ session_write_close(); // Fermer la session
         .btn-wishlist {
             cursor: pointer;
         }
+        .product-img-wrapper {
+            height: 180px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 15px;
+        }
+        .product-img-wrapper img {
+            max-height: 100%;
+            max-width: 100%;
+            object-fit: contain;
+        }
+        .hover-bg-light:hover {
+            background-color: #f8f9fa !important;
+            transition: background-color 0.2s;
+        }
     </style>
 </head>
 <body>
@@ -123,12 +219,23 @@ session_write_close(); // Fermer la session
         </a>
       </div>
       <div class="col-sm-6 offset-sm-2 offset-md-0 col-lg-5 d-none d-lg-block">
-        <div class="search-bar row bg-light p-2 my-2 rounded-4">
-          <div class="col-11">
-            <input type="text" class="form-control border-0 bg-transparent" placeholder="Rechercher un produit...">
+        <form action="index2.php" method="GET" class="search-bar row bg-light p-2 my-2 rounded-4 m-0 w-100 position-relative">
+          <div class="col-4 col-md-3 border-end p-0">
+            <select name="search_categorie" class="form-select border-0 bg-transparent shadow-none w-100 text-truncate" style="cursor:pointer; font-size: 14px;">
+              <option value="">Toutes catégories</option>
+              <?php foreach($categories as $cat): ?>
+                <option value="<?= $cat['id'] ?>" <?= (isset($_GET['search_categorie']) && $_GET['search_categorie'] == $cat['id']) ? 'selected' : '' ?>><?= htmlspecialchars($cat['nom']) ?></option>
+              <?php endforeach; ?>
+            </select>
           </div>
-          <div class="col-1"><svg width="24" height="24"><use xlink:href="#search"></use></svg></div>
-        </div>
+          <div class="col-7 col-md-8">
+            <input type="text" name="search" id="live_search_input" class="form-control border-0 bg-transparent shadow-none" placeholder="Rechercher un produit..." value="<?= htmlspecialchars($_GET['search'] ?? '') ?>" autocomplete="off">
+          </div>
+          <div class="col-1 p-0 text-center"><button type="submit" class="btn p-0 border-0 bg-transparent"><svg width="24" height="24"><use xlink:href="#search"></use></svg></button></div>
+          
+          <!-- Live Search Results -->
+          <div id="live_search_results" class="position-absolute w-100 bg-white shadow-lg rounded-3" style="top: 100%; left: 0; z-index: 1050; display: none; max-height: 350px; overflow-y: auto;"></div>
+        </form>
       </div>
       <div class="col-sm-8 col-lg-4 d-flex justify-content-end gap-3 align-items-center">
         <div class="support-box text-end d-none d-xl-block">
@@ -159,10 +266,10 @@ session_write_close(); // Fermer la session
             <div class="swiper-slide">
               <div class="row banner-content p-5">
                 <div class="content-wrapper col-md-7">
-                  <div class="categories my-3">100% naturel</div>
-                  <h3 class="display-4">Jus frais & smoothies</h3>
-                  <p>Des produits frais, locaux et de saison pour une alimentation saine.</p>
-                  <a href="#" class="btn btn-outline-dark btn-lg text-uppercase fs-6 rounded-1 px-4 py-3 mt-3">Découvrir</a>
+                  <div class="categories my-3">Notre Sélection</div>
+                  <h3 class="display-4">Produits Tendances</h3>
+                  <p>Découvrez les produits les plus appréciés et les plus vendus de notre boutique.</p>
+                  <a href="?filter=tendances#produits-section" class="btn btn-outline-dark btn-lg text-uppercase fs-6 rounded-1 px-4 py-3 mt-3">Découvrir</a>
                 </div>
                 <div class="img-wrapper col-md-5"><img src="images/product-thumb-1.png" class="img-fluid"></div>
               </div>
@@ -174,18 +281,18 @@ session_write_close(); // Fermer la session
       <div class="banner-ad bg-success-subtle block-2" style="background:url('images/ad-image-1.png') no-repeat; background-position: right bottom">
         <div class="row banner-content p-5">
           <div class="content-wrapper col-md-7">
-            <div class="categories sale mb-3 pb-3">-20%</div>
-            <h3 class="banner-title">Fruits & Légumes</h3>
-            <a href="#" class="d-flex align-items-center nav-link">Voir la collection <svg width="24" height="24"><use xlink:href="#arrow-right"></use></svg></a>
+            <div class="categories sale mb-3 pb-3">En Promo</div>
+            <h3 class="banner-title">Produits Soldés</h3>
+            <a href="?filter=promo#produits-section" class="d-flex align-items-center nav-link">Voir les promos <svg width="24" height="24"><use xlink:href="#arrow-right"></use></svg></a>
           </div>
         </div>
       </div>
       <div class="banner-ad bg-danger block-3" style="background:url('images/ad-image-2.png') no-repeat; background-position: right bottom">
         <div class="row banner-content p-5">
           <div class="content-wrapper col-md-7">
-            <div class="categories sale mb-3 pb-3">-15%</div>
-            <h3 class="item-title">Produits du terroir</h3>
-            <a href="#" class="d-flex align-items-center nav-link">Voir la collection <svg width="24" height="24"><use xlink:href="#arrow-right"></use></svg></a>
+            <div class="categories sale mb-3 pb-3">À Découvrir</div>
+            <h3 class="item-title">Nouveautés</h3>
+            <a href="?filter=nouveautes#produits-section" class="d-flex align-items-center nav-link">Voir la collection <svg width="24" height="24"><use xlink:href="#arrow-right"></use></svg></a>
           </div>
         </div>
       </div>
@@ -208,24 +315,33 @@ session_write_close(); // Fermer la session
     </div>
     <div class="category-carousel swiper">
       <div class="swiper-wrapper">
-        <a href="#" class="nav-link category-item swiper-slide"><img src="images/icon-vegetables-broccoli.png"><h3 class="category-title">Fruits & Légumes</h3></a>
-        <a href="#" class="nav-link category-item swiper-slide"><img src="images/icon-bread-baguette.png"><h3 class="category-title">Boulangerie bio</h3></a>
-        <a href="#" class="nav-link category-item swiper-slide"><img src="images/icon-soft-drinks-bottle.png"><h3 class="category-title">Jus & smoothies</h3></a>
-        <a href="#" class="nav-link category-item swiper-slide"><img src="images/icon-wine-glass-bottle.png"><h3 class="category-title">Épicerie fine</h3></a>
-        <a href="#" class="nav-link category-item swiper-slide"><img src="images/icon-animal-products-drumsticks.png"><h3 class="category-title">Produits frais</h3></a>
-        <a href="#" class="nav-link category-item swiper-slide"><img src="images/icon-bread-herb-flour.png"><h3 class="category-title">Pains & viennoiseries</h3></a>
+        <?php foreach($categories as $categorie): ?>
+        <a href="?categorie_id=<?= $categorie['id'] ?>#produits-section" class="nav-link category-item swiper-slide">
+            <?php $icon = getCategoryIcon($categorie['nom']); if (!empty($icon)): ?>
+                <img src="<?= $icon ?>" alt="<?= htmlspecialchars($categorie['nom']) ?>">
+            <?php endif; ?>
+            <h3 class="category-title"><?= htmlspecialchars($categorie['nom']) ?></h3>
+        </a>
+        <?php endforeach; ?>
       </div>
     </div>
   </div>
 </section>
 
 <!-- Trending Products -->
-<section class="py-5">
+<section id="produits-section" class="py-5">
   <div class="container-fluid">
     <div class="bootstrap-tabs product-tabs">
       <div class="tabs-header d-flex justify-content-between border-bottom my-5">
-        <h3>Produits tendances</h3>
-        <nav><div class="nav nav-tabs"><a href="#" class="nav-link text-uppercase fs-6 active">Tous</a></div></nav>
+        <h3><?= $selected_category_name ?></h3>
+        <nav>
+          <div class="nav nav-tabs">
+            <a href="?#produits-section" class="nav-link text-uppercase fs-6 <?= (!isset($_GET['filter']) && !isset($_GET['categorie_id']) && !isset($_GET['search'])) ? 'active' : '' ?>">Tous</a>
+            <a href="?filter=nouveautes#produits-section" class="nav-link text-uppercase fs-6 <?= (isset($_GET['filter']) && $_GET['filter'] == 'nouveautes') ? 'active' : '' ?>">Nouveautés</a>
+            <a href="?filter=tendances#produits-section" class="nav-link text-uppercase fs-6 <?= (isset($_GET['filter']) && $_GET['filter'] == 'tendances') ? 'active' : '' ?>">Tendances</a>
+            <a href="?filter=promo#produits-section" class="nav-link text-uppercase fs-6 <?= (isset($_GET['filter']) && $_GET['filter'] == 'promo') ? 'active' : '' ?>">En Promo</a>
+          </div>
+        </nav>
       </div>
       <div class="tab-content">
         <div class="tab-pane fade show active">
@@ -239,12 +355,14 @@ session_write_close(); // Fermer la session
                     <path d="M20.16 4.61A6.27 6.27 0 0 0 12 4a6.27 6.27 0 0 0-8.16 9.48l7.45 7.45a1 1 0 0 0 1.42 0l7.45-7.45a6.27 6.27 0 0 0 0-8.87Z"/>
                   </svg>
                 </a>
-                <figure><a href="#"><img src="images/thumb-bananas.png" class="tab-image"></a></figure>
+                <figure class="product-img-wrapper">
+                    <a href="#"><img src="<?= getProductImage($produit['nom']) ?>" class="tab-image"></a>
+                </figure>
                 <h3><?= htmlspecialchars($produit['nom']) ?></h3>
                 <span class="qty"><?= $produit['stock'] ?> unités</span>
                 <span class="rating"><svg width="24" height="24"><use xlink:href="#star-solid"></use></svg> 4.5</span>
-                <span class="price"><?= number_format($produit['prix'],2) ?> €</span>
-                <div class="d-flex align-items-center justify-content-between">
+                <span class="price"><?= number_format($produit['prix'],2) ?> DT</span>
+                <div class="d-flex align-items-center justify-content-between mt-3">
                   <div class="input-group product-qty">
                     <span class="input-group-btn">
                       <button class="quantity-left-minus btn btn-danger btn-number" data-type="minus" data-id="<?= $produit['id'] ?>">
@@ -295,12 +413,14 @@ session_write_close(); // Fermer la session
               <path d="M20.16 4.61A6.27 6.27 0 0 0 12 4a6.27 6.27 0 0 0-8.16 9.48l7.45 7.45a1 1 0 0 0 1.42 0l7.45-7.45a6.27 6.27 0 0 0 0-8.87Z"/>
             </svg>
           </a>
-          <figure><a href="#"><img src="images/thumb-tomatoes.png" class="tab-image"></a></figure>
+          <figure class="product-img-wrapper">
+            <a href="#"><img src="<?= getProductImage($produit['nom']) ?>" class="tab-image"></a>
+          </figure>
           <h3><?= htmlspecialchars($produit['nom']) ?></h3>
           <span class="qty"><?= $produit['stock'] ?> unités</span>
           <span class="rating"><svg width="24" height="24"><use xlink:href="#star-solid"></use></svg> 4.5</span>
-          <span class="price"><?= number_format($produit['prix'],2) ?> €</span>
-          <div class="d-flex align-items-center justify-content-between">
+          <span class="price"><?= number_format($produit['prix'],2) ?> DT</span>
+          <div class="d-flex align-items-center justify-content-between mt-3">
             <div class="input-group product-qty">
               <span class="input-group-btn">
                 <button class="quantity-left-minus btn btn-danger btn-number" data-type="minus" data-id="<?= $produit['id'] ?>">
@@ -428,5 +548,67 @@ function addToFavoris(produitId, element) {
 }
 </script>
 
+  <script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const searchInput = document.getElementById('live_search_input');
+        const searchResults = document.getElementById('live_search_results');
+        const searchCat = document.querySelector('select[name="search_categorie"]');
+
+        let timeoutId = null;
+
+        searchInput.addEventListener('keyup', function() {
+            clearTimeout(timeoutId);
+            const query = this.value.trim();
+            const catId = searchCat.value;
+
+            if (query.length > 0) {
+                timeoutId = setTimeout(() => {
+                    fetch(`ajax_search.php?query=${encodeURIComponent(query)}&cat_id=${catId}`)
+                        .then(response => response.json())
+                        .then(data => {
+                            searchResults.innerHTML = '';
+                            if (data.length > 0) {
+                                data.forEach(item => {
+                                    const div = document.createElement('a');
+                                    div.href = item.url;
+                                    div.className = 'd-block p-3 border-bottom text-decoration-none text-dark hover-bg-light';
+                                    div.innerHTML = `
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <div>
+                                                <strong>${item.nom}</strong>
+                                                <div class="text-muted small">${item.categorie}</div>
+                                            </div>
+                                            <span class="text-success fw-bold">${item.prix} DT</span>
+                                        </div>`;
+                                    searchResults.appendChild(div);
+                                });
+                                searchResults.style.display = 'block';
+                            } else {
+                                searchResults.innerHTML = '<div class="p-3 text-muted text-center">Aucun produit trouvé.</div>';
+                                searchResults.style.display = 'block';
+                            }
+                        })
+                        .catch(err => console.error("Erreur de recherche", err));
+                }, 300);
+            } else {
+                searchResults.style.display = 'none';
+            }
+        });
+
+        // Cacher les résultats si on clique ailleurs
+        document.addEventListener('click', function(e) {
+            if (!searchInput.contains(e.target) && !searchResults.contains(e.target) && !searchCat.contains(e.target)) {
+                searchResults.style.display = 'none';
+            }
+        });
+        
+        // Mettre à jour la recherche si on change de catégorie
+        searchCat.addEventListener('change', function() {
+            if(searchInput.value.trim().length > 0) {
+                searchInput.dispatchEvent(new Event('keyup'));
+            }
+        });
+    });
+  </script>
 </body>
 </html>

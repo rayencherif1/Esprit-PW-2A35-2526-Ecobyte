@@ -32,6 +32,64 @@ class ProduitController {
         return $stmt->fetchAll();
     }
     
+    // Récupérer les produits par catégorie
+    public function getProduitsByCategorie($categorie_id) {
+        $sql = "SELECT p.*, c.nom as categorie_nom 
+                FROM produits p 
+                LEFT JOIN categories c ON p.categorie_id = c.id 
+                WHERE p.categorie_id = :categorie_id
+                ORDER BY p.id DESC";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute(['categorie_id' => $categorie_id]);
+        return $stmt->fetchAll();
+    }
+    
+    // Récupérer les produits en promotion
+    public function getProduitsEnPromo() {
+        $sql = "SELECT p.*, c.nom as categorie_nom 
+                FROM produits p 
+                LEFT JOIN categories c ON p.categorie_id = c.id 
+                WHERE p.is_promo = 1
+                ORDER BY p.id DESC";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute();
+        return $stmt->fetchAll();
+    }
+    
+    // Récupérer les produits tendances (les plus vendus)
+    public function getProduitsTendances() {
+        $sql = "SELECT p.*, c.nom as categorie_nom 
+                FROM produits p 
+                LEFT JOIN categories c ON p.categorie_id = c.id 
+                ORDER BY p.ventes DESC LIMIT 15";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute();
+        return $stmt->fetchAll();
+    }
+    
+    // Récupérer les nouveautés
+    public function getNouveauxProduits() {
+        $sql = "SELECT p.*, c.nom as categorie_nom 
+                FROM produits p 
+                LEFT JOIN categories c ON p.categorie_id = c.id 
+                ORDER BY p.date_ajout DESC LIMIT 15";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute();
+        return $stmt->fetchAll();
+    }
+    
+    // Rechercher des produits
+    public function searchProduits($query) {
+        $sql = "SELECT p.*, c.nom as categorie_nom 
+                FROM produits p 
+                LEFT JOIN categories c ON p.categorie_id = c.id 
+                WHERE p.nom LIKE :query OR p.description LIKE :query OR c.nom LIKE :query
+                ORDER BY p.id DESC";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute(['query' => '%' . $query . '%']);
+        return $stmt->fetchAll();
+    }
+    
     // Récupérer un produit par son ID
     public function getProduitById($id) {
         $sql = "SELECT * FROM produits WHERE id = :id";

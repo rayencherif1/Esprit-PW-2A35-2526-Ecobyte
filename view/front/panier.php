@@ -86,9 +86,9 @@ foreach ($panier as $id => $item) {
                             <?php foreach($produits as $p): ?>
                             <tr>
                                 <td><?= htmlspecialchars($p['nom']) ?></td>
-                                <td><?= number_format($p['prix'], 2) ?> €</td>
+                                <td><?= number_format($p['prix'], 2) ?> DT</td>
                                 <td><?= $p['quantite'] ?></td>
-                                <td><?= number_format($p['sous_total'], 2) ?> €</td>
+                                <td><?= number_format($p['sous_total'], 2) ?> DT</td>
                                 <td><a href="/marketplace/index.php?controller=commande&action=removeFromPanier&id=<?= $p['id'] ?>" class="btn-remove" onclick="return confirm('Retirer ce produit ?')">Retirer</a></td>
                             </tr>
                             <?php endforeach; ?>
@@ -96,15 +96,15 @@ foreach ($panier as $id => $item) {
                         <tfoot class="table-light">
                             <tr class="fw-bold">
                                 <td colspan="3" class="text-end">Sous-total :</td>
-                                <td colspan="2" id="subtotal"><?= number_format($total, 2) ?> €</td>
+                                <td colspan="2" id="subtotal"><?= number_format($total, 2) ?> DT</td>
                             </tr>
                             <tr class="fw-bold" id="deliveryFeeRow" style="display: none;">
                                 <td colspan="3" class="text-end">Frais de livraison :</td>
-                                <td colspan="2" id="deliveryFee">0.00 €</td>
+                                <td colspan="2" id="deliveryFee">0.00 DT</td>
                             </tr>
                             <tr class="fw-bold bg-success text-white">
                                 <td colspan="3" class="text-end">Total TTC :</td>
-                                <td colspan="2" id="grandTotal"><?= number_format($total, 2) ?> €</td>
+                                <td colspan="2" id="grandTotal"><?= number_format($total, 2) ?> DT</td>
                             </tr>
                         </tfoot>
                     </table>
@@ -206,7 +206,7 @@ foreach ($panier as $id => $item) {
                                     </div>
                                     <div class="delivery-option" data-price="5.90" data-method="express" onclick="selectDelivery(this, 'express', 5.90)">
                                         <strong>⚡ Livraison express</strong>
-                                        <span class="price-badge">+5,90 €</span>
+                                        <span class="price-badge">+5,90 DT</span>
                                         <small class="d-block text-muted">Sous 24h-48h</small>
                                     </div>
                                     <div class="delivery-option" data-price="0" data-method="pickup" onclick="selectDelivery(this, 'pickup', 0)">
@@ -417,12 +417,12 @@ foreach ($panier as $id => $item) {
         
         if (deliveryPrice > 0) {
             deliveryFeeRow.style.display = 'table-row';
-            deliveryFeeSpan.innerHTML = deliveryPrice.toFixed(2) + ' €';
+            deliveryFeeSpan.innerHTML = deliveryPrice.toFixed(2) + ' DT';
         } else {
             deliveryFeeRow.style.display = 'none';
         }
         
-        grandTotalSpan.innerHTML = total.toFixed(2) + ' €';
+        grandTotalSpan.innerHTML = total.toFixed(2) + ' DT';
     }
     
     // Application code promo

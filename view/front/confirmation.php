@@ -70,31 +70,31 @@
                         <tr>
                             <td><?= htmlspecialchars($p['nom']) ?></td>
                             <td class="text-center"><?= $p['quantite'] ?></td>
-                            <td class="text-end"><?= number_format($p['prix'], 2) ?> €</td>
-                            <td class="text-end"><?= number_format($total_produit, 2) ?> €</td>
+                            <td class="text-end"><?= number_format($p['prix'], 2) ?> DT</td>
+                            <td class="text-end"><?= number_format($total_produit, 2) ?> DT</td>
                         </tr>
                         <?php endforeach; ?>
                     </tbody>
                     <tfoot class="table-light">
                         <tr>
                             <td colspan="3" class="text-end fw-bold">Sous-total :</td>
-                            <td class="text-end"><?= number_format($sous_total, 2) ?> €</td>
+                            <td class="text-end"><?= number_format($sous_total, 2) ?> DT</td>
                         </tr>
                         <?php if(($commande['frais_livraison'] ?? 0) > 0): ?>
                         <tr>
                             <td colspan="3" class="text-end fw-bold">Frais de livraison :</td>
-                            <td class="text-end"><?= number_format($commande['frais_livraison'], 2) ?> €</td>
+                            <td class="text-end"><?= number_format($commande['frais_livraison'], 2) ?> DT</td>
                         </tr>
                         <?php endif; ?>
                         <?php if(!empty($commande['code_promo'])): ?>
                         <tr>
                             <td colspan="3" class="text-end fw-bold">Code promo (<?= htmlspecialchars($commande['code_promo']) ?>) :</td>
-                            <td class="text-end text-danger">-<?= number_format($sous_total - ($commande['total'] - ($commande['frais_livraison'] ?? 0)), 2) ?> €</td>
+                            <td class="text-end text-danger">-<?= number_format($sous_total - ($commande['total'] - ($commande['frais_livraison'] ?? 0)), 2) ?> DT</td>
                         </tr>
                         <?php endif; ?>
                         <tr class="table-success fw-bold">
                             <td colspan="3" class="text-end fs-5">Total TTC :</td>
-                            <td class="text-end fs-5"><?= number_format($commande['total'], 2) ?> €</td>
+                            <td class="text-end fs-5"><?= number_format($commande['total'], 2) ?> DT</td>
                         </tr>
                     </tfoot>
                 </table>
@@ -180,7 +180,7 @@
                     <?php if(($commande['frais_livraison'] ?? 0) > 0): ?>
                     <div class="info-row">
                         <div class="info-label">Frais :</div>
-                        <div class="info-value"><?= number_format($commande['frais_livraison'], 2) ?> €</div>
+                        <div class="info-value"><?= number_format($commande['frais_livraison'], 2) ?> DT</div>
                     </div>
                     <?php endif; ?>
                 </div>
