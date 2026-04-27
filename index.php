@@ -35,43 +35,45 @@ try {
         // ========== BACK OFFICE (ADMIN) ==========
         
         switch ($action) {
-            case 'sign-in':
-                // Page de connexion admin
-                if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-                    $email = $_POST['email'] ?? '';
-                    $password = $_POST['password'] ?? '';
-                    
-                    if ($email === 'admin2026' && $password === 'adminadmin') {
-                        $_SESSION['admin_logged_in'] = true;
-                        header('Location: ?section=back&action=users');
-                        exit;
-                    } else {
-                        $errors[] = "Identifiants admin incorrects";
-                    }
-                }
-                require __DIR__ . '/view/back/sign-in.php';
-                break;
-
-            case 'logout':
-                unset($_SESSION['admin_logged_in']);
-                header('Location: ?section=back&action=sign-in');
-                exit;
-
             case 'users':
-                // Vérifier si l'admin est connecté
-                if (!isset($_SESSION['admin_logged_in'])) {
-                    header('Location: ?section=back&action=sign-in');
+                // Vérifier si l'admin est connecté via son rôle
+                if (!isset($_SESSION['logged_in']) || $_SESSION['user_role'] !== 'admin') {
+                    header('Location: ?section=front&action=sign-in');
                     exit;
                 }
                 $userController = new UserController();
-                $users = $userController->listUsers();
+                $search = $_GET['search'] ?? null;
+                $sort = $_GET['sort'] ?? 'date_creation';
+                $order = $_GET['order'] ?? 'DESC';
+                
+                $users = $userController->listUsers($search, $sort, $order);
+                
+                if (isset($_GET['ajax']) && $_GET['ajax'] == '1') {
+                    require __DIR__ . '/view/back/users_list_partial.php';
+                    exit;
+                }
+                
                 require __DIR__ . '/view/back/users.php';
+                break;
+
+            case 'exportPDF':
+                if (!isset($_SESSION['logged_in']) || $_SESSION['user_role'] !== 'admin') {
+                    header('Location: ?section=front&action=sign-in');
+                    exit;
+                }
+                $userController = new UserController();
+                $search = $_GET['search'] ?? null;
+                $sort = $_GET['sort'] ?? 'date_creation';
+                $order = $_GET['order'] ?? 'DESC';
+                
+                $users = $userController->listUsers($search, $sort, $order);
+                require __DIR__ . '/view/back/export-users-pdf.php';
                 break;
 
             case 'addUser':
             case 'editUser':
-                if (!isset($_SESSION['admin_logged_in'])) {
-                    header('Location: ?section=back&action=sign-in');
+                if (!isset($_SESSION['logged_in']) || $_SESSION['user_role'] !== 'admin') {
+                    header('Location: ?section=front&action=sign-in');
                     exit;
                 }
                 
@@ -99,8 +101,8 @@ try {
                 break;
 
             case 'deleteUser':
-                if (!isset($_SESSION['admin_logged_in'])) {
-                    header('Location: ?section=back&action=sign-in');
+                if (!isset($_SESSION['logged_in']) || $_SESSION['user_role'] !== 'admin') {
+                    header('Location: ?section=front&action=sign-in');
                     exit;
                 }
                 $userController = new UserController();
@@ -108,10 +110,21 @@ try {
                 header('Location: ?section=back&action=users');
                 exit;
 
+            case 'banUser':
+                if (!isset($_SESSION['logged_in']) || $_SESSION['user_role'] !== 'admin') {
+                    header('Location: ?section=front&action=sign-in');
+                    exit;
+                }
+                $userController = new UserController();
+                $userController->banUser((int)$_GET['id'], $_GET['duration'] ?? '1d');
+                header('Location: ?section=back&action=users');
+                exit;
+
+            case 'sign-in':
             case 'home':
             default:
-                if (!isset($_SESSION['admin_logged_in'])) {
-                    header('Location: ?section=back&action=sign-in');
+                if (!isset($_SESSION['logged_in']) || $_SESSION['user_role'] !== 'admin') {
+                    header('Location: ?section=front&action=sign-in');
                     exit;
                 }
                 header('Location: ?section=back&action=users');
@@ -129,6 +142,21 @@ try {
             case 'signup':
                 // Page d'inscription client
                 require __DIR__ . '/view/front/signup.php';
+                break;
+
+            case 'forgot-password':
+                // Page mot de passe oublié
+                require __DIR__ . '/view/front/forgot-password.php';
+                break;
+
+            case 'verify-code':
+                // Page de vérification du code
+                require __DIR__ . '/view/front/verify-code.php';
+                break;
+
+            case 'change-password':
+                // Page de changement de mot de passe
+                require __DIR__ . '/view/front/change-password.php';
                 break;
 
             case 'logout':

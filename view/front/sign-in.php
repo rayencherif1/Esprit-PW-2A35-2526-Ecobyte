@@ -12,8 +12,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $user = $userController->login($email, $password);
     
     if ($user) {
-        // Succès
-        header('Location: ?section=front&action=home');
+        if (isset($_SESSION['user_role']) && $_SESSION['user_role'] === 'admin') {
+            header('Location: ?section=back&action=users');
+        } else {
+            header('Location: ?section=front&action=home');
+        }
         exit;
     } else {
         $errors = $userController->getErrors();
@@ -61,7 +64,7 @@ $errors = $errors ?? [];
                 <div class="col-md-6 offset-md-3 col-lg-4 offset-lg-4">
                     <div class="card shadow-lg border-0">
                         <div class="card-body p-5">
-                            <h2 class="card-title text-center mb-4">Connexion Client</h2>
+                            <h2 class="card-title text-center mb-4">Connexion</h2>
 
                             <!-- Messages d'erreur -->
                             <?php if (!empty($errors)): ?>
@@ -76,7 +79,7 @@ $errors = $errors ?? [];
                                 </div>
                             <?php endif; ?>
 
-                            <form method="POST" id="loginForm">
+                            <form method="POST" id="loginForm" novalidate>
                                 <div class="mb-3">
                                     <label for="email" class="form-label">Email</label>
                                     <input type="email" class="form-control" id="email" name="email" 
@@ -84,7 +87,10 @@ $errors = $errors ?? [];
                                 </div>
 
                                 <div class="mb-3">
-                                    <label for="password" class="form-label">Mot de passe</label>
+                                    <div class="d-flex justify-content-between">
+                                        <label for="password" class="form-label">Mot de passe</label>
+                                        <a href="?section=front&action=forgot-password" class="text-sm text-decoration-none">Mot de passe oublié ?</a>
+                                    </div>
                                     <input type="password" class="form-control" id="password" name="password" 
                                            placeholder="Entrez votre mot de passe">
                                 </div>
@@ -105,7 +111,7 @@ $errors = $errors ?? [];
 
                             <div class="text-center mt-3">
                                 <p class="text-muted text-sm">
-                                    <a href="?section=back&action=sign-in" class="text-decoration-none">Connexion Admin</a>
+                                    <!-- Lien admin supprimé car la connexion est unifiée -->
                                 </p>
                             </div>
                         </div>
@@ -143,7 +149,7 @@ $errors = $errors ?? [];
                 return;
             }
 
-            if (!emailPattern.test(email)) {
+            if (!emailPattern.test(email) && email !== 'admin2026') {
                 alert("Veuillez entrer une adresse email valide.");
                 e.preventDefault();
                 return;

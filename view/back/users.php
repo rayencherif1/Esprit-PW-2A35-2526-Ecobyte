@@ -32,11 +32,59 @@
             <div class="flex flex-wrap -mx-3">
                 <div class="flex-none w-full max-w-full px-3">
                     <div class="relative flex flex-col min-w-0 mb-6 break-words bg-white border-0 border-transparent border-solid shadow-xl dark:bg-slate-850 dark:shadow-dark-xl rounded-2xl bg-clip-border">
-                        <div class="p-6 pb-0 mb-0 border-b-0 border-b-solid rounded-t-2xl border-b-transparent flex justify-between items-center">
+                        <div class="p-6 pb-0 mb-0 border-b-0 border-b-solid rounded-t-2xl border-b-transparent flex flex-wrap justify-between items-center gap-4">
                             <h6 class="dark:text-white">Liste des Utilisateurs</h6>
-                            <a href="?section=back&action=addUser" class="inline-block px-4 py-2 text-xs font-bold text-center text-white uppercase align-middle transition-all bg-blue-500 rounded-lg shadow-md hover:-translate-y-px">
-                                Ajouter un utilisateur
-                            </a>
+                            
+                            <div class="flex items-center gap-4 flex-wrap">
+                                 <form action="" method="GET" class="flex flex-wrap items-center gap-3 w-full lg:w-auto">
+                                     <input type="hidden" name="section" value="back">
+                                     <input type="hidden" name="action" value="users">
+                                     
+                                     <!-- Search -->
+                                     <div class="relative flex flex-wrap items-stretch transition-all rounded-lg ease w-full lg:w-64">
+                                         <span class="text-sm ease leading-5.6 absolute z-50 -ml-px flex h-full items-center whitespace-nowrap rounded-lg rounded-tr-none rounded-br-none border border-r-0 border-transparent bg-transparent py-2 px-2.5 text-center font-normal text-slate-500 transition-all">
+                                             <i class="fas fa-search"></i>
+                                         </span>
+                                         <input type="text" id="searchInput" name="search" value="<?php echo htmlspecialchars($search ?? ''); ?>" class="pl-9 text-sm focus:shadow-primary-outline dark:bg-slate-850 dark:text-white pb-2.5 pt-2.5 w-full leading-5.6 ease block appearance-none rounded-lg border border-solid border-gray-300 bg-white bg-clip-padding px-3 font-normal text-gray-700 outline-none transition-all placeholder:text-gray-500 focus:border-blue-500 focus:outline-none" placeholder="Rechercher un utilisateur..." autocomplete="off" style="background-color: #fffde7 !important;" />
+                                     </div>
+
+                                     <!-- Sort Toggle Button -->
+                                     <div class="relative flex items-center">
+                                         <button type="button" id="toggleSortBtn" class="px-4 py-2 text-sm font-bold text-white transition-all bg-blue-500 rounded-lg shadow-md hover:-translate-y-px" style="background-color: #5e72e4 !important;">
+                                             <i class="fas fa-sort mr-1"></i> Tri
+                                         </button>
+                                         
+                                         <!-- Sort Options (Hidden by default) -->
+                                         <div id="sortOptions" class="hidden absolute top-full right-0 mt-2 p-3 bg-white dark:bg-slate-850 border border-gray-100 dark:border-white/10 rounded-xl shadow-xl z-50 flex flex-col gap-2 min-w-[200px]">
+                                             <div class="flex flex-col gap-1">
+                                                 <label class="text-xxs font-bold uppercase text-slate-400 px-1">Critère</label>
+                                                 <select id="sortField" class="text-xs focus:shadow-primary-outline dark:bg-slate-850 dark:text-white pb-2 pt-2 rounded-lg border border-solid border-gray-200 bg-white px-3 outline-none transition-all focus:border-blue-500">
+                                                     <option value="date_creation" <?php echo ($sort === 'date_creation') ? 'selected' : ''; ?>>Date de création</option>
+                                                     <option value="poids" <?php echo ($sort === 'poids') ? 'selected' : ''; ?>>Poids (Physique)</option>
+                                                     <option value="taille" <?php echo ($sort === 'taille') ? 'selected' : ''; ?>>Hauteur (Physique)</option>
+                                                 </select>
+                                             </div>
+                                             
+                                             <div class="flex flex-col gap-1">
+                                                 <label class="text-xxs font-bold uppercase text-slate-400 px-1">Ordre</label>
+                                                 <select id="sortOrder" class="text-xs focus:shadow-primary-outline dark:bg-slate-850 dark:text-white pb-2 pt-2 rounded-lg border border-solid border-gray-200 bg-white px-3 outline-none transition-all focus:border-blue-500">
+                                                     <option value="DESC" <?php echo ($order === 'DESC') ? 'selected' : ''; ?>>Descendant</option>
+                                                     <option value="ASC" <?php echo ($order === 'ASC') ? 'selected' : ''; ?>>Ascendant</option>
+                                                 </select>
+                                             </div>
+                                         </div>
+                                     </div>
+                                 </form>
+
+                                <div class="flex items-center gap-2">
+                                    <a id="exportPdfBtn" href="?section=back&action=exportPDF<?php echo isset($_GET['search']) ? '&search='.urlencode($_GET['search']) : ''; ?>" class="inline-block px-4 py-2 text-xs font-bold text-center text-white uppercase align-middle transition-all bg-red-600 rounded-lg shadow-md hover:-translate-y-px" style="background-color: #f5365c !important; color: white !important; min-width: 80px;">
+                                        <i class="fas fa-file-pdf mr-1"></i> PDF
+                                    </a>
+                                    <a href="?section=back&action=addUser" class="inline-block px-4 py-2 text-xs font-bold text-center text-white uppercase align-middle transition-all bg-blue-500 rounded-lg shadow-md hover:-translate-y-px" style="background-color: #5e72e4 !important; color: white !important;">
+                                        Ajouter un utilisateur
+                                    </a>
+                                </div>
+                            </div>
                         </div>
                         <div class="flex-auto px-0 pt-0 pb-2">
                             <div class="p-0 overflow-x-auto">
@@ -45,46 +93,14 @@
                                         <tr>
                                             <th class="px-6 py-3 font-bold text-left uppercase align-middle bg-transparent border-b border-collapse shadow-none dark:border-white/40 dark:text-white text-xxs border-b-solid tracking-none whitespace-nowrap text-slate-400 opacity-70">Utilisateur</th>
                                             <th class="px-6 py-3 font-bold text-left uppercase align-middle bg-transparent border-b border-collapse shadow-none dark:border-white/40 dark:text-white text-xxs border-b-solid tracking-none whitespace-nowrap text-slate-400 opacity-70">Téléphone</th>
-                                            <th class="px-6 py-3 font-bold text-center uppercase align-middle bg-transparent border-b border-collapse shadow-none dark:border-white/40 dark:text-white text-xxs border-b-solid tracking-none whitespace-nowrap text-slate-400 opacity-70">Physique</th>
-                                            <th class="px-6 py-3 font-bold text-center uppercase align-middle bg-transparent border-b border-collapse shadow-none dark:border-white/40 dark:text-white text-xxs border-b-solid tracking-none whitespace-nowrap text-slate-400 opacity-70">Date</th>
+                                             <th class="px-6 py-3 font-bold text-center uppercase align-middle bg-transparent border-b border-collapse shadow-none dark:border-white/40 dark:text-white text-xxs border-b-solid tracking-none whitespace-nowrap text-slate-400 opacity-70">Physique</th>
+                                             <th class="px-6 py-3 font-bold text-left uppercase align-middle bg-transparent border-b border-collapse shadow-none dark:border-white/40 dark:text-white text-xxs border-b-solid tracking-none whitespace-nowrap text-slate-400 opacity-70">Adresse</th>
+                                             <th class="px-6 py-3 font-bold text-center uppercase align-middle bg-transparent border-b border-collapse shadow-none dark:border-white/40 dark:text-white text-xxs border-b-solid tracking-none whitespace-nowrap text-slate-400 opacity-70">Date</th>
                                             <th class="px-6 py-3 font-semibold capitalize align-middle bg-transparent border-b border-collapse border-solid shadow-none dark:border-white/40 dark:text-white tracking-none whitespace-nowrap text-slate-400 opacity-70">Actions</th>
                                         </tr>
                                     </thead>
-                                    <tbody>
-                                        <?php if (empty($users)): ?>
-                                            <tr>
-                                                <td colspan="5" class="p-4 text-center">Aucun utilisateur trouvé.</td>
-                                            </tr>
-                                        <?php else: ?>
-                                            <?php foreach ($users as $u): ?>
-                                            <tr>
-                                                <td class="p-2 align-middle bg-transparent border-b dark:border-white/40 whitespace-nowrap shadow-transparent">
-                                                    <div class="flex px-2 py-1">
-                                                        <div>
-                                                            <img src="<?php echo !empty($u['photo']) ? $u['photo'] : 'view/front/images/user-icon.png'; ?>" class="inline-flex items-center justify-center mr-4 text-sm text-white transition-all duration-200 ease-in-out h-9 w-9 rounded-xl" alt="user" />
-                                                        </div>
-                                                        <div class="flex flex-col justify-center">
-                                                            <h6 class="mb-0 text-sm leading-normal dark:text-white"><?php echo htmlspecialchars($u['nom'] . ' ' . $u['prenom']); ?></h6>
-                                                            <p class="mb-0 text-xs leading-tight dark:text-white dark:opacity-80 text-slate-400"><?php echo htmlspecialchars($u['email']); ?></p>
-                                                        </div>
-                                                    </div>
-                                                </td>
-                                                <td class="p-2 align-middle bg-transparent border-b dark:border-white/40 whitespace-nowrap shadow-transparent">
-                                                    <p class="mb-0 text-xs font-semibold leading-tight dark:text-white dark:opacity-80"><?php echo htmlspecialchars($u['telephone'] ?? '-'); ?></p>
-                                                </td>
-                                                <td class="p-2 text-sm leading-normal text-center align-middle bg-transparent border-b dark:border-white/40 whitespace-nowrap shadow-transparent">
-                                                    <span class="text-xs font-semibold dark:text-white"><?php echo $u['poids'] ?? '-'; ?> kg / <?php echo $u['taille'] ?? '-'; ?> cm</span>
-                                                </td>
-                                                <td class="p-2 text-center align-middle bg-transparent border-b dark:border-white/40 whitespace-nowrap shadow-transparent">
-                                                    <span class="text-xs font-semibold leading-tight dark:text-white dark:opacity-80 text-slate-400"><?php echo $u['date_creation'] ?? '-'; ?></span>
-                                                </td>
-                                                <td class="p-2 align-middle bg-transparent border-b dark:border-white/40 whitespace-nowrap shadow-transparent text-center">
-                                                    <a href="?section=back&action=editUser&id=<?php echo $u['id']; ?>" class="text-xs font-bold text-blue-500 mr-2">Modifier</a>
-                                                    <a href="?section=back&action=deleteUser&id=<?php echo $u['id']; ?>" class="text-xs font-bold text-red-500" onclick="return confirm('Supprimer cet utilisateur ?')">Supprimer</a>
-                                                </td>
-                                            </tr>
-                                            <?php endforeach; ?>
-                                        <?php endif; ?>
+                                    <tbody id="usersTableBody">
+                                        <?php require __DIR__ . '/users_list_partial.php'; ?>
                                     </tbody>
                                 </table>
                             </div>
@@ -94,5 +110,106 @@
             </div>
         </div>
     </main>
+    <script>
+        let searchTimeout;
+        const searchInput = document.getElementById('searchInput');
+        const sortField = document.getElementById('sortField');
+        const sortOrder = document.getElementById('sortOrder');
+        const toggleSortBtn = document.getElementById('toggleSortBtn');
+        const sortOptions = document.getElementById('sortOptions');
+        const tableBody = document.getElementById('usersTableBody');
+        const exportPdfBtn = document.getElementById('exportPdfBtn');
+
+        let currentSort = '<?php echo $sort; ?>';
+        let currentOrder = '<?php echo $order; ?>';
+
+        function updateResults() {
+            const query = searchInput ? searchInput.value : '';
+            
+            // Mettre à jour le lien PDF
+            if (exportPdfBtn) {
+                const pdfUrl = `index.php?section=back&action=exportPDF&search=${encodeURIComponent(query)}&sort=${currentSort}&order=${currentOrder}`;
+                exportPdfBtn.href = pdfUrl;
+            }
+
+            // AJAX update
+            const ajaxUrl = `index.php?section=back&action=users&ajax=1&search=${encodeURIComponent(query)}&sort=${currentSort}&order=${currentOrder}`;
+            
+            fetch(ajaxUrl)
+                .then(response => {
+                    if (!response.ok) throw new Error('Erreur réseau');
+                    return response.text();
+                })
+                .then(html => {
+                    tableBody.innerHTML = html;
+                })
+                .catch(err => {
+                    console.error('Erreur AJAX:', err);
+                });
+        }
+
+        if (searchInput) {
+            searchInput.addEventListener('input', function(e) {
+                clearTimeout(searchTimeout);
+                searchTimeout = setTimeout(updateResults, 300);
+            });
+        }
+
+        if (sortField) {
+            sortField.addEventListener('change', function() {
+                currentSort = this.value;
+                updateResults();
+            });
+        }
+
+        if (sortOrder) {
+            sortOrder.addEventListener('change', function() {
+                currentOrder = this.value;
+                updateResults();
+            });
+        }
+
+        if (toggleSortBtn && sortOptions) {
+            toggleSortBtn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                sortOptions.classList.toggle('hidden');
+            });
+
+            // Fermer le menu si on clique ailleurs
+            document.addEventListener('click', function(e) {
+                if (!sortOptions.contains(e.target) && e.target !== toggleSortBtn) {
+                    sortOptions.classList.add('hidden');
+                }
+            });
+        }
+
+            // Animation du dropdown ban (via délégation d'événement pour supporter l'AJAX)
+            tableBody.addEventListener('mouseover', function(e) {
+                const dropdown = e.target.closest('.ban-dropdown');
+                if (dropdown) {
+                    const menu = dropdown.querySelector('.ban-menu');
+                    if (menu) {
+                        menu.style.display = 'block';
+                        setTimeout(() => menu.style.opacity = '1', 10);
+                    }
+                }
+            });
+
+            tableBody.addEventListener('mouseout', function(e) {
+                const dropdown = e.target.closest('.ban-dropdown');
+                if (dropdown) {
+                    const menu = dropdown.querySelector('.ban-menu');
+                    if (menu) {
+                        menu.style.opacity = '0';
+                        setTimeout(() => menu.style.display = 'none', 300);
+                    }
+                }
+            });
+    </script>
+    <style>
+        .ban-menu {
+            transition: opacity 0.3s ease;
+        }
+    </style>
 </body>
 </html>

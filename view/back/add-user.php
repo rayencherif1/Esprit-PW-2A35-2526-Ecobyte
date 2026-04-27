@@ -30,7 +30,7 @@
                                 </div>
                             <?php endif; ?>
 
-                            <form method="POST">
+                            <form method="POST" novalidate>
                                 <div class="flex flex-wrap -mx-3">
                                     <div class="w-full max-w-full px-3 shrink-0 md:w-6/12 md:flex-0">
                                         <div class="mb-4">

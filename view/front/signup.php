@@ -13,8 +13,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $result = $userController->register($_POST);
     if ($result) {
         $success = $userController->getSuccess();
-        // Redirect or show success
-        header('Refresh: 3; URL=?section=front&action=home');
+        // Redirection vers la page de connexion après 3 secondes
+        header('Refresh: 3; URL=?section=front&action=sign-in');
     } else {
         $errors = $userController->getErrors();
     }
@@ -45,7 +45,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         <?php if ($success): ?>
                             <div class="alert alert-success">
                                 <?php echo htmlspecialchars($success); ?>
-                                <p class="mb-0 small">Redirection vers l'accueil dans 3 secondes...</p>
+                                <p class="mb-0 small">Redirection vers la page de connexion dans 3 secondes...</p>
                             </div>
                         <?php endif; ?>
 
@@ -59,7 +59,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             </div>
                         <?php endif; ?>
 
-                        <form method="POST" action="" id="signupForm">
+                        <form method="POST" action="" id="signupForm" novalidate>
                             <div class="row">
                                 <div class="col-md-6 mb-3">
                                     <label class="form-label">Nom</label>

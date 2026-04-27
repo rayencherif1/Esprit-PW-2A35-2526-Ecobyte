@@ -1,168 +1,62 @@
 <?php
 /**
  * Model User
- * Classe pour gérer les utilisateurs avec PDO
+ * Classe SIMPLE pour représenter un utilisateur (Attributs, Getters, Setters)
  */
 
-require_once __DIR__ . '/../config.php';
-
 class User {
-    private $db;
+    private $id;
+    private $nom;
+    private $prenom;
+    private $email;
+    private $password;
+    private $telephone;
+    private $photo;
+    private $poids;
+    private $taille;
+    private $date_creation;
+    private $ban_until;
 
-    public function __construct() {
-        $this->db = Database::getInstance()->getConnection();
-    }
-
-    /**
-     * Récupère tous les utilisateurs
-     * @return array
-     */
-    public function getAllUsers() {
-        try {
-            $query = "SELECT id, nom, prenom, email, telephone, photo, poids, taille, date_creation FROM users ORDER BY date_creation DESC";
-            $stmt = $this->db->prepare($query);
-            $stmt->execute();
-            return $stmt->fetchAll();
-        } catch (PDOException $e) {
-            throw new Exception("Erreur lors de la récupération des utilisateurs: " . $e->getMessage());
+    public function __construct($data = []) {
+        if (!empty($data)) {
+            $this->id = $data['id'] ?? null;
+            $this->nom = $data['nom'] ?? null;
+            $this->prenom = $data['prenom'] ?? null;
+            $this->email = $data['email'] ?? null;
+            $this->password = $data['password'] ?? null;
+            $this->telephone = $data['telephone'] ?? null;
+            $this->photo = $data['photo'] ?? null;
+            $this->poids = $data['poids'] ?? null;
+            $this->taille = $data['taille'] ?? null;
+            $this->date_creation = $data['date_creation'] ?? null;
+            $this->ban_until = $data['ban_until'] ?? null;
         }
     }
 
-    /**
-     * Récupère un utilisateur par ID
-     * @param int $id
-     * @return array|false
-     */
-    public function getUserById($id) {
-        try {
-            $query = "SELECT id, nom, prenom, email, telephone, photo, poids, taille, date_creation FROM users WHERE id = :id";
-            $stmt = $this->db->prepare($query);
-            $stmt->execute([':id' => $id]);
-            return $stmt->fetch();
-        } catch (PDOException $e) {
-            throw new Exception("Erreur lors de la récupération de l'utilisateur: " . $e->getMessage());
-        }
-    }
+    // Getters
+    public function getId() { return $this->id; }
+    public function getNom() { return $this->nom; }
+    public function getPrenom() { return $this->prenom; }
+    public function getEmail() { return $this->email; }
+    public function getPassword() { return $this->password; }
+    public function getTelephone() { return $this->telephone; }
+    public function getPhoto() { return $this->photo; }
+    public function getPoids() { return $this->poids; }
+    public function getTaille() { return $this->taille; }
+    public function getDateCreation() { return $this->date_creation; }
+    public function getBanUntil() { return $this->ban_until; }
 
-    /**
-     * Récupère un utilisateur par Email (pour la connexion)
-     * @param string $email
-     * @return array|false
-     */
-    public function getUserByEmail($email) {
-        try {
-            $query = "SELECT * FROM users WHERE email = :email";
-            $stmt = $this->db->prepare($query);
-            $stmt->execute([':email' => $email]);
-            return $stmt->fetch();
-        } catch (PDOException $e) {
-            throw new Exception("Erreur lors de la récupération de l'utilisateur par email: " . $e->getMessage());
-        }
-    }
-
-    /**
-     * Crée un nouvel utilisateur
-     * @param array $data Données de l'utilisateur
-     * @return int ID de l'utilisateur créé
-     */
-    public function createUser($data) {
-        try {
-            $query = "INSERT INTO users (nom, prenom, email, password, telephone, photo, poids, taille, date_creation) 
-                     VALUES (:nom, :prenom, :email, :password, :telephone, :photo, :poids, :taille, NOW())";
-            $stmt = $this->db->prepare($query);
-            
-            $stmt->execute([
-                ':nom' => $data['nom'],
-                ':prenom' => $data['prenom'],
-                ':email' => $data['email'],
-                ':password' => password_hash($data['password'], PASSWORD_DEFAULT),
-                ':telephone' => $data['telephone'] ?? null,
-                ':photo' => $data['photo'] ?? null,
-                ':poids' => $data['poids'] ?? null,
-                ':taille' => $data['taille'] ?? null
-            ]);
-            
-            return $this->db->lastInsertId();
-        } catch (PDOException $e) {
-            throw new Exception("Erreur lors de la création de l'utilisateur: " . $e->getMessage());
-        }
-    }
-
-    /**
-     * Met à jour un utilisateur
-     * @param int $id
-     * @param array $data
-     * @return bool
-     */
-    public function updateUser($id, $data) {
-        try {
-            $fields = "nom = :nom, prenom = :prenom, email = :email, telephone = :telephone, poids = :poids, taille = :taille";
-            $params = [
-                ':id' => $id,
-                ':nom' => $data['nom'],
-                ':prenom' => $data['prenom'],
-                ':email' => $data['email'],
-                ':telephone' => $data['telephone'] ?? null,
-                ':poids' => $data['poids'] ?? null,
-                ':taille' => $data['taille'] ?? null
-            ];
-
-            if (isset($data['photo'])) {
-                $fields .= ", photo = :photo";
-                $params[':photo'] = $data['photo'];
-            }
-
-            if (!empty($data['password'])) {
-                $fields .= ", password = :password";
-                $params[':password'] = password_hash($data['password'], PASSWORD_DEFAULT);
-            }
-
-            $query = "UPDATE users SET $fields WHERE id = :id";
-            $stmt = $this->db->prepare($query);
-            
-            return $stmt->execute($params);
-        } catch (PDOException $e) {
-            throw new Exception("Erreur lors de la mise à jour de l'utilisateur: " . $e->getMessage());
-        }
-    }
-
-    /**
-     * Supprime un utilisateur
-     * @param int $id
-     * @return bool
-     */
-    public function deleteUser($id) {
-        try {
-            $query = "DELETE FROM users WHERE id = :id";
-            $stmt = $this->db->prepare($query);
-            return $stmt->execute([':id' => $id]);
-        } catch (PDOException $e) {
-            throw new Exception("Erreur lors de la suppression de l'utilisateur: " . $e->getMessage());
-        }
-    }
-
-    /**
-     * Vérifie si un email existe déjà
-     * @param string $email
-     * @param int|null $excludeId ID à exclure (pour la mise à jour)
-     * @return bool
-     */
-    public function emailExists($email, $excludeId = null) {
-        try {
-            if ($excludeId) {
-                $query = "SELECT COUNT(*) as count FROM users WHERE email = :email AND id != :id";
-                $stmt = $this->db->prepare($query);
-                $stmt->execute([':email' => $email, ':id' => $excludeId]);
-            } else {
-                $query = "SELECT COUNT(*) as count FROM users WHERE email = :email";
-                $stmt = $this->db->prepare($query);
-                $stmt->execute([':email' => $email]);
-            }
-            $result = $stmt->fetch();
-            return $result['count'] > 0;
-        } catch (PDOException $e) {
-            throw new Exception("Erreur lors de la vérification de l'email: " . $e->getMessage());
-        }
-    }
+    // Setters
+    public function setId($id) { $this->id = $id; }
+    public function setNom($nom) { $this->nom = $nom; }
+    public function setPrenom($prenom) { $this->prenom = $prenom; }
+    public function setEmail($email) { $this->email = $email; }
+    public function setPassword($password) { $this->password = $password; }
+    public function setTelephone($telephone) { $this->telephone = $telephone; }
+    public function setPhoto($photo) { $this->photo = $photo; }
+    public function setPoids($poids) { $this->poids = $poids; }
+    public function setTaille($taille) { $this->taille = $taille; }
+    public function setDateCreation($date_creation) { $this->date_creation = $date_creation; }
+    public function setBanUntil($ban_until) { $this->ban_until = $ban_until; }
 }
 ?>
