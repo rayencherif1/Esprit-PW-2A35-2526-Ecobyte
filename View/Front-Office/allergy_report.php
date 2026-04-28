@@ -1,315 +1,434 @@
 <?php
-
 require_once __DIR__ . '/../../config.php';
 require_once __DIR__ . '/../../Model/allergie.php';
 require_once __DIR__ . '/../../Controller/allergie.Controller.php';
+require_once __DIR__ . '/../../Controller/traitement.Controller.php'; // AJOUTÉ
 
+$controller = new AllergieC();
+$allergies = $controller->listAllergie();
 
-$errors = [];
-$old = [
-    'nom' => '',
-    'description' => '',
-    'gravite' => ''
-];
-
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-
-    $nom = trim($_POST['nom'] ?? '');
-    $description = trim($_POST['description'] ?? '');
-    $gravite = trim($_POST['gravite'] ?? '');
-
-    // Sauvegarder les anciennes valeurs
-    $old = compact('nom', 'description', 'gravite');
-
-    // Validation Nom
-    if (empty($nom)) {
-        $errors['nom'] = "Le nom est obligatoire.";
-    } elseif (mb_strlen($nom) < 3) {
-        $errors['nom'] = "Le nom doit contenir au moins 3 caractères.";
-    }
-
-    // Validation Description
-    if (empty($description)) {
-        $errors['description'] = "La description est obligatoire.";
-    }
-
-    // Validation Gravité
-    $gravitesValides = ['faible', 'moyenne', 'grave'];
-    if (empty($gravite)) {
-        $errors['gravite'] = "La gravité est obligatoire.";
-    } elseif (!in_array($gravite, $gravitesValides, true)) {
-        $errors['gravite'] = "Valeur de gravité invalide.";
-    }
-
-    // Si aucune erreur => insertion
-    if (empty($errors)) {
-        $allergie = new Allergie(null, $nom, $description, $gravite);
-        $controller = new AllergieC();
-        $controller->addAllergie($allergie);
-
-        header("Location: index.html?success=added");
-        exit();
-    }
+// S'assurer que c'est un tableau
+if (!is_array($allergies)) {
+    $allergies = [];
 }
 
+// Récupérer l'ID pour les détails
+$selected_id = $_GET['id'] ?? null;
+$allergie_detail = null;
+$traitements = [];
+
+if ($selected_id) {
+    $allergie_detail = $controller->getAllergieById($selected_id);
+    if ($allergie_detail) {
+        $traitementController = new TraitementC();
+        $traitements = $traitementController->listTraitementByAllergie($selected_id);
+        if (!is_array($traitements)) {
+            $traitements = [];
+        }
+    }
+}
 ?>
+
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="utf-8">
-  <meta http-equiv="X-UA-Compatible" content="IE=edge">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Ecobyte — Signaler une allergie</title>
-
-  <!-- Bootstrap 5 -->
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/css/bootstrap.min.css" rel="stylesheet">
-  <!-- Google Fonts -->
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
-
-  <style>
-    /* ── Reset & base ── */
-    *, *::before, *::after { box-sizing: border-box; }
-    body {
-      font-family: 'DM Sans', sans-serif;
-      background: #f4f6f8;
-      color: #1a1a2e;
-      margin: 0;
-    }
-
-    /* ── Header ── */
-    .top-header {
-      background: #fff;
-      border-bottom: 1px solid #e8e8e8;
-      padding: 12px 0;
-    }
-    .brand-logo { height: 48px; width: auto; }
-    .nav-strip { background: #fff; border-bottom: 1px solid #f0f0f0; }
-    .nav-strip .nav-link { color: #333; font-weight: 500; }
-    .nav-strip .nav-link.active-link { color: #dc3545; font-weight: 700; }
-
-    /* ── Card formulaire ── */
-    .form-card {
-      background: #fff;
-      border-radius: 18px;
-      box-shadow: 0 4px 24px rgba(0,0,0,.08);
-      padding: 2.5rem;
-      max-width: 680px;
-      margin: 2.5rem auto;
-    }
-    .form-card h2 {
-      font-size: 1.75rem;
-      font-weight: 700;
-      color: #dc3545;
-    }
-
-    /* ── Champs ── */
-    .form-control, .form-select {
-      border-radius: 10px;
-      border: 1.5px solid #e0e0e0;
-      padding: .65rem 1rem;
-      transition: border-color .2s, box-shadow .2s;
-      font-size: .95rem;
-    }
-    .form-control:focus, .form-select:focus {
-      border-color: #dc3545;
-      box-shadow: 0 0 0 3px rgba(220,53,69,.12);
-      outline: none;
-    }
-    .form-control.is-invalid, .form-select.is-invalid {
-      border-color: #dc3545;
-    }
-    .invalid-feedback { font-size: .82rem; }
-
-    /* ── Checkboxes symptômes ── */
-    .symptom-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: .45rem .75rem;
-    }
-    .symptom-item {
-      display: flex;
-      align-items: center;
-      gap: .45rem;
-      background: #fafafa;
-      border: 1.5px solid #e8e8e8;
-      border-radius: 8px;
-      padding: .45rem .75rem;
-      cursor: pointer;
-      transition: border-color .15s, background .15s;
-    }
-    .symptom-item:hover { border-color: #dc3545; background: #fff5f5; }
-    .symptom-item input[type="checkbox"] { accent-color: #dc3545; width: 16px; height: 16px; }
-    .symptom-item.checked { border-color: #dc3545; background: #fff0f1; }
-
-    /* ── Bouton ── */
-    .btn-submit {
-      background: #dc3545;
-      color: #fff;
-      border: none;
-      border-radius: 12px;
-      padding: .8rem;
-      font-size: 1rem;
-      font-weight: 600;
-      letter-spacing: .3px;
-      transition: background .2s, transform .15s;
-      width: 100%;
-    }
-    .btn-submit:hover { background: #b02a37; transform: translateY(-1px); }
-    .btn-submit:active { transform: translateY(0); }
-
-    /* ── Alerte succès ── */
-    .alert-success-custom {
-      background: #d1fae5;
-      color: #065f46;
-      border: 1.5px solid #6ee7b7;
-      border-radius: 12px;
-      padding: 1rem 1.25rem;
-      font-weight: 500;
-      text-align: center;
-      margin-bottom: 1.5rem;
-    }
-
-    /* ── Label ── */
-    .form-label { font-weight: 600; margin-bottom: .4rem; font-size: .9rem; color: #444; }
-
-    @media (max-width: 500px) {
-      .symptom-grid { grid-template-columns: 1fr; }
-      .form-card { padding: 1.5rem; margin: 1rem; }
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Allergies - Guide complet</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        
+        * {
+            font-family: 'Inter', sans-serif;
+        }
+        
+        .card-allergy {
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .card-allergy:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.02);
+        }
+        
+        .hero-section {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        
+        .modal {
+            display: <?= $selected_id ? 'flex' : 'none' ?>;
+        }
+        
+        .truncate {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        
+        .back-button {
+            transition: all 0.3s ease;
+        }
+        
+        .back-button:hover {
+            transform: translateX(-5px);
+        }
+    </style>
 </head>
+<body class="bg-gray-50">
 
-<body>
-
-<!-- ══ HEADER ══════════════════════════════════════════════════════════════ -->
-<header>
-  <div class="container-fluid top-header">
-    <div class="row py-2 align-items-center">
-      <div class="col-sm-4 col-lg-3 text-center text-sm-start">
-        <a href="index.html" class="d-inline-block">
-          <img src="images/ecobyte-logo.png" alt="Ecobyte" class="brand-logo img-fluid">
-        </a>
-      </div>
-
-      <div class="col-sm-6 offset-sm-2 offset-md-0 col-lg-5 d-none d-lg-block">
-        <div class="search-bar row bg-light p-2 my-2 rounded-4">
-          <div class="col-md-4 d-none d-md-block">
-            <select class="form-select border-0 bg-transparent">
-              <option>Toutes catégories</option>
-            </select>
-          </div>
-          <div class="col-12 col-md-8">
-            <input type="text" class="form-control border-0 bg-transparent" placeholder="Rechercher...">
-          </div>
+    <!-- Header / Hero Section -->
+    <div class="hero-section text-white py-16">
+        <div class="container mx-auto px-4 text-center">
+            <!-- Bouton retour -->
+            <div class="absolute top-4 left-4 md:top-8 md:left-8">
+                <a href="index.html" class="back-button inline-flex items-center gap-2 bg-white/20 hover:bg-white/30 rounded-lg px-4 py-2 text-sm font-medium transition">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+                    </svg>
+                    Retour à l'accueil
+                </a>
+            </div>
+            
+            <div class="flex justify-center mb-4">
+                <svg class="w-16 h-16" fill="none" stroke="currentColor" viewBox="0 0 24 24" width="64" height="64">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+            </div>
+            <h1 class="text-4xl md:text-5xl font-bold mb-4">Guide complet des allergies</h1>
+            <p class="text-lg md:text-xl opacity-90 max-w-2xl mx-auto">
+                Découvrez les différentes allergies, leurs symptômes et les traitements associés
+            </p>
+            <div class="flex justify-center gap-4 mt-8">
+                <div class="bg-white/20 rounded-full px-4 py-2 text-sm">
+                    📊 <?= count($allergies) ?> allergies répertoriées
+                </div>
+                <div class="bg-white/20 rounded-full px-4 py-2 text-sm">
+                    💊 Traitements disponibles
+                </div>
+            </div>
         </div>
-      </div>
-
-      <div class="col-sm-8 col-lg-4 d-flex justify-content-end gap-4 align-items-center mt-4 mt-sm-0 justify-content-center justify-content-sm-end">
-        <div class="support-box text-end d-none d-xl-block">
-          <span class="fs-6 text-muted">Support</span>
-          <h5 class="mb-0">+980-34984089</h5>
-        </div>
-      </div>
     </div>
-  </div>
 
-  <div class="container-fluid nav-strip">
-    <div class="row py-2">
-      <div class="d-flex justify-content-center justify-content-sm-between align-items-center">
-        <nav class="main-menu d-flex navbar navbar-expand-lg w-100">
-          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#topNav"
-                  aria-controls="topNav" aria-expanded="false" aria-label="Toggle navigation">
-            <span class="navbar-toggler-icon"></span>
-          </button>
-          <div class="collapse navbar-collapse" id="topNav">
-            <ul class="navbar-nav justify-content-end menu-list list-unstyled d-flex gap-md-3 mb-0 ms-auto">
-              <li class="nav-item">
-                <a href="allergy_report.php" class="nav-link active-link">🚨 Signaler Allergie</a>
-              </li>
-            </ul>
-          </div>
-        </nav>
-      </div>
-    </div>
-  </div>
-</header>
-
-<!-- ══ MAIN ════════════════════════════════════════════════════════════════ -->
-<main class="py-4" style="background:#f4f6f8; min-height: calc(100vh - 130px);">
-  <div class="container">
-    <div class="form-card">
-
-      <h2 class="text-center mb-1">🚨 Signaler une allergie</h2>
-      <p class="text-center text-muted mb-4" style="font-size:.9rem;">
-        Remplissez ce formulaire pour signaler une réaction allergique.
-      </p>
-
-      <!-- ✅ Message succès -->
-
-
-      <!-- ✅ Erreur globale si nécessaire -->
-      <?php if (!empty($errors)): ?>
-        <div class="alert alert-danger rounded-3 py-2 px-3 mb-3" style="font-size:.88rem;">
-          ⚠️ Veuillez corriger les erreurs ci-dessous avant de soumettre.
+    <!-- Section des allergies -->
+    <div class="container mx-auto px-4 py-12">
+        
+        <!-- Barre de recherche et filtre -->
+        <div class="mb-8">
+            <div class="max-w-4xl mx-auto">
+                <!-- Barre de recherche -->
+                <div class="mb-4">
+                    <input type="text" 
+                           id="searchInput" 
+                           placeholder="🔍 Rechercher une allergie..." 
+                           class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                </div>
+                
+                <!-- Filtre déroulant par gravité -->
+                <div class="flex gap-3 items-center">
+                    <label for="graviteFilter" class="text-gray-700 font-medium">Filtrer par gravité :</label>
+                    <select id="graviteFilter" class="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white">
+                        <option value="all">🌍 Toutes les allergies</option>
+                        <option value="faible">🟢 Gravité faible</option>
+                        <option value="moyenne">🟠 Gravité moyenne</option>
+                        <option value="grave">🔴 Gravité grave</option>
+                    </select>
+                    
+                    <!-- Compteur de résultats -->
+                    <div class="ml-auto text-sm text-gray-500">
+                        <span id="resultCount"><?= count($allergies) ?></span> allergie(s) trouvée(s)
+                    </div>
+                </div>
+            </div>
         </div>
-      <?php endif; ?>
+        
+        <!-- Message si aucune allergie -->
+        <?php if (count($allergies) == 0): ?>
+            <div class="text-center py-12">
+                <div class="text-6xl mb-4">🌿</div>
+                <p class="text-gray-500 text-lg">Aucune allergie disponible pour le moment.</p>
+                <a href="allergie_add.php" class="text-blue-600 hover:underline mt-2 inline-block">Ajouter une allergie</a>
+            </div>
+        <?php else: ?>
+            
+            <!-- Grille des allergies -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6" id="allergiesGrid">
+                
+                <?php foreach ($allergies as $allergie): 
+                    $graviteValue = strtolower($allergie['gravite'] ?? 'non définie');
+                ?>
+                    <div class="card-allergy bg-white rounded-xl shadow-lg overflow-hidden border border-gray-100 allergy-card" 
+                         data-name="<?= strtolower(htmlspecialchars($allergie['nom'])) ?>"
+                         data-gravite="<?= $graviteValue ?>">
+                        
+                        <!-- En-tête -->
+                        <div class="p-4 border-b border-gray-100">
+                            <div class="flex justify-between items-start">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
+                                        <span class="text-xl">🌿</span>
+                                    </div>
+                                    <h3 class="font-bold text-lg text-gray-800"><?= htmlspecialchars($allergie['nom']) ?></h3>
+                                </div>
+                                
+                                <!-- Badge gravité -->
+                                <?php 
+                                    $graviteClass = match($graviteValue) {
+                                        'faible' => 'bg-green-100 text-green-700',
+                                        'moyenne' => 'bg-orange-100 text-orange-700',
+                                        'grave' => 'bg-red-100 text-red-700',
+                                        default => 'bg-gray-100 text-gray-600'
+                                    };
+                                ?>
+                                <span class="px-3 py-1 rounded-full text-xs font-semibold <?= $graviteClass ?>">
+                                    <?= ucfirst($graviteValue) ?>
+                                </span>
+                            </div>
+                        </div>
+                        
+                        <!-- Description courte -->
+                        <div class="p-4">
+                            <p class="text-gray-600 text-sm">
+                                <?= htmlspecialchars(substr($allergie['description'] ?? '', 0, 100)) ?>
+                                <?= isset($allergie['description']) && strlen($allergie['description']) > 100 ? '...' : '' ?>
+                            </p>
+                        </div>
+                        
+                        <!-- Symptômes aperçu -->
+                        <?php if (!empty($allergie['symptomes'])): ?>
+                        <div class="px-4 pb-2">
+                            <div class="flex items-center gap-2 text-xs text-gray-500">
+                                <span>🤧</span>
+                                <span class="truncate"><?= htmlspecialchars(substr($allergie['symptomes'], 0, 60)) ?></span>
+                            </div>
+                        </div>
+                        <?php endif; ?>
+                        
+                        <!-- Bouton Détails -->
+                        <div class="p-4 pt-2">
+                            <a href="?id=<?= $allergie['id_allergie'] ?>" 
+                               class="block w-full bg-blue-600 text-white py-2 rounded-lg font-semibold text-center hover:bg-blue-700 transition">
+                                📖 Voir détails
+                            </a>
+                        </div>
+                        
+                    </div>
+                <?php endforeach; ?>
+                
+            </div>
+            
+        <?php endif; ?>
+        
+    </div>
 
-<form method="POST" novalidate>
+    <!-- Modal/Carte de détails -->
+    <?php if ($allergie_detail): ?>
+    <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+        <div class="bg-white rounded-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            
+            <!-- En-tête -->
+            <div class="sticky top-0 bg-white border-b border-gray-200 p-4 flex justify-between items-center">
+                <h2 class="text-xl font-bold text-gray-800">
+                    <span class="text-2xl mr-2">🌿</span>
+                    <?= htmlspecialchars($allergie_detail['nom']) ?>
+                </h2>
+                <a href="?" class="text-gray-400 hover:text-gray-600 transition text-2xl">
+                    ✕
+                </a>
+            </div>
+            
+            <div class="p-6">
+                
+                <!-- Gravité -->
+                <div class="mb-4">
+                    <?php 
+                        $gravite = $allergie_detail['gravite'] ?? 'non définie';
+                        $graviteBadgeClass = match(strtolower($gravite)) {
+                            'faible' => 'bg-green-100 text-green-700',
+                            'moyenne' => 'bg-orange-100 text-orange-700',
+                            'grave' => 'bg-red-100 text-red-700',
+                            default => 'bg-gray-100 text-gray-600'
+                        };
+                    ?>
+                    <span class="inline-block px-3 py-1 rounded-full text-sm font-semibold <?= $graviteBadgeClass ?>">
+                        Gravité : <?= ucfirst($gravite) ?>
+                    </span>
+                </div>
+                
+                <!-- Description complète -->
+                <div class="mb-6">
+                    <h3 class="font-semibold text-gray-700 mb-2 text-lg">📝 Description</h3>
+                    <div class="bg-gray-50 rounded-lg p-4">
+                        <p class="text-gray-600 leading-relaxed">
+                            <?= htmlspecialchars($allergie_detail['description'] ?? 'Aucune description disponible') ?>
+                        </p>
+                    </div>
+                </div>
+                
+                <!-- Symptômes -->
+                <div class="mb-6">
+                    <h3 class="font-semibold text-gray-700 mb-2 text-lg">🤧 Symptômes</h3>
+                    <div class="bg-yellow-50 rounded-lg p-4">
+                        <p class="text-gray-600 leading-relaxed">
+                            <?= htmlspecialchars($allergie_detail['symptomes'] ?? 'Aucun symptôme répertorié') ?>
+                        </p>
+                    </div>
+                </div>
+                
+                <!-- Traitements associés -->
+                <div class="bg-blue-50 rounded-lg p-4">
+                    <h3 class="font-semibold text-gray-700 mb-3 text-lg">💊 Traitements associés</h3>
+                    
+                    <?php if (count($traitements) > 0): ?>
+                        <div class="space-y-3">
+                            <?php foreach ($traitements as $index => $t): ?>
+                                <div class="bg-white rounded-lg p-3 border border-gray-200 hover:shadow-md transition">
+                                    <div class="flex items-start gap-2">
+                                        <div class="w-6 h-6 rounded-full bg-blue-500 flex items-center justify-center flex-shrink-0">
+                                            <span class="text-white text-xs font-bold"><?= $index + 1 ?></span>
+                                        </div>
+                                        <div class="flex-1">
+                                            <h4 class="font-semibold text-gray-800"><?= htmlspecialchars($t['nom_traitement']) ?></h4>
+                                            <?php if (!empty($t['conseils'])): ?>
+                                                <p class="text-sm text-gray-600 mt-1">
+                                                    <span class="font-medium text-green-700">📌 Conseils :</span> <?= htmlspecialchars($t['conseils']) ?>
+                                                </p>
+                                            <?php endif; ?>
+                                            <?php if (!empty($t['interdiction'])): ?>
+                                                <p class="text-sm text-red-600 mt-1">
+                                                    <span class="font-medium">🚫 Interdictions :</span> <?= htmlspecialchars($t['interdiction']) ?>
+                                                </p>
+                                            <?php endif; ?>
+                                        </div>
+                                    </div>
+                                </div>
+                            <?php endforeach; ?>
+                        </div>
+                    <?php else: ?>
+                        <div class="text-center py-4">
+                            <p class="text-gray-500 text-sm">💊 Aucun traitement répertorié pour cette allergie.</p>
+                        </div>
+                    <?php endif; ?>
+                    
+                </div>
+                
+                <!-- Statistiques -->
+                <div class="bg-gray-50 rounded-lg p-4 mt-4">
+                    <div class="flex justify-around text-center">
+                        <div>
+                            <p class="text-2xl font-bold text-blue-600"><?= count($traitements) ?></p>
+                            <p class="text-xs text-gray-500">Traitements</p>
+                        </div>
+                        <div>
+                            <p class="text-2xl font-bold text-green-600">1</p>
+                            <p class="text-xs text-gray-500">Allergie</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Bouton fermer -->
+                <div class="mt-6">
+                    <a href="?" class="block w-full bg-gray-200 text-gray-700 py-2 rounded-lg font-semibold text-center hover:bg-gray-300 transition">
+                        Fermer
+                    </a>
+                </div>
+                
+            </div>
+            
+        </div>
+    </div>
+    <?php endif; ?>
 
-<!-- NOM -->
-<div class="mb-3">
-  <label class="form-label">Nom *</label>
-  <input type="text" name="nom"
-    class="form-control <?= isset($errors['nom']) ? 'is-invalid' : '' ?>"
-    value="<?= htmlspecialchars($old['nom'] ?? '') ?>">
-  <div class="invalid-feedback"><?= $errors['nom'] ?? '' ?></div>
-</div>
-
-<!-- DESCRIPTION -->
-<div class="mb-3">
-  <label class="form-label">Description *</label>
-  <textarea name="description" rows="4"
-    class="form-control <?= isset($errors['description']) ? 'is-invalid' : '' ?>"><?= htmlspecialchars($old['description'] ?? '') ?></textarea>
-  <div class="invalid-feedback"><?= $errors['description'] ?? '' ?></div>
-</div>
-
-<!-- GRAVITÉ -->
-<div class="mb-3">
-  <label class="form-label">Gravité *</label>
-  <select name="gravite"
-    class="form-select <?= isset($errors['gravite']) ? 'is-invalid' : '' ?>">
-
-    <option value="">-- Choisir --</option>
-    <option value="faible"  <?= ($old['gravite'] ?? '') === 'faible' ? 'selected' : '' ?>>Faible</option>
-    <option value="moyenne" <?= ($old['gravite'] ?? '') === 'moyenne' ? 'selected' : '' ?>>Moyenne</option>
-    <option value="grave"   <?= ($old['gravite'] ?? '') === 'grave' ? 'selected' : '' ?>>Grave</option>
-  </select>
-
-  <div class="invalid-feedback"><?= $errors['gravite'] ?? '' ?></div>
-</div>
-
-<!-- SUBMIT -->
-<div class="d-grid">
-  <button type="submit" class="btn btn-danger btn-lg">
-    Envoyer
-  </button>
-</div>
-
-</form>
-    </div><!-- /.form-card -->
-  </div><!-- /.container -->
-</main>
-
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/js/bootstrap.bundle.min.js"></script>
-
-<!-- Highlight checkbox labels on check/uncheck -->
-<script>
-  document.querySelectorAll('.symptom-item input[type="checkbox"]').forEach(cb => {
-    cb.addEventListener('change', () => {
-      cb.closest('.symptom-item').classList.toggle('checked', cb.checked);
-    });
-  });
-</script>
-
+    <script>
+        // Filtre par gravité avec select
+        const graviteSelect = document.getElementById('graviteFilter');
+        const searchInput = document.getElementById('searchInput');
+        const allergyCards = document.querySelectorAll('.allergy-card');
+        const resultCountSpan = document.getElementById('resultCount');
+        
+        let currentSearch = '';
+        
+        // Fonction pour filtrer les cartes
+        function filterCards() {
+            const selectedGravite = graviteSelect.value;
+            let visibleCount = 0;
+            
+            allergyCards.forEach(card => {
+                const gravite = card.getAttribute('data-gravite');
+                const name = card.getAttribute('data-name');
+                
+                // Vérifier le filtre de gravité
+                const graviteMatch = selectedGravite === 'all' || gravite === selectedGravite;
+                
+                // Vérifier la recherche
+                const searchMatch = !currentSearch || (name && name.includes(currentSearch));
+                
+                // Afficher ou masquer la carte
+                if (graviteMatch && searchMatch) {
+                    card.style.display = '';
+                    visibleCount++;
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+            
+            // Mettre à jour le compteur
+            if (resultCountSpan) {
+                resultCountSpan.textContent = visibleCount;
+            }
+            
+            // Afficher un message si aucun résultat
+            const allergiesGrid = document.getElementById('allergiesGrid');
+            let noResultMsg = document.getElementById('noResultMessage');
+            
+            if (visibleCount === 0) {
+                if (!noResultMsg) {
+                    noResultMsg = document.createElement('div');
+                    noResultMsg.id = 'noResultMessage';
+                    noResultMsg.className = 'col-span-full text-center py-12';
+                    noResultMsg.innerHTML = `
+                        <div class="text-6xl mb-4">🔍</div>
+                        <p class="text-gray-500 text-lg">Aucune allergie ne correspond à vos critères</p>
+                        <button onclick="resetFilters()" class="mt-4 text-blue-600 hover:underline">Réinitialiser les filtres</button>
+                    `;
+                    allergiesGrid.appendChild(noResultMsg);
+                }
+            } else {
+                if (noResultMsg) {
+                    noResultMsg.remove();
+                }
+            }
+        }
+        
+        // Fonction pour réinitialiser les filtres
+        window.resetFilters = function() {
+            graviteSelect.value = 'all';
+            if (searchInput) {
+                searchInput.value = '';
+                currentSearch = '';
+            }
+            filterCards();
+        }
+        
+        // Écouter les changements du select
+        if (graviteSelect) {
+            graviteSelect.addEventListener('change', filterCards);
+        }
+        
+        // Écouter la recherche
+        if (searchInput) {
+            searchInput.addEventListener('input', function() {
+                currentSearch = this.value.toLowerCase();
+                filterCards();
+            });
+        }
+        
+        // Initialisation
+        filterCards();
+    </script>
+    
 </body>
 </html>

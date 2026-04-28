@@ -4,11 +4,13 @@ require_once __DIR__ . '/../config.php';
 
 class AllergieC
 {
+    // ✅ AJOUT
     function addAllergie($allergie)
     {
         $sql = "INSERT INTO allergie (nom, description, gravite, symptomes) 
                 VALUES (:nom, :description, :gravite, :symptomes)";
         $db = config::getConnexion();
+
         try {
             $query = $db->prepare($sql);
             $result = $query->execute([
@@ -17,58 +19,81 @@ class AllergieC
                 ':gravite' => $allergie->getGravite(),
                 ':symptomes' => $allergie->getSymptomes()
             ]);
-            
-            if ($result) {
-                return $db->lastInsertId();
-            }
-            return false;
+
+            return $result ? $db->lastInsertId() : false;
+
         } catch (PDOException $e) {
             error_log('Erreur addAllergie: ' . $e->getMessage());
             return false;
         }
     }
 
-    function listAllergie()
+    // ✅ LISTE + FILTRE + RECHERCHE (début du mot)
+    function listAllergie($gravite = null, $search = null)
     {
-        $sql = "SELECT * FROM allergie ORDER BY id_allergie DESC";
         $db = config::getConnexion();
+
         try {
-            $liste = $db->query($sql);
-            return $liste->fetchAll(PDO::FETCH_ASSOC);
+            $sql = "SELECT * FROM allergie WHERE 1=1";
+            $params = [];
+
+            // 🔍 Recherche (commence par)
+            if (!empty($search)) {
+                $sql .= " AND nom LIKE :search";
+                $params[':search'] = $search . "%";
+            }
+
+            // 🎯 Filtre gravité
+            if (!empty($gravite)) {
+                $sql .= " AND gravite = :gravite";
+                $params[':gravite'] = $gravite;
+            }
+
+            $sql .= " ORDER BY id_allergie DESC";
+
+            $query = $db->prepare($sql);
+            $query->execute($params);
+
+            return $query->fetchAll(PDO::FETCH_ASSOC);
+
         } catch (PDOException $e) {
             error_log('Erreur listAllergie: ' . $e->getMessage());
             return [];
         }
     }
 
+    // ✅ GET BY ID
     function getAllergieById($id)
     {
-        $sql = "SELECT * FROM allergie WHERE id_allergie = :id LIMIT 1";
-        $db  = config::getConnexion();
+        $db = config::getConnexion();
+
         try {
-            $query = $db->prepare($sql);
+            $query = $db->prepare("SELECT * FROM allergie WHERE id_allergie = :id LIMIT 1");
             $query->execute([':id' => $id]);
             return $query->fetch(PDO::FETCH_ASSOC);
+
         } catch (PDOException $e) {
             error_log('Erreur getAllergieById: ' . $e->getMessage());
             return false;
         }
     }
 
+    // ✅ UPDATE
     function updateAllergie($allergie, $id)
     {
+        $db = config::getConnexion();
+
         try {
-            $db = config::getConnexion();
             $query = $db->prepare(
-                'UPDATE allergie SET
+                "UPDATE allergie SET
                     nom = :nom,
                     description = :description,
                     gravite = :gravite,
                     symptomes = :symptomes
-                WHERE id_allergie = :id'
+                WHERE id_allergie = :id"
             );
 
-            $result = $query->execute([
+            return $query->execute([
                 ':id' => $id,
                 ':nom' => $allergie->getNom(),
                 ':description' => $allergie->getDescription(),
@@ -76,22 +101,21 @@ class AllergieC
                 ':symptomes' => $allergie->getSymptomes()
             ]);
 
-            return $result;
         } catch (PDOException $e) {
             error_log('Erreur updateAllergie: ' . $e->getMessage());
             return false;
         }
     }
 
-    function deleteAllergie($ide)
+    // ✅ DELETE
+    function deleteAllergie($id)
     {
-        $sql = "DELETE FROM allergie WHERE id_allergie = :id";
         $db = config::getConnexion();
-        
+
         try {
-            $req = $db->prepare($sql);
-            $result = $req->execute([':id' => $ide]);
-            return $result;
+            $query = $db->prepare("DELETE FROM allergie WHERE id_allergie = :id");
+            return $query->execute([':id' => $id]);
+
         } catch (PDOException $e) {
             error_log('Erreur deleteAllergie: ' . $e->getMessage());
             return false;
