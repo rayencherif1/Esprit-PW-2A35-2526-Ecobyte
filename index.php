@@ -8,6 +8,7 @@ require_once 'controller/CategorieController.php';
 require_once 'controller/CommandeController.php';
 require_once 'controller/AuthController.php';
 require_once 'controller/FavorisController.php';  // AJOUT OBLIGATOIRE
+require_once 'controller/ExportController.php';  // Export PDF
 
 $controller = $_GET['controller'] ?? 'produit';
 $action = $_GET['action'] ?? 'front';
@@ -27,6 +28,9 @@ switch($controller) {
         break;
     case 'favoris':
         $controllerInstance = new FavorisController();
+        break;
+    case 'export':
+        $controllerInstance = new ExportController();
         break;
     default:
         $controllerInstance = new ProduitController();

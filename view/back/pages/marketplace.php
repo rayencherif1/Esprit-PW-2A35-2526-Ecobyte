@@ -118,6 +118,29 @@
                 <li class="mt-0.5 w-full"><a class="py-2.7 text-sm ease-nav-brand my-0 mx-2 flex items-center whitespace-nowrap px-4 transition-colors dark:text-white dark:opacity-80" href="#"><div class="mr-2 flex h-8 w-8 items-center justify-center rounded-lg bg-center stroke-0 text-center xl:p-2.5"><i class="relative top-0 text-sm leading-normal text-cyan-500 ni ni-blog"></i></div><span>Blog</span></a></li>
                 <li class="mt-0.5 w-full"><a class="py-2.7 text-sm ease-nav-brand my-0 mx-2 flex items-center whitespace-nowrap px-4 transition-colors dark:text-white dark:opacity-80" href="#"><div class="mr-2 flex h-8 w-8 items-center justify-center rounded-lg bg-center stroke-0 text-center xl:p-2.5"><i class="relative top-0 text-sm leading-normal text-emerald-500 ni ni-book-bookmark"></i></div><span>Recette</span></a></li>
                 <li class="mt-0.5 w-full"><a class="py-2.7 text-sm ease-nav-brand my-0 mx-2 flex items-center whitespace-nowrap px-4 transition-colors dark:text-white dark:opacity-80" href="#"><div class="mr-2 flex h-8 w-8 items-center justify-center rounded-lg bg-center stroke-0 text-center xl:p-2.5"><i class="relative top-0 text-sm leading-normal text-purple-500 ni ni-single-02"></i></div><span>User</span></a></li>
+                <li class="mt-0.5 w-full">
+                    <div class="relative">
+                        <a class="py-2.7 text-sm ease-nav-brand my-0 mx-2 flex items-center whitespace-nowrap px-4 transition-colors dark:text-white dark:opacity-80 cursor-pointer" onclick="toggleExportMenu()">
+                            <div class="mr-2 flex h-8 w-8 items-center justify-center rounded-lg bg-center stroke-0 text-center xl:p-2.5"><i class="relative top-0 text-sm leading-normal text-red-500 ni ni-cloud-download"></i></div>
+                            <span>📥 Export PDF</span>
+                        </a>
+                        <div id="exportMenu" class="hidden absolute left-0 mt-0 w-48 bg-white dark:bg-slate-850 rounded-lg shadow-lg z-50">
+                            <a href="/marketplace/index.php?controller=export&action=exportProduitsPDF" class="block px-4 py-2 text-sm text-gray-700 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700">
+                                📦 Export Produits
+                            </a>
+                            <a href="/marketplace/index.php?controller=export&action=exportCommandesPDF" class="block px-4 py-2 text-sm text-gray-700 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700">
+                                🛒 Export Commandes
+                            </a>
+                            <a href="/marketplace/index.php?controller=export&action=exportCategoriesPDF" class="block px-4 py-2 text-sm text-gray-700 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700">
+                                📁 Export Catégories
+                            </a>
+                            <hr class="my-1 border-gray-200 dark:border-gray-700">
+                            <a href="/marketplace/index.php?controller=export&action=exportRapportCompletPDF" class="block px-4 py-2 text-sm text-blue-600 dark:text-blue-400 hover:bg-gray-100 dark:hover:bg-gray-700 font-semibold">
+                                📊 Rapport Complet
+                            </a>
+                        </div>
+                    </div>
+                </li>
                 <li class="mt-0.5 w-full"><a class="py-2.7 text-sm ease-nav-brand my-0 mx-2 flex items-center whitespace-nowrap px-4 transition-colors dark:text-white dark:opacity-80" href="/marketplace/index.php?controller=auth&action=logout"><div class="mr-2 flex h-8 w-8 items-center justify-center rounded-lg bg-center stroke-0 text-center xl:p-2.5"><i class="relative top-0 text-sm leading-normal text-slate-400 ni ni-button-power"></i></div><span>Déconnexion</span></a></li>
             </ul>
         </div>
@@ -481,6 +504,20 @@
     <script>
         function openModal(id) { document.getElementById(id).classList.add('active'); }
         function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+        
+        function toggleExportMenu() {
+            var menu = document.getElementById('exportMenu');
+            menu.classList.toggle('hidden');
+        }
+        
+        // Fermer le menu quand on clique ailleurs
+        document.addEventListener('click', function(event) {
+            var menu = document.getElementById('exportMenu');
+            var toggle = event.target.closest('[onclick="toggleExportMenu()"]');
+            if (!toggle && !menu.contains(event.target)) {
+                menu.classList.add('hidden');
+            }
+        });
         
         function openEditProductModal(id, nom, prix, stock, description, categorie_id) {
             document.getElementById('edit_product_id').value = id;
