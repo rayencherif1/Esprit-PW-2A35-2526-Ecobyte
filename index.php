@@ -9,6 +9,7 @@ require_once 'controller/CommandeController.php';
 require_once 'controller/AuthController.php';
 require_once 'controller/FavorisController.php';  // AJOUT OBLIGATOIRE
 require_once 'controller/ExportController.php';  // Export PDF
+require_once 'controller/ApiController.php';  // API (Nutri-Score, etc.)
 
 $controller = $_GET['controller'] ?? 'produit';
 $action = $_GET['action'] ?? 'front';
@@ -31,6 +32,9 @@ switch($controller) {
         break;
     case 'export':
         $controllerInstance = new ExportController();
+        break;
+    case 'api':
+        $controllerInstance = new ApiController();
         break;
     default:
         $controllerInstance = new ProduitController();

@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120">
+  <rect width="120" height="120" rx="20" fill="#ebfbee"/>
+  <rect x="30" y="28" width="60" height="64" rx="16" fill="#38a169"/>
+  <rect x="34" y="34" width="52" height="22" rx="11" fill="#9ae6b4"/>
+  <text x="60" y="48" text-anchor="middle" font-family="Arial, sans-serif" font-size="8" fill="#1a202c">VITAMINES</text>
+  <rect x="36" y="62" width="48" height="24" rx="10" fill="#68d391"/>
+  <text x="60" y="76" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" fill="#f7fafc">Bien-être</text>
+  <path d="M50 92h20c0 4-3 6-10 6s-10-2-10-6z" fill="#c6f6d5"/>
+</svg>

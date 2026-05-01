@@ -19,6 +19,29 @@ class ExportController {
     private $errorColor = array(220, 53, 69);        // Rouge pour rupture
     private $warningColor = array(255, 193, 7);      // Orange pour stock faible
     private $successColor = array(40, 167, 69);      // Vert pour disponible
+
+    private function quickChartUrl(string $chartConfigJson, int $width = 900, int $height = 500): string {
+        $encoded = urlencode($chartConfigJson);
+        return "https://quickchart.io/chart?c={$encoded}&w={$width}&h={$height}&format=png&backgroundColor=white";
+    }
+
+    private function downloadToTempPng(string $url): ?string {
+        $tmp = tempnam(sys_get_temp_dir(), 'ecobite_chart_');
+        if ($tmp === false) return null;
+        $path = $tmp . '.png';
+        @unlink($tmp);
+        $ctx = stream_context_create([
+            'http' => [
+                'method' => 'GET',
+                'timeout' => 10,
+                'header' => "User-Agent: EcoBite/1.0\r\n"
+            ]
+        ]);
+        $data = @file_get_contents($url, false, $ctx);
+        if ($data === false) return null;
+        file_put_contents($path, $data);
+        return $path;
+    }
     
     public function __construct() {
         $produit = new Produit();
@@ -30,7 +53,18 @@ class ExportController {
      */
     private function toLatin1($text) {
         if (is_null($text)) return '';
-        // Convertir UTF-8 en entities HTML, puis en ISO-8859-1
+        $text = (string)$text;
+        if ($text === '') return '';
+
+        // 1) Convertir en ISO-8859-1 avec translit (évite des "vides" sur caractères non supportés)
+        if (function_exists('iconv')) {
+            $converted = @iconv('UTF-8', 'ISO-8859-1//TRANSLIT//IGNORE', $text);
+            if ($converted !== false && $converted !== '') {
+                return $converted;
+            }
+        }
+
+        // 2) Fallback entities -> latin1
         $text = htmlentities($text, ENT_QUOTES, 'UTF-8');
         $text = html_entity_decode($text, ENT_QUOTES, 'ISO-8859-1');
         return $text;
@@ -101,7 +135,16 @@ class ExportController {
         $pdf->SetDrawColor(200, 200, 200);
         
         foreach ($cells as $width => $text) {
-            $pdf->Cell($width, 8, $this->toLatin1($text), 1, 0, 'L', $fill);
+            $txt = $text;
+            if (is_null($txt) || (is_string($txt) && trim($txt) === '')) $txt = '-';
+            $txt = $this->toLatin1((string)$txt);
+            // Fit text to cell width to avoid "blank-looking" overflows
+            $max = max(5, $width - 4);
+            while ($pdf->GetStringWidth($txt) > $max && mb_strlen($txt) > 4) {
+                $txt = mb_substr($txt, 0, -2);
+                $txt = rtrim($txt) . '…';
+            }
+            $pdf->Cell($width, 8, $txt, 1, 0, 'L', $fill);
         }
         $pdf->Ln();
     }
@@ -385,6 +428,246 @@ class ExportController {
         }
 
         $pdf->Output('D', 'rapport_complet_ecobite_'.date('Ymd').'.pdf');
+        exit;
+    }
+
+    /**
+     * Exporter les statistiques + charts en PDF (QuickChart)
+     */
+    public function exportStatsPDF() {
+        $produitController = new ProduitController();
+        $categorieController = new CategorieController();
+        $commandeController = new CommandeController();
+
+        $produits = $produitController->getAllProduits();
+        $categories = $categorieController->getAllCategories();
+        $commandes = $commandeController->getAllCommandes();
+
+        // Revenu réel
+        $revenuTotal = 0;
+        $panierMoyen = 0;
+        $totalItemsVendus = 0;
+        try {
+            $row = $this->db->query("SELECT 
+                    COALESCE(SUM(cp.quantite * cp.prix_unitaire), 0) AS ca_total,
+                    COUNT(DISTINCT cp.commande_id) AS nb_commandes,
+                    COALESCE(SUM(cp.quantite), 0) AS items_total
+                FROM commande_produits cp")->fetch();
+            $revenuTotal = floatval($row['ca_total'] ?? 0);
+            $nbCmd = intval($row['nb_commandes'] ?? 0);
+            $totalItemsVendus = intval($row['items_total'] ?? 0);
+            $panierMoyen = $nbCmd > 0 ? ($revenuTotal / $nbCmd) : 0;
+        } catch (Exception $e) {}
+
+        $promoCount = 0;
+        $stockStats = ['Rupture' => 0, 'Faible (<5)' => 0, 'OK' => 0];
+        $ventesByCat = [];
+
+        foreach ($produits as $p) {
+            if (!empty($p['is_promo'])) $promoCount++;
+            $s = intval($p['stock'] ?? 0);
+            if ($s <= 0) $stockStats['Rupture']++;
+            elseif ($s < 5) $stockStats['Faible (<5)']++;
+            else $stockStats['OK']++;
+        }
+
+        // Ventes par catégorie (réel)
+        try {
+            $stmt = $this->db->query("
+                SELECT COALESCE(cat.nom,'Sans catégorie') AS categorie,
+                       COALESCE(SUM(cp.quantite),0) AS qte
+                FROM commande_produits cp
+                JOIN produits p ON p.id = cp.produit_id
+                LEFT JOIN categories cat ON cat.id = p.categorie_id
+                GROUP BY categorie
+                ORDER BY qte DESC
+                LIMIT 6
+            ");
+            $rows = $stmt->fetchAll() ?: [];
+            foreach ($rows as $r) $ventesByCat[$r['categorie']] = intval($r['qte']);
+        } catch (Exception $e) {}
+
+        // CA par mois (6 derniers mois)
+        $caParMois = [];
+        try {
+            $stmt = $this->db->query("
+                SELECT DATE_FORMAT(c.date_commande, '%Y-%m') AS ym,
+                       COALESCE(SUM(cp.quantite * cp.prix_unitaire), 0) AS ca
+                FROM commandes c
+                JOIN commande_produits cp ON cp.commande_id = c.id
+                WHERE c.date_commande >= DATE_SUB(CURDATE(), INTERVAL 6 MONTH)
+                GROUP BY ym
+                ORDER BY ym ASC
+            ");
+            $caParMois = $stmt->fetchAll() ?: [];
+        } catch (Exception $e) {}
+
+        // Top produits (quantité)
+        $topProduits = [];
+        try {
+            $stmt = $this->db->query("
+                SELECT p.nom, COALESCE(SUM(cp.quantite),0) AS qte
+                FROM commande_produits cp
+                JOIN produits p ON p.id = cp.produit_id
+                GROUP BY p.id, p.nom
+                ORDER BY qte DESC
+                LIMIT 5
+            ");
+            $topProduits = $stmt->fetchAll() ?: [];
+        } catch (Exception $e) {}
+
+        $pdf = new FPDF();
+        $pdf->AddPage();
+        $this->addHeader($pdf, 'Statistiques EcoBite');
+
+        // Résumé
+        $pdf->SetFont('Arial', 'B', 12);
+        $pdf->Cell(0, 8, $this->toLatin1('Résumé'), 0, 1);
+        $pdf->SetFont('Arial', '', 11);
+        $pdf->Cell(0, 7, $this->toLatin1('Produits: ' . count($produits) . ' | Catégories: ' . count($categories) . ' | Commandes: ' . count($commandes)), 0, 1);
+        $pdf->Cell(0, 7, $this->toLatin1('Revenus totaux: ' . number_format($revenuTotal, 2, ',', ' ') . ' DT | Panier moyen: ' . number_format($panierMoyen, 2, ',', ' ') . ' DT'), 0, 1);
+        $pdf->Cell(0, 7, $this->toLatin1('Articles vendus: ' . $totalItemsVendus . ' | Produits en promo: ' . $promoCount), 0, 1);
+        $pdf->Ln(4);
+
+        // Chart 1: ventes par catégorie
+        $chart1 = json_encode([
+            'type' => 'bar',
+            'data' => [
+                'labels' => array_keys($ventesByCat),
+                'datasets' => [[
+                    'label' => 'Ventes',
+                    'data' => array_values($ventesByCat),
+                    'backgroundColor' => 'rgba(46,125,50,0.25)',
+                    'borderColor' => 'rgba(46,125,50,1)',
+                    'borderWidth' => 2,
+                    'borderRadius' => 10
+                ]]
+            ],
+            'options' => [
+                'plugins' => ['legend' => ['display' => false]],
+                'scales' => ['y' => ['beginAtZero' => true]]
+            ]
+        ], JSON_UNESCAPED_UNICODE);
+        $url1 = $this->quickChartUrl($chart1, 900, 420);
+        $png1 = $this->downloadToTempPng($url1);
+        if ($png1) {
+            $pdf->Image($png1, 15, $pdf->GetY(), 180);
+            $pdf->Ln(90);
+            @unlink($png1);
+        }
+
+        // Chart CA/mois
+        if (!empty($caParMois)) {
+            $chartCa = json_encode([
+                'type' => 'line',
+                'data' => [
+                    'labels' => array_map(fn($r) => $r['ym'], $caParMois),
+                    'datasets' => [[
+                        'label' => 'CA',
+                        'data' => array_map(fn($r) => (float)$r['ca'], $caParMois),
+                        'borderColor' => 'rgba(33,150,243,1)',
+                        'backgroundColor' => 'rgba(33,150,243,0.15)',
+                        'fill' => true,
+                        'tension' => 0.35
+                    ]]
+                ],
+                'options' => ['plugins' => ['legend' => ['display' => false]]]
+            ], JSON_UNESCAPED_UNICODE);
+            $urlCa = $this->quickChartUrl($chartCa, 900, 420);
+            $pngCa = $this->downloadToTempPng($urlCa);
+            if ($pngCa) {
+                $pdf->Image($pngCa, 15, $pdf->GetY(), 180);
+                $pdf->Ln(90);
+                @unlink($pngCa);
+            }
+        }
+
+        // Chart top produits
+        if (!empty($topProduits)) {
+            $chartTop = json_encode([
+                'type' => 'bar',
+                'data' => [
+                    'labels' => array_map(fn($r) => $r['nom'], $topProduits),
+                    'datasets' => [[
+                        'label' => 'Quantités',
+                        'data' => array_map(fn($r) => (int)$r['qte'], $topProduits),
+                        'backgroundColor' => 'rgba(76,175,80,0.25)',
+                        'borderColor' => 'rgba(76,175,80,1)',
+                        'borderWidth' => 2,
+                        'borderRadius' => 10
+                    ]]
+                ],
+                'options' => ['plugins' => ['legend' => ['display' => false]]]
+            ], JSON_UNESCAPED_UNICODE);
+            $urlTop = $this->quickChartUrl($chartTop, 900, 420);
+            $pngTop = $this->downloadToTempPng($urlTop);
+            if ($pngTop) {
+                $pdf->AddPage();
+                $this->addHeader($pdf, 'Top Produits');
+                $pdf->Image($pngTop, 15, $pdf->GetY(), 180);
+                $pdf->Ln(90);
+                @unlink($pngTop);
+            }
+        }
+
+        // Chart 2: stock + promo
+        $chart2 = json_encode([
+            'type' => 'doughnut',
+            'data' => [
+                'labels' => array_keys($stockStats),
+                'datasets' => [[
+                    'data' => array_values($stockStats),
+                    'backgroundColor' => ['#ef5350', '#ffb300', '#66bb6a'],
+                    'borderWidth' => 0
+                ]]
+            ],
+            'options' => [
+                'plugins' => ['legend' => ['position' => 'bottom']],
+                'cutout' => '60%'
+            ]
+        ], JSON_UNESCAPED_UNICODE);
+        $url2 = $this->quickChartUrl($chart2, 900, 420);
+        $png2 = $this->downloadToTempPng($url2);
+
+        $promoStats = ['En promo' => $promoCount, 'Hors promo' => max(0, count($produits) - $promoCount)];
+        $chart3 = json_encode([
+            'type' => 'doughnut',
+            'data' => [
+                'labels' => array_keys($promoStats),
+                'datasets' => [[
+                    'data' => array_values($promoStats),
+                    'backgroundColor' => ['#fb8c00', '#90a4ae'],
+                    'borderWidth' => 0
+                ]]
+            ],
+            'options' => [
+                'plugins' => ['legend' => ['position' => 'bottom']],
+                'cutout' => '60%'
+            ]
+        ], JSON_UNESCAPED_UNICODE);
+        $url3 = $this->quickChartUrl($chart3, 900, 420);
+        $png3 = $this->downloadToTempPng($url3);
+
+        $pdf->AddPage();
+        $this->addHeader($pdf, 'Stocks & Promotions');
+
+        if ($png2) {
+            $pdf->SetFont('Arial', 'B', 12);
+            $pdf->Cell(0, 8, $this->toLatin1('Stock'), 0, 1);
+            $pdf->Image($png2, 15, $pdf->GetY(), 180);
+            $pdf->Ln(90);
+            @unlink($png2);
+        }
+        if ($png3) {
+            $pdf->SetFont('Arial', 'B', 12);
+            $pdf->Cell(0, 8, $this->toLatin1('Promotions'), 0, 1);
+            $pdf->Image($png3, 15, $pdf->GetY(), 180);
+            $pdf->Ln(90);
+            @unlink($png3);
+        }
+
+        $this->addFooter($pdf);
+        $pdf->Output('D', 'stats_ecobite_' . date('Ymd') . '.pdf');
         exit;
     }
 }

@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120">
+  <rect width="120" height="120" rx="20" fill="#f7fafc"/>
+  <rect x="25" y="22" width="70" height="76" rx="18" fill="#4c51bf"/>
+  <rect x="32" y="28" width="56" height="20" rx="10" fill="#c3dafe"/>
+  <text x="60" y="42" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" fill="#1a202c">WHEY</text>
+  <text x="60" y="56" text-anchor="middle" font-family="Arial, sans-serif" font-size="7" fill="#1a202c">PROTÉINE</text>
+  <rect x="34" y="55" width="52" height="30" rx="10" fill="#667eea"/>
+  <text x="60" y="72" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" fill="#f7fafc">Poudre</text>
+  <path d="M40 90h40c0 6-4 10-10 10s-10-4-10-10H40z" fill="#a3bffa"/>
+</svg>

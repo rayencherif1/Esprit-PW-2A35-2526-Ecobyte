@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120">
+  <rect width="120" height="120" rx="20" fill="#fff7ed"/>
+  <rect x="28" y="24" width="64" height="72" rx="18" fill="#d9470f"/>
+  <rect x="34" y="30" width="52" height="20" rx="10" fill="#fed7aa"/>
+  <text x="60" y="44" text-anchor="middle" font-family="Arial, sans-serif" font-size="8" fill="#7c2d12">COLLAGÈNE</text>
+  <rect x="36" y="56" width="48" height="30" rx="10" fill="#f6ad55"/>
+  <text x="60" y="72" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" fill="#fff7ed">Beauté</text>
+  <circle cx="60" cy="91" r="8" fill="#fef3c7"/>
+</svg>

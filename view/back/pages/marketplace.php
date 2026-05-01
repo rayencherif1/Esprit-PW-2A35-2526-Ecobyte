@@ -90,11 +90,99 @@
     $totalProduits = count($produits);
     $totalCategories = count($categories);
     $totalCommandes = count($commandes);
-    $revenuTotal = array_sum(array_column($commandes, 'total'));
+    // Chiffre d'affaires réel (basé sur commande_produits)
+    $dbStats = null;
+    try {
+        require_once '../../../model/Produit.php';
+        $m = new Produit();
+        $dbStats = $m->getDb();
+    } catch (Exception $e) {
+        $dbStats = null;
+    }
+
+    $revenuTotal = 0;
+    $panierMoyen = 0;
+    $totalItemsVendus = 0;
+    $topProduits = [];
+    $caParMois = [];
+    if ($dbStats) {
+        // CA total + nb commandes
+        $row = $dbStats->query("SELECT 
+                COALESCE(SUM(cp.quantite * cp.prix_unitaire), 0) AS ca_total,
+                COUNT(DISTINCT cp.commande_id) AS nb_commandes,
+                COALESCE(SUM(cp.quantite), 0) AS items_total
+            FROM commande_produits cp")->fetch();
+        $revenuTotal = floatval($row['ca_total'] ?? 0);
+        $nbCmd = intval($row['nb_commandes'] ?? 0);
+        $totalItemsVendus = intval($row['items_total'] ?? 0);
+        $panierMoyen = $nbCmd > 0 ? ($revenuTotal / $nbCmd) : 0;
+
+        // CA par mois (6 derniers mois)
+        $stmt = $dbStats->query("
+            SELECT DATE_FORMAT(c.date_commande, '%Y-%m') AS ym,
+                   COALESCE(SUM(cp.quantite * cp.prix_unitaire), 0) AS ca
+            FROM commandes c
+            JOIN commande_produits cp ON cp.commande_id = c.id
+            WHERE c.date_commande >= DATE_SUB(CURDATE(), INTERVAL 6 MONTH)
+            GROUP BY ym
+            ORDER BY ym ASC
+        ");
+        $caParMois = $stmt->fetchAll() ?: [];
+
+        // Top produits (quantité vendue)
+        $stmt = $dbStats->query("
+            SELECT p.nom, COALESCE(SUM(cp.quantite),0) AS qte
+            FROM commande_produits cp
+            JOIN produits p ON p.id = cp.produit_id
+            GROUP BY p.id, p.nom
+            ORDER BY qte DESC
+            LIMIT 5
+        ");
+        $topProduits = $stmt->fetchAll() ?: [];
+    }
     $produitsRupture = 0;
     foreach($produits as $p) {
         if($p['stock'] <= 0) $produitsRupture++;
     }
+
+    // ======== DATA CHARTS (dynamiques) ========
+    // Ventes par catégorie (Top 6) — basé sur commandes réelles si possible
+    $ventesByCat = [];
+    if ($dbStats) {
+        $stmt = $dbStats->query("
+            SELECT COALESCE(cat.nom,'Sans catégorie') AS categorie,
+                   COALESCE(SUM(cp.quantite),0) AS qte
+            FROM commande_produits cp
+            JOIN produits p ON p.id = cp.produit_id
+            LEFT JOIN categories cat ON cat.id = p.categorie_id
+            GROUP BY categorie
+            ORDER BY qte DESC
+            LIMIT 6
+        ");
+        $rows = $stmt->fetchAll() ?: [];
+        foreach ($rows as $r) $ventesByCat[$r['categorie']] = intval($r['qte']);
+    } else {
+        foreach ($produits as $p) {
+            $cat = $p['categorie_nom'] ?? 'Sans catégorie';
+            $ventesByCat[$cat] = ($ventesByCat[$cat] ?? 0) + intval($p['ventes'] ?? 0);
+        }
+        arsort($ventesByCat);
+        $ventesByCat = array_slice($ventesByCat, 0, 6, true);
+    }
+
+    // Stock: répartition (rupture/faible/ok)
+    $stockStats = ['Rupture' => 0, 'Faible (<5)' => 0, 'OK' => 0];
+    foreach ($produits as $p) {
+        $s = intval($p['stock'] ?? 0);
+        if ($s <= 0) $stockStats['Rupture']++;
+        elseif ($s < 5) $stockStats['Faible (<5)']++;
+        else $stockStats['OK']++;
+    }
+
+    // Promos
+    $promoCount = 0;
+    foreach ($produits as $p) if (!empty($p['is_promo'])) $promoCount++;
+    $promoStats = ['En promo' => $promoCount, 'Hors promo' => max(0, count($produits) - $promoCount)];
     
     // Messages de succès/erreur
     $successMessage = $_SESSION['success_message'] ?? '';
@@ -256,6 +344,70 @@
             </div>
         </div>
 
+        <!-- DASHBOARD ANALYTICS (Charts) -->
+        <div class="w-full px-6 pb-6 mx-auto">
+            <div class="flex flex-wrap -mx-3">
+                <div class="w-full max-w-full px-3 mb-6 lg:mb-0 lg:w-7/12">
+                    <div class="relative flex flex-col min-w-0 break-words bg-white shadow-xl dark:bg-slate-850 dark:shadow-dark-xl rounded-2xl bg-clip-border">
+                        <div class="p-6 pb-0 mb-0 border-b-0 border-b-solid rounded-t-2xl border-b-transparent flex justify-between items-center">
+                            <h6 class="dark:text-white">📈 Ventes par catégorie (Top)</h6>
+                            <a href="/marketplace/index.php?controller=export&action=exportStatsPDF" class="btn-action info">Exporter Stats PDF</a>
+                        </div>
+                        <div class="p-6">
+                            <canvas id="chartVentesByCat" height="140"></canvas>
+                        </div>
+                    </div>
+                </div>
+                <div class="w-full max-w-full px-3 lg:w-5/12">
+                    <div class="relative flex flex-col min-w-0 break-words bg-white shadow-xl dark:bg-slate-850 dark:shadow-dark-xl rounded-2xl bg-clip-border mb-6">
+                        <div class="p-6 pb-0 mb-0 border-b-0 border-b-solid rounded-t-2xl border-b-transparent">
+                            <h6 class="dark:text-white">📦 Stock (répartition)</h6>
+                        </div>
+                        <div class="p-6">
+                            <canvas id="chartStock" height="140"></canvas>
+                        </div>
+                    </div>
+                    <div class="relative flex flex-col min-w-0 break-words bg-white shadow-xl dark:bg-slate-850 dark:shadow-dark-xl rounded-2xl bg-clip-border">
+                        <div class="p-6 pb-0 mb-0 border-b-0 border-b-solid rounded-t-2xl border-b-transparent">
+                            <h6 class="dark:text-white">🏷️ Promotions</h6>
+                        </div>
+                        <div class="p-6">
+                            <canvas id="chartPromo" height="140"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ANALYTICS (Revenue + Top produits) -->
+        <div class="w-full px-6 pb-6 mx-auto">
+            <div class="flex flex-wrap -mx-3">
+                <div class="w-full max-w-full px-3 mb-6 lg:mb-0 lg:w-7/12">
+                    <div class="relative flex flex-col min-w-0 break-words bg-white shadow-xl dark:bg-slate-850 dark:shadow-dark-xl rounded-2xl bg-clip-border">
+                        <div class="p-6 pb-0 mb-0 border-b-0 border-b-solid rounded-t-2xl border-b-transparent">
+                            <h6 class="dark:text-white">💰 Chiffre d'affaires (6 derniers mois)</h6>
+                            <p class="text-sm" style="margin-top:6px; color:#6b7280;">
+                                Panier moyen: <strong><?= number_format($panierMoyen, 2) ?> DT</strong> • Articles vendus: <strong><?= (int)$totalItemsVendus ?></strong>
+                            </p>
+                        </div>
+                        <div class="p-6">
+                            <canvas id="chartCaMois" height="140"></canvas>
+                        </div>
+                    </div>
+                </div>
+                <div class="w-full max-w-full px-3 lg:w-5/12">
+                    <div class="relative flex flex-col min-w-0 break-words bg-white shadow-xl dark:bg-slate-850 dark:shadow-dark-xl rounded-2xl bg-clip-border">
+                        <div class="p-6 pb-0 mb-0 border-b-0 border-b-solid rounded-t-2xl border-b-transparent">
+                            <h6 class="dark:text-white">🏆 Top produits (quantités vendues)</h6>
+                        </div>
+                        <div class="p-6">
+                            <canvas id="chartTopProduits" height="140"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- SECTION CATÉGORIES (en haut) -->
         <div class="w-full px-6 py-6 mx-auto">
             <?php if(!empty($successMessage)): ?>
@@ -289,7 +441,7 @@
                                             <td><?= htmlspecialchars($c['nom']) ?></td>
                                             <td><?= htmlspecialchars($c['description']) ?></td>
                                             <td>
-                                                <button class="btn-action warning" onclick="openEditCategoryModal(<?= $c['id'] ?>, '<?= htmlspecialchars($c['nom']) ?>', '<?= htmlspecialchars($c['description']) ?>')">Modifier</button>
+                                                <button class="btn-action warning" onclick='openEditCategoryModal(<?= (int)$c["id"] ?>, <?= json_encode((string)($c["nom"] ?? ""), JSON_UNESCAPED_UNICODE) ?>, <?= json_encode((string)($c["description"] ?? ""), JSON_UNESCAPED_UNICODE) ?>)'>Modifier</button>
                                                 <a href="/marketplace/index.php?controller=categorie&action=delete&id=<?= $c['id'] ?>" class="btn-action danger" onclick="return confirm('Supprimer cette catégorie ?')">Supprimer</a>
                                             </td>
                                         </tr>
@@ -317,7 +469,7 @@
                                 <table class="table-crud">
                                     <thead>
                                         <tr>
-                                            <th>Nom</th><th>Prix (DT)</th><th>Stock</th><th>Catégorie</th><th>Actions</th>
+                                            <th>Nom</th><th>Prix (DT)</th><th>Stock</th><th>Catégorie</th><th>Promo</th><th>Actions</th>
                                             <th>Commandes</th>
                                         </tr>
                                     </thead>
@@ -329,7 +481,28 @@
                                                 <td><?= $p['stock'] ?></td>
                                                 <td><?= htmlspecialchars($p['categorie_nom'] ?? '—') ?></td>
                                                 <td>
-                                                    <button class="btn-action warning" onclick="openEditProductModal(<?= $p['id'] ?>, '<?= htmlspecialchars($p['nom']) ?>', <?= $p['prix'] ?>, <?= $p['stock'] ?>, '<?= htmlspecialchars($p['description']) ?>', <?= $p['categorie_id'] ?? 'null' ?>)">Modifier</button>
+                                                    <?php if (!empty($p['is_promo'])): ?>
+                                                        <span class="btn-action" style="background:#ff9800;">Promo</span>
+                                                        <?php if (isset($p['prix_promo']) && $p['prix_promo'] !== null && $p['prix_promo'] !== ''): ?>
+                                                            <div style="font-size:12px; color:#333; margin-top:4px;">
+                                                                <?= number_format($p['prix_promo'], 2) ?> DT
+                                                            </div>
+                                                        <?php endif; ?>
+                                                    <?php else: ?>
+                                                        —
+                                                    <?php endif; ?>
+                                                </td>
+                                                <td>
+                                                    <button class="btn-action warning" onclick='openEditProductModal(
+                                                        <?= (int)$p["id"] ?>,
+                                                        <?= json_encode((string)($p["nom"] ?? ""), JSON_UNESCAPED_UNICODE) ?>,
+                                                        <?= json_encode((float)($p["prix"] ?? 0), JSON_UNESCAPED_UNICODE) ?>,
+                                                        <?= json_encode((int)($p["stock"] ?? 0), JSON_UNESCAPED_UNICODE) ?>,
+                                                        <?= json_encode((string)($p["description"] ?? ""), JSON_UNESCAPED_UNICODE) ?>,
+                                                        <?= json_encode(($p["categorie_id"] ?? null) !== null ? (int)$p["categorie_id"] : null, JSON_UNESCAPED_UNICODE) ?>,
+                                                        <?= json_encode(!empty($p["is_promo"]) ? 1 : 0, JSON_UNESCAPED_UNICODE) ?>,
+                                                        <?= json_encode((isset($p["prix_promo"]) && $p["prix_promo"] !== '' && $p["prix_promo"] !== null) ? (float)$p["prix_promo"] : null, JSON_UNESCAPED_UNICODE) ?>
+                                                    )'>Modifier</button>
                                                     <a href="/marketplace/index.php?controller=produit&action=delete&id=<?= $p['id'] ?>" class="btn-action danger" onclick="return confirm('Supprimer ce produit ?')">Supprimer</a>
                                                 </td>
                                                 <td>
@@ -337,7 +510,7 @@
                                                 </td>
                                             </tr>
                                             <tr id="orders-<?= $p['id'] ?>" style="display: none;" class="order-row">
-                                                <td colspan="6">
+                                                <td colspan="7">
                                                     <?php if (!empty($commandesParProduit[$p['id']])): ?>
                                                         <table class="order-table">
                                                             <thead>
@@ -417,6 +590,16 @@
                         <?php endforeach; ?>
                     </select>
                 </div>
+                <div class="form-group">
+                    <label style="display:flex; align-items:center; gap:10px;">
+                        <input type="checkbox" name="is_promo" id="add_is_promo" style="width:auto;">
+                        Produit en promo
+                    </label>
+                </div>
+                <div class="form-group">
+                    <label>Prix promo (DT)</label>
+                    <input type="number" name="prix_promo" id="add_prix_promo" step="0.01" placeholder="Ex: 9.90">
+                </div>
                 <button type="submit" class="btn-action">Ajouter</button>
             </form>
         </div>
@@ -454,6 +637,16 @@
                         <option value="<?= $cat['id'] ?>"><?= htmlspecialchars($cat['nom']) ?></option>
                         <?php endforeach; ?>
                     </select>
+                </div>
+                <div class="form-group">
+                    <label style="display:flex; align-items:center; gap:10px;">
+                        <input type="checkbox" name="is_promo" id="edit_is_promo" style="width:auto;">
+                        Produit en promo
+                    </label>
+                </div>
+                <div class="form-group">
+                    <label>Prix promo (DT)</label>
+                    <input type="number" name="prix_promo" id="edit_prix_promo" step="0.01" placeholder="Ex: 9.90">
                 </div>
                 <button type="submit" class="btn-action">Mettre à jour</button>
             </form>
@@ -519,13 +712,15 @@
             }
         });
         
-        function openEditProductModal(id, nom, prix, stock, description, categorie_id) {
+        function openEditProductModal(id, nom, prix, stock, description, categorie_id, is_promo, prix_promo) {
             document.getElementById('edit_product_id').value = id;
             document.getElementById('edit_product_nom').value = nom;
             document.getElementById('edit_product_prix').value = prix;
             document.getElementById('edit_product_stock').value = stock;
             document.getElementById('edit_product_description').value = description;
             if(categorie_id && categorie_id != 'null') document.getElementById('edit_product_categorie_id').value = categorie_id;
+            document.getElementById('edit_is_promo').checked = !!is_promo;
+            document.getElementById('edit_prix_promo').value = (prix_promo === null || prix_promo === 'null') ? '' : prix_promo;
             openModal('editProductModal');
         }
         
@@ -646,6 +841,89 @@
                 errors.forEach(e => e.style.display = 'none');
             }
         }
+    </script>
+
+    <!-- Charts -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <script>
+      const ventesLabels = <?= json_encode(array_keys($ventesByCat), JSON_UNESCAPED_UNICODE) ?>;
+      const ventesData = <?= json_encode(array_values($ventesByCat), JSON_UNESCAPED_UNICODE) ?>;
+      const stockLabels = <?= json_encode(array_keys($stockStats), JSON_UNESCAPED_UNICODE) ?>;
+      const stockData = <?= json_encode(array_values($stockStats), JSON_UNESCAPED_UNICODE) ?>;
+      const promoLabels = <?= json_encode(array_keys($promoStats), JSON_UNESCAPED_UNICODE) ?>;
+      const promoData = <?= json_encode(array_values($promoStats), JSON_UNESCAPED_UNICODE) ?>;
+      const caMoisLabels = <?= json_encode(array_map(fn($r) => $r['ym'], $caParMois), JSON_UNESCAPED_UNICODE) ?>;
+      const caMoisData = <?= json_encode(array_map(fn($r) => (float)$r['ca'], $caParMois), JSON_UNESCAPED_UNICODE) ?>;
+      const topProdLabels = <?= json_encode(array_map(fn($r) => $r['nom'], $topProduits), JSON_UNESCAPED_UNICODE) ?>;
+      const topProdData = <?= json_encode(array_map(fn($r) => (int)$r['qte'], $topProduits), JSON_UNESCAPED_UNICODE) ?>;
+
+      function makeBar(ctx, labels, data, title) {
+        return new Chart(ctx, {
+          type: 'bar',
+          data: {
+            labels,
+            datasets: [{
+              label: title,
+              data,
+              backgroundColor: 'rgba(46,125,50,0.25)',
+              borderColor: 'rgba(46,125,50,1)',
+              borderWidth: 1.5,
+              borderRadius: 10,
+            }]
+          },
+          options: {
+            responsive: true,
+            plugins: { legend: { display: false } },
+            scales: {
+              x: { grid: { display: false } },
+              y: { beginAtZero: true }
+            }
+          }
+        });
+      }
+
+      function makeDoughnut(ctx, labels, data, colors) {
+        return new Chart(ctx, {
+          type: 'doughnut',
+          data: { labels, datasets: [{ data, backgroundColor: colors, borderWidth: 0 }] },
+          options: { responsive: true, plugins: { legend: { position: 'bottom' } }, cutout: '62%' }
+        });
+      }
+
+      function makeLine(ctx, labels, data, title) {
+        return new Chart(ctx, {
+          type: 'line',
+          data: {
+            labels,
+            datasets: [{
+              label: title,
+              data,
+              borderColor: 'rgba(33,150,243,1)',
+              backgroundColor: 'rgba(33,150,243,0.15)',
+              fill: true,
+              tension: 0.35
+            }]
+          },
+          options: {
+            responsive: true,
+            plugins: { legend: { display: false } },
+            scales: { y: { beginAtZero: true } }
+          }
+        });
+      }
+
+      const el1 = document.getElementById('chartVentesByCat');
+      if (el1) makeBar(el1, ventesLabels, ventesData, 'Ventes');
+      const el2 = document.getElementById('chartStock');
+      if (el2) makeDoughnut(el2, stockLabels, stockData, ['#ef5350', '#ffb300', '#66bb6a']);
+      const el3 = document.getElementById('chartPromo');
+      if (el3) makeDoughnut(el3, promoLabels, promoData, ['#fb8c00', '#90a4ae']);
+
+      // Charts supplémentaires (innovants)
+      const el4 = document.getElementById('chartCaMois');
+      if (el4) makeLine(el4, caMoisLabels, caMoisData, 'Chiffre d\'affaires');
+      const el5 = document.getElementById('chartTopProduits');
+      if (el5) makeBar(el5, topProdLabels, topProdData, 'Quantités vendues');
     </script>
 </body>
 </html>

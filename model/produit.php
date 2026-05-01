@@ -1,5 +1,12 @@
 <?php
 // model/Produit.php
+// Compat: le projet utilise parfois "Produit.php" (Windows OK, Linux sensible à la casse).
+require_once __DIR__ . '/produit.php';
+
+?>
+
+<?php
+// model/Produit.php
 require_once __DIR__ . '/../config/database.php';
 
 class Produit {

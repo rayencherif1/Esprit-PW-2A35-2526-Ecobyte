@@ -8,6 +8,36 @@ class ProduitController {
     public function __construct() {
         $produit = new Produit();
         $this->db = $produit->getDb();
+        $this->ensureProduitsSchema();
+    }
+
+    private function columnExists(string $table, string $column): bool {
+        $stmt = $this->db->prepare("SHOW COLUMNS FROM `$table` LIKE :col");
+        $stmt->execute(['col' => $column]);
+        return $stmt->fetch() !== false;
+    }
+
+    /**
+     * Évite les erreurs SQL quand la base n'a pas encore toutes les colonnes.
+     * Important: on reste non destructif (uniquement ADD COLUMN si manquant).
+     */
+    private function ensureProduitsSchema(): void {
+        try {
+            if (!$this->columnExists('produits', 'date_ajout')) {
+                $this->db->exec("ALTER TABLE produits ADD COLUMN date_ajout DATETIME DEFAULT CURRENT_TIMESTAMP");
+            }
+            if (!$this->columnExists('produits', 'is_promo')) {
+                $this->db->exec("ALTER TABLE produits ADD COLUMN is_promo TINYINT(1) DEFAULT 0");
+            }
+            if (!$this->columnExists('produits', 'ventes')) {
+                $this->db->exec("ALTER TABLE produits ADD COLUMN ventes INT DEFAULT 0");
+            }
+            if (!$this->columnExists('produits', 'prix_promo')) {
+                $this->db->exec("ALTER TABLE produits ADD COLUMN prix_promo DECIMAL(10,2) NULL");
+            }
+        } catch (Exception $e) {
+            // Ne pas casser le front si l'ALTER échoue (permissions etc.)
+        }
     }
     
     // Vérifier si l'utilisateur est connecté
@@ -99,31 +129,41 @@ class ProduitController {
     }
     
     // Ajouter un produit (avec catégorie obligatoire)
-    public function createProduit($nom, $prix, $stock, $description, $categorie_id) {
+    public function createProduit($nom, $prix, $stock, $description, $categorie_id, $calories = null, $nutriscore = null, $saison = null, $is_promo = 0, $prix_promo = null) {
         if (empty($categorie_id)) {
             return false;
         }
         
-        $sql = "INSERT INTO produits (nom, prix, stock, description, categorie_id) 
-                VALUES (:nom, :prix, :stock, :description, :categorie_id)";
+        $sql = "INSERT INTO produits (nom, prix, stock, description, categorie_id, calories, nutriscore, saison, is_promo, prix_promo) 
+                VALUES (:nom, :prix, :stock, :description, :categorie_id, :calories, :nutriscore, :saison, :is_promo, :prix_promo)";
         $stmt = $this->db->prepare($sql);
         return $stmt->execute([
             'nom' => $nom,
             'prix' => $prix,
             'stock' => $stock,
             'description' => $description,
-            'categorie_id' => $categorie_id
+            'categorie_id' => $categorie_id,
+            'calories' => $calories,
+            'nutriscore' => $nutriscore,
+            'saison' => $saison,
+            'is_promo' => $is_promo ? 1 : 0,
+            'prix_promo' => $prix_promo
         ]);
     }
     
     // Modifier un produit
-    public function updateProduit($id, $nom, $prix, $stock, $description, $categorie_id) {
+    public function updateProduit($id, $nom, $prix, $stock, $description, $categorie_id, $calories = null, $nutriscore = null, $saison = null, $is_promo = 0, $prix_promo = null) {
         $sql = "UPDATE produits SET 
                 nom = :nom, 
                 prix = :prix, 
                 stock = :stock, 
                 description = :description, 
-                categorie_id = :categorie_id 
+                categorie_id = :categorie_id,
+                calories = :calories,
+                nutriscore = :nutriscore,
+                saison = :saison,
+                is_promo = :is_promo,
+                prix_promo = :prix_promo
                 WHERE id = :id";
         $stmt = $this->db->prepare($sql);
         return $stmt->execute([
@@ -132,7 +172,12 @@ class ProduitController {
             'prix' => $prix,
             'stock' => $stock,
             'description' => $description,
-            'categorie_id' => $categorie_id
+            'categorie_id' => $categorie_id,
+            'calories' => $calories,
+            'nutriscore' => $nutriscore,
+            'saison' => $saison,
+            'is_promo' => $is_promo ? 1 : 0,
+            'prix_promo' => $prix_promo
         ]);
     }
     
@@ -162,10 +207,18 @@ class ProduitController {
             $stock = $_POST['stock'] ?? 0;
             $description = $_POST['description'] ?? '';
             $categorie_id = $_POST['categorie_id'] ?? null;
+            $is_promo = isset($_POST['is_promo']) ? 1 : 0;
+            $prix_promo = isset($_POST['prix_promo']) && $_POST['prix_promo'] !== '' ? floatval($_POST['prix_promo']) : null;
+            $calories = isset($_POST['calories']) && $_POST['calories'] !== '' ? intval($_POST['calories']) : null;
+            $nutriscore = isset($_POST['nutriscore']) ? strtoupper(trim($_POST['nutriscore'])) : null;
+            $saison = isset($_POST['saison']) && trim($_POST['saison']) !== '' ? trim($_POST['saison']) : null;
+            if ($nutriscore !== null && $nutriscore !== '' && !preg_match('/^[A-E]$/', $nutriscore)) {
+                $nutriscore = null;
+            }
             
             if (!empty($nom) && $prix > 0 && !empty($categorie_id)) {
                 try {
-                    $this->createProduit($nom, $prix, $stock, $description, $categorie_id);
+                    $this->createProduit($nom, $prix, $stock, $description, $categorie_id, $calories, $nutriscore, $saison, $is_promo, $prix_promo);
                     $_SESSION['success_message'] = 'Produit ajouté avec succès!';
                 } catch (Exception $e) {
                     $_SESSION['error_message'] = 'Erreur lors de l\'ajout du produit: ' . $e->getMessage();
@@ -192,9 +245,17 @@ class ProduitController {
             $stock = $_POST['stock'] ?? 0;
             $description = $_POST['description'] ?? '';
             $categorie_id = $_POST['categorie_id'] ?? null;
+            $is_promo = isset($_POST['is_promo']) ? 1 : 0;
+            $prix_promo = isset($_POST['prix_promo']) && $_POST['prix_promo'] !== '' ? floatval($_POST['prix_promo']) : null;
+            $calories = isset($_POST['calories']) && $_POST['calories'] !== '' ? intval($_POST['calories']) : null;
+            $nutriscore = isset($_POST['nutriscore']) ? strtoupper(trim($_POST['nutriscore'])) : null;
+            $saison = isset($_POST['saison']) && trim($_POST['saison']) !== '' ? trim($_POST['saison']) : null;
+            if ($nutriscore !== null && $nutriscore !== '' && !preg_match('/^[A-E]$/', $nutriscore)) {
+                $nutriscore = null;
+            }
             
             if ($id > 0 && !empty($nom)) {
-                $this->updateProduit($id, $nom, $prix, $stock, $description, $categorie_id);
+                $this->updateProduit($id, $nom, $prix, $stock, $description, $categorie_id, $calories, $nutriscore, $saison, $is_promo, $prix_promo);
             }
         }
         header('Location: /marketplace/view/back/pages/marketplace.php');

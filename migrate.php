@@ -20,6 +20,11 @@ try {
         $db->exec("ALTER TABLE produits ADD COLUMN ventes INT DEFAULT 0");
         echo "Colonne ventes ajoutée.\n";
     }
+    
+    if (!in_array('prix_promo', $columns)) {
+        $db->exec("ALTER TABLE produits ADD COLUMN prix_promo DECIMAL(10,2) NULL");
+        echo "Colonne prix_promo ajoutée.\n";
+    }
 
     // 2. Populate columns with random dummy data to test filters
     $produits = $db->query("SELECT id FROM produits")->fetchAll(PDO::FETCH_COLUMN);

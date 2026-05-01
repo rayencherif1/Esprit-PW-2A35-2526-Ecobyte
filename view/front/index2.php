@@ -3,12 +3,16 @@ require_once __DIR__ . '/../../controller/ProduitController.php';
 require_once __DIR__ . '/../../controller/FavorisController.php';
 require_once __DIR__ . '/../../controller/CategorieController.php';
 require_once __DIR__ . '/../../model/Produit.php';
+define('SEASONAL_API_LOCAL_INCLUDE', true);
+require_once __DIR__ . '/../../external/seasonal_recommendation.php';
 
 $categorieController = new CategorieController();
 $categories = $categorieController->getAllCategories();
 
 $produitController = new ProduitController();
 $selected_category_name = 'Produits tendances';
+$bestSellers = $produitController->getProduitsTendances();
+$promoProduits = $produitController->getProduitsEnPromo();
 
 if (isset($_GET['search']) && !empty(trim($_GET['search']))) {
     $produits = $produitController->searchProduits(trim($_GET['search']));
@@ -23,6 +27,9 @@ if (isset($_GET['search']) && !empty(trim($_GET['search']))) {
     } elseif ($_GET['filter'] == 'nouveautes') {
         $produits = $produitController->getNouveauxProduits();
         $selected_category_name = 'Nouveautés';
+    } elseif ($_GET['filter'] == 'all') {
+        $produits = $produitController->getAllProduits();
+        $selected_category_name = 'Tous les produits';
     } else {
         $produits = $produitController->getAllProduits();
     }
@@ -37,7 +44,26 @@ if (isset($_GET['search']) && !empty(trim($_GET['search']))) {
         }
     }
 } else {
+    // Par défaut, on affiche tous les produits
     $produits = $produitController->getAllProduits();
+    $selected_category_name = 'Tous les produits';
+}
+
+$selected_location = trim($_GET['location'] ?? 'Tunis');
+$selected_location = preg_replace('/[^a-zA-ZÀ-ÿ0-9\s\-]/u', '', $selected_location);
+$selected_location = mb_substr($selected_location, 0, 50);
+if ($selected_location === '') {
+    $selected_location = 'Tunis';
+}
+$locationQuery = '&location=' . urlencode($selected_location);
+
+// Filtre Nutri‑Score (A-E)
+$nutriFilter = isset($_GET['nutriscore']) ? strtoupper(trim($_GET['nutriscore'])) : '';
+if ($nutriFilter !== '' && preg_match('/^[A-E]$/', $nutriFilter)) {
+    $produits = array_values(array_filter($produits, function($p) use ($nutriFilter) {
+        return isset($p['nutriscore']) && strtoupper(trim((string)$p['nutriscore'])) === $nutriFilter;
+    }));
+    $selected_category_name .= ' — Nutri‑Score ' . htmlspecialchars($nutriFilter);
 }
 
 // Fonction pour déterminer l'icône de la catégorie
@@ -61,7 +87,17 @@ function getCategoryIcon($nom) {
 // Fonction pour déterminer une image cohérente pour les produits
 function getProductImage($nom) {
     $nomLower = strtolower(trim($nom));
-    if (strpos($nomLower, 'boisson') !== false || strpos($nomLower, 'jus') !== false || strpos($nomLower, 'smoothie') !== false || strpos($nomLower, 'guarana') !== false) {
+    if (strpos($nomLower, 'créatine') !== false || strpos($nomLower, 'creatine') !== false || strpos($nomLower, 'monohydrate') !== false) {
+        return 'images/thumb-creatine.svg';
+    } elseif (strpos($nomLower, 'whey') !== false || strpos($nomLower, 'protéine') !== false || strpos($nomLower, 'proteine') !== false || strpos($nomLower, 'protein') !== false) {
+        return 'images/thumb-whey.svg';
+    } elseif (strpos($nomLower, 'collagène') !== false || strpos($nomLower, 'collagene') !== false) {
+        return 'images/thumb-collagene.svg';
+    } elseif (strpos($nomLower, 'vitamine') !== false || strpos($nomLower, 'vitamines') !== false) {
+        return 'images/thumb-vitamines.svg';
+    } elseif (strpos($nomLower, 'poudre') !== false || strpos($nomLower, 'supplément') !== false || strpos($nomLower, 'supplement') !== false || strpos($nomLower, 'glutamine') !== false || strpos($nomLower, 'électrolytes') !== false || strpos($nomLower, 'electrolytes') !== false) {
+        return 'images/thumb-supplement.svg';
+    } elseif (strpos($nomLower, 'boisson') !== false || strpos($nomLower, 'jus') !== false || strpos($nomLower, 'smoothie') !== false || strpos($nomLower, 'guarana') !== false) {
         return 'images/product-thumb-1.png';
     } elseif (strpos($nomLower, 'dattes') !== false || strpos($nomLower, 'pâte') !== false || strpos($nomLower, 'barre') !== false) {
         return 'images/thumb-biscuits.png';
@@ -71,14 +107,9 @@ function getProductImage($nom) {
         return 'images/thumb-tomatoes.png';
     } elseif (strpos($nomLower, 'lait') !== false || strpos($nomLower, 'milk') !== false) {
         return 'images/thumb-milk.png';
-    } elseif (strpos($nomLower, 'poudre') !== false || strpos($nomLower, 'collagène') !== false || strpos($nomLower, 'glutamine') !== false || strpos($nomLower, 'électrolytes') !== false || strpos($nomLower, 'kreatine') !== false) {
-        // Une image par défaut pour les poudres/suppléments (on utilise une image de pot ou générique si possible)
-        // Faute de pot de poudre, on utilise l'image du lait ou avocat comme fallback "santé"
-        return 'images/thumb-milk.png'; 
-    } else {
-        // Image par défaut générique
-        return 'images/product-thumb-11.jpg'; // Essai d'une image générique
     }
+    // Aucune image spécifique trouvée : on enlève l'image pour que seul le nom/prix reste visible.
+    return '';
 }
 
 // Récupérer les IDs des favoris en une seule requête
@@ -104,10 +135,12 @@ if ($db) {
 
 session_write_close(); // Fermer la session
 
-// Récupérer les 3 premières catégories pour les bannières publicitaires
-$catPromo1 = $categories[0] ?? ['nom' => 'Alimentation saine', 'description' => 'Des produits frais, locaux et de saison pour une alimentation saine.'];
-$catPromo2 = $categories[1] ?? ['nom' => 'Produits Bio', 'description' => ''];
-$catPromo3 = $categories[2] ?? ['nom' => 'Suppléments', 'description' => ''];
+// Récupérer les recommandations saisonnières
+$seasonalData = getSeasonalRecommendations($selected_location);
+
+// Déterminer si afficher tous les produits ou seulement 8
+$showAll = ($selected_category_name == 'Tous les produits');
+$displayProduits = $showAll ? $produits : array_slice($produits, 0, 8);
 ?>
 <!DOCTYPE html>
 <html lang="fr">
@@ -169,6 +202,17 @@ $catPromo3 = $categories[2] ?? ['nom' => 'Suppléments', 'description' => ''];
             background: #1e7e34;
             color: white;
         }
+        .seasonal-badge {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: #ff9800;
+            color: white;
+            padding: 2px 6px;
+            border-radius: 10px;
+            font-size: 12px;
+            z-index: 10;
+        }
         .btn-wishlist {
             cursor: pointer;
         }
@@ -178,15 +222,60 @@ $catPromo3 = $categories[2] ?? ['nom' => 'Suppléments', 'description' => ''];
             align-items: center;
             justify-content: center;
             margin-bottom: 15px;
+            overflow: hidden;
         }
         .product-img-wrapper img {
             max-height: 100%;
             max-width: 100%;
             object-fit: contain;
         }
+        .product-img-wrapper.empty-product-icon {
+            background: rgba(0, 0, 0, 0.04);
+            border: 1px dashed rgba(0, 0, 0, 0.12);
+        }
         .hover-bg-light:hover {
             background-color: #f8f9fa !important;
             transition: background-color 0.2s;
+        }
+        .nutriscore-badge {
+            position: absolute;
+            top: 12px;
+            left: 12px;
+            width: 34px;
+            height: 34px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            color: #fff;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.12);
+            border: 2px solid rgba(255,255,255,0.9);
+            letter-spacing: 0.5px;
+            user-select: none;
+        }
+        .nutriscore-A { background: linear-gradient(135deg, #2ecc71, #27ae60); }
+        .nutriscore-B { background: linear-gradient(135deg, #8bc34a, #689f38); }
+        .nutriscore-C { background: linear-gradient(135deg, #f1c40f, #f39c12); }
+        .nutriscore-D { background: linear-gradient(135deg, #ff9800, #f57c00); }
+        .nutriscore-E { background: linear-gradient(135deg, #e74c3c, #c0392b); }
+        .product-item { position: relative; }
+        .nutriscore-skeleton {
+            position: absolute;
+            top: 12px;
+            left: 12px;
+            width: 34px;
+            height: 34px;
+            border-radius: 10px;
+            background: linear-gradient(90deg, rgba(0,0,0,0.06), rgba(0,0,0,0.02), rgba(0,0,0,0.06));
+            background-size: 200% 100%;
+            animation: ns-shimmer 1.2s infinite;
+            border: 2px solid rgba(255,255,255,0.9);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.08);
+        }
+        @keyframes ns-shimmer {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
         }
     </style>
 </head>
@@ -220,7 +309,7 @@ $catPromo3 = $categories[2] ?? ['nom' => 'Suppléments', 'description' => ''];
       </div>
       <div class="col-sm-6 offset-sm-2 offset-md-0 col-lg-5 d-none d-lg-block">
         <form action="index2.php" method="GET" class="search-bar row bg-light p-2 my-2 rounded-4 m-0 w-100 position-relative">
-          <div class="col-4 col-md-3 border-end p-0">
+          <div class="col-2 col-md-2 border-end p-0">
             <select name="search_categorie" class="form-select border-0 bg-transparent shadow-none w-100 text-truncate" style="cursor:pointer; font-size: 14px;">
               <option value="">Toutes catégories</option>
               <?php foreach($categories as $cat): ?>
@@ -228,7 +317,18 @@ $catPromo3 = $categories[2] ?? ['nom' => 'Suppléments', 'description' => ''];
               <?php endforeach; ?>
             </select>
           </div>
-          <div class="col-7 col-md-8">
+          <div class="col-2 col-md-2 border-end p-0">
+            <select name="nutriscore" class="form-select border-0 bg-transparent shadow-none w-100 text-truncate" style="cursor:pointer; font-size: 14px;">
+              <option value="">Nutri‑Score (Tous)</option>
+              <?php foreach(['A','B','C','D','E'] as $g): ?>
+                <option value="<?= $g ?>" <?= (isset($_GET['nutriscore']) && strtoupper($_GET['nutriscore']) === $g) ? 'selected' : '' ?>><?= $g ?></option>
+              <?php endforeach; ?>
+            </select>
+          </div>
+          <div class="col-4 col-md-3 border-end p-0">
+            <input type="text" name="location" class="form-control border-0 bg-transparent shadow-none" placeholder="Localisation en Tunisie" value="<?= htmlspecialchars($selected_location) ?>" autocomplete="off">
+          </div>
+          <div class="col-3 col-md-4">
             <input type="text" name="search" id="live_search_input" class="form-control border-0 bg-transparent shadow-none" placeholder="Rechercher un produit..." value="<?= htmlspecialchars($_GET['search'] ?? '') ?>" autocomplete="off">
           </div>
           <div class="col-1 p-0 text-center"><button type="submit" class="btn p-0 border-0 bg-transparent"><svg width="24" height="24"><use xlink:href="#search"></use></svg></button></div>
@@ -290,9 +390,10 @@ $catPromo3 = $categories[2] ?? ['nom' => 'Suppléments', 'description' => ''];
       <div class="banner-ad bg-danger block-3" style="background:url('images/ad-image-2.png') no-repeat; background-position: right bottom">
         <div class="row banner-content p-5">
           <div class="content-wrapper col-md-7">
-            <div class="categories sale mb-3 pb-3">À Découvrir</div>
-            <h3 class="item-title">Nouveautés</h3>
-            <a href="?filter=nouveautes#produits-section" class="d-flex align-items-center nav-link">Voir la collection <svg width="24" height="24"><use xlink:href="#arrow-right"></use></svg></a>
+            <div class="categories sale mb-3 pb-3">Saison</div>
+            <h3 class="item-title">Recommandations Saisonnières</h3>
+            <p class="mb-4">Produits conseillés selon la météo actuelle et la saison. Cliquez pour voir les recommandations réelles.</p>
+            <a href="#seasonal-section" class="d-flex align-items-center nav-link">Voir les recommandations <svg width="24" height="24"><use xlink:href="#arrow-right"></use></svg></a>
           </div>
         </div>
       </div>
@@ -328,6 +429,96 @@ $catPromo3 = $categories[2] ?? ['nom' => 'Suppléments', 'description' => ''];
   </div>
 </section>
 
+<!-- Seasonal Recommendations -->
+<section id="seasonal-section" class="py-5 overflow-hidden" style="background: linear-gradient(135deg, #e8f5e8 0%, #f1f8e9 100%);">
+  <div class="container-fluid">
+    <div class="section-header d-flex flex-wrap justify-content-between mb-5">
+      <div>
+        <h2 class="section-title">🌤️ Recommandations Saisonnières</h2>
+        <p class="text-muted mt-2"><?= htmlspecialchars($seasonalData['message']) ?></p>
+      </div>
+      <div class="d-flex align-items-center">
+        <div class="weather-info bg-white p-3 rounded shadow-sm">
+          <small class="text-muted">Météo actuelle</small><br>
+          <strong><?= htmlspecialchars($seasonalData['weather']['temp']) ?>°C - <?= htmlspecialchars($seasonalData['weather']['description']) ?></strong>
+          <?php if (!empty($seasonalData['location'])): ?>
+            <div class="text-muted small mt-1">Localisation : <?= htmlspecialchars($seasonalData['location']) ?></div>
+          <?php endif; ?>
+          <?php if (!empty($seasonalData['weather']['source']) && $seasonalData['weather']['source'] === 'live'): ?>
+            <div class="text-success small mt-1">Donnée météo en direct</div>
+          <?php else: ?>
+            <div class="text-warning small mt-1">Météo de secours (fallback saisonnier)</div>
+          <?php endif; ?>
+        </div>
+      </div>
+    </div>
+    <div class="products-carousel swiper">
+      <div class="swiper-wrapper">
+        <?php if (!empty($seasonalData['recommendations'])): ?>
+          <?php foreach($seasonalData['recommendations'] as $rec): ?>
+          <?php $isFavori = in_array($rec['id'], $favorisIds); ?>
+          <div class="product-item swiper-slide" data-product-id="<?= intval($rec['id']) ?>">
+            <div class="seasonal-badge">⭐ Recommandé</div>
+            <a href="javascript:void(0)" class="btn-wishlist <?= $isFavori ? 'active' : '' ?>" onclick="addToFavoris(<?= $rec['id'] ?>, this)">
+              <svg width="24" height="24" viewBox="0 0 24 24" <?= $isFavori ? 'fill="red"' : 'fill="none"' ?> stroke="currentColor" stroke-width="2">
+                <path d="M20.16 4.61A6.27 6.27 0 0 0 12 4a6.27 6.27 0 0 0-8.16 9.48l7.45 7.45a1 1 0 0 0 1.42 0l7.45-7.45a6.27 6.27 0 0 0 0-8.87Z"/>
+              </svg>
+            </a>
+          <?php $imagePath = getProductImage($rec['nom']); ?>
+          <?php if (!empty($imagePath)): ?>
+            <figure class="product-img-wrapper">
+              <a href="#"><img src="<?= $imagePath ?>" class="tab-image"></a>
+            </figure>
+          <?php endif; ?>
+          <h3><?= htmlspecialchars($rec['nom']) ?></h3>
+            <?php
+              $isPromo = !empty($rec['is_promo']);
+              $prixPromo = isset($rec['prix_promo']) && $rec['prix_promo'] !== '' && $rec['prix_promo'] !== null ? floatval($rec['prix_promo']) : null;
+            ?>
+            <?php if ($isPromo && $prixPromo !== null && $prixPromo > 0 && $prixPromo < floatval($rec['prix'])): ?>
+              <span class="price">
+                <span style="text-decoration: line-through; color:#999; margin-right:6px;"><?= number_format($rec['prix'],2) ?> DT</span>
+                <span style="color:#d32f2f; font-weight:800;"><?= number_format($prixPromo,2) ?> DT</span>
+              </span>
+            <?php else: ?>
+              <span class="price"><?= number_format($rec['prix'],2) ?> DT</span>
+            <?php endif; ?>
+            <div class="d-flex align-items-center justify-content-between mt-3">
+              <div class="input-group product-qty">
+                <span class="input-group-btn">
+                  <button class="quantity-left-minus btn btn-danger btn-number" data-type="minus" data-id="<?= $rec['id'] ?>">
+                    <svg width="14" height="14"><use xlink:href="#minus"></use></svg>
+                  </button>
+                </span>
+                <input type="text" name="quantity" class="form-control input-number text-center" value="1" data-id="<?= $rec['id'] ?>" style="width: 40px;">
+                <span class="input-group-btn">
+                  <button class="quantity-right-plus btn btn-success btn-number" data-type="plus" data-id="<?= $rec['id'] ?>">
+                    <svg width="14" height="14"><use xlink:href="#plus"></use></svg>
+                  </button>
+                </span>
+              </div>
+              <button class="add-to-cart-btn" data-id="<?= $rec['id'] ?>">
+                Ajouter <svg width="16" height="16"><use xlink:href="#cart"></use></svg>
+              </button>
+            </div>
+          </div>
+          <?php endforeach; ?>
+        <?php else: ?>
+          <div class="col-12">
+            <div class="alert alert-info mb-0">Aucune recommandation disponible pour le moment. Revenez plus tard ou actualisez la page.</div>
+          </div>
+        <?php endif; ?>
+      </div>
+      <?php if (!empty($seasonalData['recommendations'])): ?>
+      <div class="swiper-buttons">
+        <button class="swiper-prev seasonal-carousel-prev btn btn-primary">❮</button>
+        <button class="swiper-next seasonal-carousel-next btn btn-primary">❯</button>
+      </div>
+      <?php endif; ?>
+    </div>
+  </div>
+</section>
+
 <!-- Trending Products -->
 <section id="produits-section" class="py-5">
   <div class="container-fluid">
@@ -336,32 +527,51 @@ $catPromo3 = $categories[2] ?? ['nom' => 'Suppléments', 'description' => ''];
         <h3><?= $selected_category_name ?></h3>
         <nav>
           <div class="nav nav-tabs">
-            <a href="?#produits-section" class="nav-link text-uppercase fs-6 <?= (!isset($_GET['filter']) && !isset($_GET['categorie_id']) && !isset($_GET['search'])) ? 'active' : '' ?>">Tous</a>
-            <a href="?filter=nouveautes#produits-section" class="nav-link text-uppercase fs-6 <?= (isset($_GET['filter']) && $_GET['filter'] == 'nouveautes') ? 'active' : '' ?>">Nouveautés</a>
-            <a href="?filter=tendances#produits-section" class="nav-link text-uppercase fs-6 <?= (isset($_GET['filter']) && $_GET['filter'] == 'tendances') ? 'active' : '' ?>">Tendances</a>
-            <a href="?filter=promo#produits-section" class="nav-link text-uppercase fs-6 <?= (isset($_GET['filter']) && $_GET['filter'] == 'promo') ? 'active' : '' ?>">En Promo</a>
+            <a href="?filter=all<?= $locationQuery ?>#produits-section" class="nav-link text-uppercase fs-6 <?= ((!isset($_GET['filter']) && !isset($_GET['categorie_id']) && !isset($_GET['search'])) || (isset($_GET['filter']) && $_GET['filter'] == 'all')) ? 'active' : '' ?>">Tous</a>
+            <a href="?filter=nouveautes<?= $locationQuery ?>#produits-section" class="nav-link text-uppercase fs-6 <?= (isset($_GET['filter']) && $_GET['filter'] == 'nouveautes') ? 'active' : '' ?>">Nouveautés</a>
+            <a href="?filter=tendances<?= $locationQuery ?>#produits-section" class="nav-link text-uppercase fs-6 <?= (isset($_GET['filter']) && $_GET['filter'] == 'tendances') ? 'active' : '' ?>">Tendances</a>
+            <a href="?filter=promo<?= $locationQuery ?>#produits-section" class="nav-link text-uppercase fs-6 <?= (isset($_GET['filter']) && $_GET['filter'] == 'promo') ? 'active' : '' ?>">En Promo</a>
           </div>
         </nav>
       </div>
       <div class="tab-content">
         <div class="tab-pane fade show active">
           <div class="product-grid row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 row-cols-xl-5">
-            <?php foreach(array_slice($produits, 0, 8) as $produit): ?>
+            <?php foreach($displayProduits as $produit): ?>
             <?php $isFavori = in_array($produit['id'], $favorisIds); ?>
             <div class="col">
-              <div class="product-item">
+              <div class="product-item" data-product-id="<?= intval($produit['id']) ?>">
+                <?php $ns = strtoupper(trim($produit['nutriscore'] ?? '')); ?>
+                <?php if (preg_match('/^[A-E]$/', $ns)): ?>
+                  <div class="nutriscore-badge nutriscore-<?= $ns ?>" title="Nutri‑Score <?= $ns ?>"><?= $ns ?></div>
+                <?php else: ?>
+                  <div class="nutriscore-skeleton" aria-hidden="true"></div>
+                <?php endif; ?>
                 <a href="javascript:void(0)" class="btn-wishlist <?= $isFavori ? 'active' : '' ?>" onclick="addToFavoris(<?= $produit['id'] ?>, this)">
                   <svg width="24" height="24" viewBox="0 0 24 24" <?= $isFavori ? 'fill="red"' : 'fill="none"' ?> stroke="currentColor" stroke-width="2">
                     <path d="M20.16 4.61A6.27 6.27 0 0 0 12 4a6.27 6.27 0 0 0-8.16 9.48l7.45 7.45a1 1 0 0 0 1.42 0l7.45-7.45a6.27 6.27 0 0 0 0-8.87Z"/>
                   </svg>
                 </a>
-                <figure class="product-img-wrapper">
-                    <a href="#"><img src="<?= getProductImage($produit['nom']) ?>" class="tab-image"></a>
-                </figure>
+                <?php $imagePath = getProductImage($produit['nom']); ?>
+                <?php if (!empty($imagePath)): ?>
+                  <figure class="product-img-wrapper">
+                      <a href="#"><img src="<?= $imagePath ?>" class="tab-image"></a>
+                  </figure>
+                <?php endif; ?>
                 <h3><?= htmlspecialchars($produit['nom']) ?></h3>
                 <span class="qty"><?= $produit['stock'] ?> unités</span>
-                <span class="rating"><svg width="24" height="24"><use xlink:href="#star-solid"></use></svg> 4.5</span>
-                <span class="price"><?= number_format($produit['prix'],2) ?> DT</span>
+                <?php
+                  $isPromo = !empty($produit['is_promo']);
+                  $prixPromo = isset($produit['prix_promo']) && $produit['prix_promo'] !== '' && $produit['prix_promo'] !== null ? floatval($produit['prix_promo']) : null;
+                ?>
+                <?php if ($isPromo && $prixPromo !== null && $prixPromo > 0 && $prixPromo < floatval($produit['prix'])): ?>
+                  <span class="price">
+                    <span style="text-decoration: line-through; color:#999; margin-right:6px;"><?= number_format($produit['prix'],2) ?> DT</span>
+                    <span style="color:#d32f2f; font-weight:800;"><?= number_format($prixPromo,2) ?> DT</span>
+                  </span>
+                <?php else: ?>
+                  <span class="price"><?= number_format($produit['prix'],2) ?> DT</span>
+                <?php endif; ?>
                 <div class="d-flex align-items-center justify-content-between mt-3">
                   <div class="input-group product-qty">
                     <span class="input-group-btn">
@@ -405,9 +615,15 @@ $catPromo3 = $categories[2] ?? ['nom' => 'Suppléments', 'description' => ''];
     </div>
     <div class="products-carousel swiper">
       <div class="swiper-wrapper">
-        <?php foreach($produits as $produit): ?>
+        <?php foreach($bestSellers as $produit): ?>
         <?php $isFavori = in_array($produit['id'], $favorisIds); ?>
-        <div class="product-item swiper-slide">
+        <div class="product-item swiper-slide" data-product-id="<?= intval($produit['id']) ?>">
+          <?php $ns = strtoupper(trim($produit['nutriscore'] ?? '')); ?>
+          <?php if (preg_match('/^[A-E]$/', $ns)): ?>
+            <div class="nutriscore-badge nutriscore-<?= $ns ?>" title="Nutri‑Score <?= $ns ?>"><?= $ns ?></div>
+          <?php else: ?>
+            <div class="nutriscore-skeleton" aria-hidden="true"></div>
+          <?php endif; ?>
           <a href="javascript:void(0)" class="btn-wishlist <?= $isFavori ? 'active' : '' ?>" onclick="addToFavoris(<?= $produit['id'] ?>, this)">
             <svg width="24" height="24" viewBox="0 0 24 24" <?= $isFavori ? 'fill="red"' : 'fill="none"' ?> stroke="currentColor" stroke-width="2">
               <path d="M20.16 4.61A6.27 6.27 0 0 0 12 4a6.27 6.27 0 0 0-8.16 9.48l7.45 7.45a1 1 0 0 0 1.42 0l7.45-7.45a6.27 6.27 0 0 0 0-8.87Z"/>
@@ -418,8 +634,18 @@ $catPromo3 = $categories[2] ?? ['nom' => 'Suppléments', 'description' => ''];
           </figure>
           <h3><?= htmlspecialchars($produit['nom']) ?></h3>
           <span class="qty"><?= $produit['stock'] ?> unités</span>
-          <span class="rating"><svg width="24" height="24"><use xlink:href="#star-solid"></use></svg> 4.5</span>
-          <span class="price"><?= number_format($produit['prix'],2) ?> DT</span>
+          <?php
+            $isPromo = !empty($produit['is_promo']);
+            $prixPromo = isset($produit['prix_promo']) && $produit['prix_promo'] !== '' && $produit['prix_promo'] !== null ? floatval($produit['prix_promo']) : null;
+          ?>
+          <?php if ($isPromo && $prixPromo !== null && $prixPromo > 0 && $prixPromo < floatval($produit['prix'])): ?>
+            <span class="price">
+              <span style="text-decoration: line-through; color:#999; margin-right:6px;"><?= number_format($produit['prix'],2) ?> DT</span>
+              <span style="color:#d32f2f; font-weight:800;"><?= number_format($prixPromo,2) ?> DT</span>
+            </span>
+          <?php else: ?>
+            <span class="price"><?= number_format($produit['prix'],2) ?> DT</span>
+          <?php endif; ?>
           <div class="d-flex align-items-center justify-content-between mt-3">
             <div class="input-group product-qty">
               <span class="input-group-btn">
@@ -546,6 +772,59 @@ function addToFavoris(produitId, element) {
             console.error('Erreur:', error);
         });
 }
+</script>
+
+<script>
+// Nutri‑Score (API externe OpenFoodFacts) — chargé automatiquement côté client
+document.addEventListener('DOMContentLoaded', function() {
+  const cards = document.querySelectorAll('.product-item[data-product-id]');
+  const ids = [];
+
+  cards.forEach(card => {
+    const hasNutri = card.querySelector('.nutriscore-badge');
+    const skeleton = card.querySelector('.nutriscore-skeleton');
+    const id = card.getAttribute('data-product-id');
+    if (!hasNutri && skeleton && id) ids.push(id);
+  });
+
+  // Limite: éviter de spammer l'API si beaucoup de produits
+  ids.slice(0, 12).forEach(id => {
+    fetch(`/marketplace/index.php?controller=api&action=nutriscore&id=${encodeURIComponent(id)}`)
+      .then(r => r.json())
+      .then(data => {
+        const grade = (data && data.nutriscore) ? String(data.nutriscore).toUpperCase() : '';
+        const card = document.querySelector(`.product-item[data-product-id="${id}"]`);
+        if (!card) return;
+
+        // Si l'API ne trouve rien: enlever le skeleton pour éviter un "loading" infini
+        if (!grade.match(/^[A-E]$/)) {
+          const sk = card.querySelector('.nutriscore-skeleton');
+          if (sk) sk.remove();
+          // Afficher un badge neutre si pas de score
+          if (!card.querySelector('.nutriscore-badge')) {
+            const div = document.createElement('div');
+            div.className = 'nutriscore-badge';
+            div.style.background = 'linear-gradient(135deg, #9e9e9e, #757575)';
+            div.title = 'Nutri‑Score indisponible';
+            div.textContent = '?';
+            card.prepend(div);
+          }
+          return;
+        }
+
+        const sk = card.querySelector('.nutriscore-skeleton');
+        if (sk) sk.remove();
+        if (!card.querySelector('.nutriscore-badge')) {
+          const div = document.createElement('div');
+          div.className = `nutriscore-badge nutriscore-${grade}`;
+          div.title = `Nutri‑Score ${grade}`;
+          div.textContent = grade;
+          card.prepend(div);
+        }
+      })
+      .catch(() => {});
+  });
+});
 </script>
 
   <script>
