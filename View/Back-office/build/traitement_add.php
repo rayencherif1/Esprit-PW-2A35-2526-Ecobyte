@@ -194,13 +194,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             box-shadow: 0 1px 3px rgba(0,0,0,0.05);
         }
         
-        .info-badge {
-            background: #e0e7ff;
-            padding: 8px 12px;
-            border-radius: 6px;
-            font-size: 14px;
-            color: #3730a3;
-            margin-bottom: 20px;
+        /* Supprimé l'affichage de l'ID allergie */
+        .hidden-id {
+            display: none;
         }
     </style>
 </head>
@@ -214,12 +210,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <div class="alert"><?= htmlspecialchars($errors['general']) ?></div>
         <?php endif; ?>
         
-        <div class="info-badge">
-            🔍 ID Allergie : <?= htmlspecialchars($id_allergie) ?>
-        </div>
+        <!-- L'ID allergie est complètement supprimé de l'affichage -->
+        <!-- Les données sont conservées dans un champ caché du formulaire -->
         
         <form method="POST">
             <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?>">
+            <input type="hidden" name="id_allergie" value="<?= htmlspecialchars($id_allergie) ?>">
             
             <label>Nom traitement *</label>
             <input type="text" name="nom_traitement"

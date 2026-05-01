@@ -78,6 +78,14 @@ if ($selected_id) {
         }
     </style>
 </head>
+<!-- Bouton flottant pour ouvrir le chatbot -->
+<div class="fixed bottom-6 right-6 z-50">
+    <a href="chatbot.php" 
+       class="bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-full p-4 shadow-lg hover:shadow-xl transition transform hover:scale-105 flex items-center gap-2 group">
+        <span class="text-2xl">🤖</span>
+        <span class="hidden group-hover:inline text-sm font-semibold mr-2">AllergieBot</span>
+    </a>
+</div>
 <body class="bg-gray-50">
 
     <!-- Header / Hero Section -->
