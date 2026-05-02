@@ -108,6 +108,168 @@
                     </div>
                 </div>
             </div>
+
+            <!-- Section Statistiques -->
+            <?php
+                // Calcul des statistiques
+                $totalUsers = count($users);
+                $totalPoids = 0;
+                $countPoids = 0;
+                $totalTaille = 0;
+                $countTaille = 0;
+                $bannedUsers = 0;
+
+                $weightDistribution = [
+                    '< 50 kg' => 0,
+                    '50 - 70 kg' => 0,
+                    '70 - 90 kg' => 0,
+                    '> 90 kg' => 0
+                ];
+
+                foreach ($users as $u) {
+                    if (!empty($u['poids']) && is_numeric($u['poids'])) {
+                        $p = $u['poids'];
+                        $totalPoids += $p;
+                        $countPoids++;
+                        
+                        if ($p < 50) $weightDistribution['< 50 kg']++;
+                        elseif ($p <= 70) $weightDistribution['50 - 70 kg']++;
+                        elseif ($p <= 90) $weightDistribution['70 - 90 kg']++;
+                        else $weightDistribution['> 90 kg']++;
+                    }
+                    if (!empty($u['taille']) && is_numeric($u['taille'])) {
+                        $totalTaille += $u['taille'];
+                        $countTaille++;
+                    }
+                    if (!empty($u['ban_until']) && strtotime($u['ban_until']) > time()) {
+                        $bannedUsers++;
+                    }
+                }
+
+                $avgPoids = $countPoids > 0 ? round($totalPoids / $countPoids, 1) : 0;
+                $avgTaille = $countTaille > 0 ? round($totalTaille / $countTaille, 1) : 0;
+                $activeUsers = $totalUsers - $bannedUsers;
+            ?>
+            <div class="flex flex-wrap -mx-3 mt-6">
+                <!-- Total Utilisateurs -->
+                <div class="w-full max-w-full px-3 mb-6 sm:w-1/2 sm:flex-none xl:mb-0 xl:w-1/4">
+                    <div class="relative flex flex-col min-w-0 break-words bg-white shadow-xl dark:bg-slate-850 dark:shadow-dark-xl rounded-2xl bg-clip-border">
+                        <div class="flex-auto p-4">
+                            <div class="flex flex-row -mx-3">
+                                <div class="flex-none w-2/3 max-w-full px-3">
+                                    <div>
+                                        <p class="mb-0 font-sans text-sm font-semibold leading-normal uppercase dark:text-white dark:opacity-60">Total Utilisateurs</p>
+                                        <h5 class="mb-2 font-bold dark:text-white"><?php echo $totalUsers; ?></h5>
+                                    </div>
+                                </div>
+                                <div class="px-3 text-right basis-1/3">
+                                    <div class="inline-block w-12 h-12 text-center rounded-circle bg-gradient-to-tl from-blue-500 to-violet-500 flex items-center justify-center">
+                                        <i class="fas fa-users text-lg text-white"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Utilisateurs Actifs -->
+                <div class="w-full max-w-full px-3 mb-6 sm:w-1/2 sm:flex-none xl:mb-0 xl:w-1/4">
+                    <div class="relative flex flex-col min-w-0 break-words bg-white shadow-xl dark:bg-slate-850 dark:shadow-dark-xl rounded-2xl bg-clip-border">
+                        <div class="flex-auto p-4">
+                            <div class="flex flex-row -mx-3">
+                                <div class="flex-none w-2/3 max-w-full px-3">
+                                    <div>
+                                        <p class="mb-0 font-sans text-sm font-semibold leading-normal uppercase dark:text-white dark:opacity-60">Utilisateurs Actifs</p>
+                                        <h5 class="mb-2 font-bold dark:text-white"><?php echo $activeUsers; ?></h5>
+                                        <p class="mb-0 dark:text-white dark:opacity-60 text-xs">
+                                            <span class="font-bold text-red-600"><?php echo $bannedUsers; ?></span> bannis
+                                        </p>
+                                    </div>
+                                </div>
+                                <div class="px-3 text-right basis-1/3">
+                                    <div class="inline-block w-12 h-12 text-center rounded-circle bg-gradient-to-tl from-emerald-500 to-teal-400 flex items-center justify-center">
+                                        <i class="fas fa-user-check text-lg text-white"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Poids Moyen -->
+                <div class="w-full max-w-full px-3 mb-6 sm:w-1/2 sm:flex-none xl:mb-0 xl:w-1/4">
+                    <div class="relative flex flex-col min-w-0 break-words bg-white shadow-xl dark:bg-slate-850 dark:shadow-dark-xl rounded-2xl bg-clip-border">
+                        <div class="flex-auto p-4">
+                            <div class="flex flex-row -mx-3">
+                                <div class="flex-none w-2/3 max-w-full px-3">
+                                    <div>
+                                        <p class="mb-0 font-sans text-sm font-semibold leading-normal uppercase dark:text-white dark:opacity-60">Poids Moyen</p>
+                                        <h5 class="mb-2 font-bold dark:text-white"><?php echo $avgPoids; ?> kg</h5>
+                                    </div>
+                                </div>
+                                <div class="px-3 text-right basis-1/3">
+                                    <div class="inline-block w-12 h-12 text-center rounded-circle bg-gradient-to-tl from-orange-500 to-yellow-500 flex items-center justify-center">
+                                        <i class="fas fa-weight text-lg text-white"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Taille Moyenne -->
+                <div class="w-full max-w-full px-3 mb-6 sm:w-1/2 sm:flex-none xl:mb-0 xl:w-1/4">
+                    <div class="relative flex flex-col min-w-0 break-words bg-white shadow-xl dark:bg-slate-850 dark:shadow-dark-xl rounded-2xl bg-clip-border">
+                        <div class="flex-auto p-4">
+                            <div class="flex flex-row -mx-3">
+                                <div class="flex-none w-2/3 max-w-full px-3">
+                                    <div>
+                                        <p class="mb-0 font-sans text-sm font-semibold leading-normal uppercase dark:text-white dark:opacity-60">Taille Moyenne</p>
+                                        <h5 class="mb-2 font-bold dark:text-white"><?php echo $avgTaille; ?> cm</h5>
+                                    </div>
+                                </div>
+                                <div class="px-3 text-right basis-1/3">
+                                    <div class="inline-block w-12 h-12 text-center rounded-circle bg-gradient-to-tl from-red-600 to-orange-600 flex items-center justify-center">
+                                        <i class="fas fa-ruler-vertical text-lg text-white"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Section Graphiques -->
+            <div class="flex flex-wrap -mx-3 mt-6">
+                <!-- Pie Chart -->
+                <div class="w-full max-w-full px-3 mb-6 sm:w-1/2 lg:w-1/3">
+                    <div class="relative flex flex-col min-w-0 break-words bg-white shadow-xl dark:bg-slate-850 dark:shadow-dark-xl rounded-2xl bg-clip-border">
+                        <div class="p-4 pb-0 mb-0 rounded-t-4">
+                            <h6 class="mb-0 dark:text-white font-bold">Statut des Utilisateurs</h6>
+                        </div>
+                        <div class="flex-auto p-4">
+                            <div style="height: 250px; position: relative;">
+                                <canvas id="statusChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Bar Chart -->
+                <div class="w-full max-w-full px-3 mb-6 sm:w-1/2 lg:w-2/3">
+                    <div class="relative flex flex-col min-w-0 break-words bg-white shadow-xl dark:bg-slate-850 dark:shadow-dark-xl rounded-2xl bg-clip-border">
+                        <div class="p-4 pb-0 mb-0 rounded-t-4">
+                            <h6 class="mb-0 dark:text-white font-bold">Répartition des Poids</h6>
+                        </div>
+                        <div class="flex-auto p-4">
+                            <div style="height: 250px; position: relative;">
+                                <canvas id="weightChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
         </div>
     </main>
     <script>
@@ -211,5 +373,89 @@
             transition: opacity 0.3s ease;
         }
     </style>
+
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Chart for User Status
+            const ctxStatus = document.getElementById('statusChart');
+            if (ctxStatus) {
+                new Chart(ctxStatus, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['Actifs', 'Bannis'],
+                        datasets: [{
+                            data: [<?php echo $activeUsers; ?>, <?php echo $bannedUsers; ?>],
+                            backgroundColor: ['#2dce89', '#f5365c'],
+                            borderWidth: 0,
+                            hoverOffset: 4
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'bottom',
+                                labels: {
+                                    usePointStyle: true,
+                                    padding: 20
+                                }
+                            }
+                        },
+                        cutout: '70%'
+                    }
+                });
+            }
+
+            // Chart for Weight Distribution
+            const ctxWeight = document.getElementById('weightChart');
+            if (ctxWeight) {
+                new Chart(ctxWeight, {
+                    type: 'bar',
+                    data: {
+                        labels: <?php echo json_encode(array_keys($weightDistribution)); ?>,
+                        datasets: [{
+                            label: 'Utilisateurs',
+                            data: <?php echo json_encode(array_values($weightDistribution)); ?>,
+                            backgroundColor: '#5e72e4',
+                            borderRadius: 4,
+                            barPercentage: 0.5
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                display: false
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                ticks: {
+                                    stepSize: 1,
+                                    precision: 0
+                                },
+                                grid: {
+                                    borderDash: [5, 5],
+                                    drawBorder: false,
+                                    color: 'rgba(200, 200, 200, 0.2)'
+                                }
+                            },
+                            x: {
+                                grid: {
+                                    display: false,
+                                    drawBorder: false
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+        });
+    </script>
 </body>
 </html>

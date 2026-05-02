@@ -425,16 +425,37 @@ class UserController {
     }
 
     private function sendMail($to, $subject, $message) {
-        // En local, mail() ne fonctionne souvent pas sans config SMTP
-        // On va essayer d'utiliser PHPMailer si possible, ou on laisse mail()
-        $headers = "From: no-reply@foodmart.com\r\n";
-        $headers .= "Reply-To: no-reply@foodmart.com\r\n";
-        $headers .= "X-Mailer: PHP/" . phpversion();
+        require_once __DIR__ . '/../PHPMailer/src/Exception.php';
+        require_once __DIR__ . '/../PHPMailer/src/PHPMailer.php';
+        require_once __DIR__ . '/../PHPMailer/src/SMTP.php';
 
-        // Note: Pour Gmail, il faudrait PHPMailer avec SMTP. 
-        // Ici on utilise mail() par défaut, mais on peut simuler le succès pour le test si mail() échoue en local
+        $mail = new \PHPMailer\PHPMailer\PHPMailer(true);
+
         try {
-            return @mail($to, $subject, $message, $headers) || true; // On retourne true pour simuler le succès en dev
+            // Configuration du serveur SMTP
+            $mail->isSMTP();
+            $mail->Host       = 'smtp.gmail.com';
+            $mail->SMTPAuth   = true;
+            
+            // REMPLACEZ PAR VOTRE EMAIL ET MOT DE PASSE D'APPLICATION GMAIL
+            $mail->Username   = 'rayancherif1808@gmail.com'; // VOTRE EMAIL GMAIL
+            $mail->Password   = 'jowlfycholadtxba'; // MOT DE PASSE D'APPLICATION
+            
+            $mail->SMTPSecure = \PHPMailer\PHPMailer\PHPMailer::ENCRYPTION_STARTTLS;
+            $mail->Port       = 587;
+
+            // Expéditeur et destinataire
+            $mail->setFrom('rayancherif1808@gmail.com', 'Ecobyte Support');
+            $mail->addAddress($to);
+
+            // Contenu
+            $mail->isHTML(true);
+            $mail->Subject = $subject;
+            $mail->Body    = nl2br($message);
+            $mail->AltBody = $message;
+
+            $mail->send();
+            return true;
         } catch (Exception $e) {
             return false;
         }

@@ -17,6 +17,17 @@ class User {
     private $date_creation;
     private $ban_until;
 
+
+
+
+
+
+
+
+
+
+    
+
     public function __construct($data = []) {
         if (!empty($data)) {
             $this->id = $data['id'] ?? null;

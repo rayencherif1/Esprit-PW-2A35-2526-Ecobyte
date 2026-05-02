@@ -24,6 +24,13 @@ class Profil {
     private $created_at;
     private $updated_at;
 
+
+
+
+    
+
+
+
     public function __construct($data = []) {
         if (!empty($data)) {
             $this->id = $data['id'] ?? null;
