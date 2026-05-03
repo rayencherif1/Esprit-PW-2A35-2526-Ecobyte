@@ -25,6 +25,48 @@ function normalizeLocation(string $location): string {
     return mb_substr($location, 0, 50);
 }
 
+function getTunisianCities(): array {
+    return [
+        'Tunis',
+        'Ariana',
+        'Ben Arous',
+        'Manouba',
+        'Nabeul',
+        'Zaghouan',
+        'Bizerte',
+        'Beja',
+        'Jendouba',
+        'Le Kef',
+        'Siliana',
+        'Sousse',
+        'Monastir',
+        'Mahdia',
+        'Sfax',
+        'Kairouan',
+        'Kasserine',
+        'Sidi Bouzid',
+        'Gabes',
+        'Medenine',
+        'Tataouine',
+        'Gafsa',
+        'Tozeur',
+        'Kebili'
+    ];
+}
+
+function sanitizeTunisianCity(string $location): string {
+    $city = normalizeLocation($location);
+    $allowedCities = getTunisianCities();
+
+    foreach ($allowedCities as $allowed) {
+        if (mb_strtolower($city) === mb_strtolower($allowed)) {
+            return $allowed;
+        }
+    }
+
+    return 'Tunis';
+}
+
 function containsAny(string $haystack, array $needles): bool {
     foreach ($needles as $needle) {
         if ($needle === '') {
@@ -53,14 +95,19 @@ function getFallbackWeather(): array {
         'automne' => ['temp' => 15, 'description' => 'Frais et coloré'],
         'hiver' => ['temp' => 6, 'description' => 'Froid et couvert']
     ];
-    return $map[$season] ?? ['temp' => 20, 'description' => 'Tempéré'];
+    $fallback = $map[$season] ?? ['temp' => 20, 'description' => 'Tempéré'];
+    return array_merge($fallback, [
+        'temp_min' => max(0, intval($fallback['temp']) - 4),
+        'temp_max' => intval($fallback['temp']) + 4,
+        'day_description' => 'Conditions stables en journée',
+        'night_description' => 'Nuit calme et fraîche',
+        'sunrise' => '06:00 AM',
+        'sunset' => '06:00 PM'
+    ]);
 }
 
 function getWeather(string $location = 'Tunis'): array {
-    $location = normalizeLocation($location);
-    if ($location === '') {
-        $location = 'Tunis';
-    }
+    $location = sanitizeTunisianCity($location);
     $queryLocation = rawurlencode($location . ',Tunisie');
     $url = 'https://wttr.in/' . $queryLocation . '?format=j1';
     $json = false;
@@ -85,7 +132,30 @@ function getWeather(string $location = 'Tunis'): array {
             $current = $data['current_condition'][0];
             $temp = intval($current['temp_C'] ?? 0);
             $desc = $current['weatherDesc'][0]['value'] ?? 'Inconnue';
-            return ['temp' => $temp, 'description' => $desc, 'source' => 'live', 'location' => $location];
+            $today = $data['weather'][0] ?? [];
+            $hourly = $today['hourly'] ?? [];
+
+            $dayDescription = $desc;
+            $nightDescription = $desc;
+            if (is_array($hourly) && count($hourly) > 0) {
+                $daySlot = $hourly[min(4, count($hourly) - 1)] ?? [];
+                $nightSlot = $hourly[min(7, count($hourly) - 1)] ?? [];
+                $dayDescription = $daySlot['weatherDesc'][0]['value'] ?? $dayDescription;
+                $nightDescription = $nightSlot['weatherDesc'][0]['value'] ?? $nightDescription;
+            }
+
+            return [
+                'temp' => $temp,
+                'description' => $desc,
+                'temp_min' => intval($today['mintempC'] ?? $temp),
+                'temp_max' => intval($today['maxtempC'] ?? $temp),
+                'day_description' => $dayDescription,
+                'night_description' => $nightDescription,
+                'sunrise' => $today['astronomy'][0]['sunrise'] ?? '',
+                'sunset' => $today['astronomy'][0]['sunset'] ?? '',
+                'source' => 'live',
+                'location' => $location
+            ];
         }
     }
 
@@ -157,18 +227,56 @@ function buildRecommendationRules(string $season, array $weather): array {
     return $rules;
 }
 
-function scoreProduct(array $product, array $rules): int {
+function scoreProduct(array $product, array $rules, array $weather): int {
     $haystack = normalizeText($product['nom'] . ' ' . ($product['description'] ?? '') . ' ' . ($product['categorie_nom'] ?? ''));
     $score = 0;
+    $matchedRules = 0;
 
     foreach ($rules as $rule) {
         if (containsAny($haystack, $rule['keywords'])) {
             $score += $rule['weight'];
+            $matchedRules++;
         }
+    }
+    if ($matchedRules === 0) {
+        // Evite les produits hors contexte (météo/saison) même s'ils sont populaires.
+        $score -= 8;
+    } else {
+        $score += min(10, $matchedRules * 2);
+    }
+
+    $productSeason = normalizeText((string)($product['saison'] ?? ''));
+    $currentSeason = getSeasonFromDate();
+    if ($productSeason !== '') {
+        if (containsAny($productSeason, [$currentSeason])) {
+            $score += 10;
+        } else {
+            $score -= 6;
+        }
+    }
+    $isHotWeather = intval($weather['temp'] ?? 0) >= 25;
+    $isColdWeather = intval($weather['temp'] ?? 0) <= 12;
+    $isSunny = preg_match('/ensoleille|ensoleillé|soleil|clear|sun/i', (string)($weather['description'] ?? '')) === 1;
+    $isRainy = preg_match('/pluie|orage|nuage|couvert|snow|neige|rain|storm/i', (string)($weather['description'] ?? '')) === 1;
+
+    $hotDrinkKeywords = ['tisane', 'the', 'thé', 'cafe', 'café', 'chocolat chaud', 'soupe'];
+    $freshKeywords = ['jus', 'smoothie', 'boisson', 'eau', 'glace', 'salade', 'fruit'];
+
+    if (($isHotWeather || $isSunny) && containsAny($haystack, $hotDrinkKeywords)) {
+        $score -= 18;
+    }
+    if (($isColdWeather || $isRainy) && containsAny($haystack, $freshKeywords)) {
+        $score -= 8;
+    }
+    if (($isHotWeather || $isSunny) && containsAny($haystack, $freshKeywords)) {
+        $score += 6;
+    }
+    if (($isColdWeather || $isRainy) && containsAny($haystack, $hotDrinkKeywords)) {
+        $score += 7;
     }
 
     $ventes = intval($product['ventes'] ?? 0);
-    $score += min(30, intval($ventes / 5));
+    $score += min(24, intval($ventes / 6));
 
     $stock = intval($product['stock'] ?? 0);
     if ($stock <= 0) {
@@ -191,10 +299,10 @@ function scoreProduct(array $product, array $rules): int {
     return $score;
 }
 
-function findRecommendations(array $products, array $rules, int $limit = 4): array {
+function findRecommendations(array $products, array $rules, array $weather, int $limit = 6): array {
     $scored = [];
     foreach ($products as $product) {
-        $scored[] = ['product' => $product, 'score' => scoreProduct($product, $rules)];
+        $scored[] = ['product' => $product, 'score' => scoreProduct($product, $rules, $weather)];
     }
 
     usort($scored, static function ($a, $b) {
@@ -204,16 +312,34 @@ function findRecommendations(array $products, array $rules, int $limit = 4): arr
         return $b['score'] <=> $a['score'];
     });
 
-    $recommendations = array_map(static fn($item) => $item['product'], array_slice($scored, 0, $limit));
+    $recommendations = [];
+    $categoryCount = [];
+    foreach ($scored as $item) {
+        if (count($recommendations) >= $limit) {
+            break;
+        }
+        $category = trim((string)($item['product']['categorie_nom'] ?? 'Divers'));
+        $category = $category !== '' ? $category : 'Divers';
+        $count = $categoryCount[$category] ?? 0;
+        if ($count >= 2) {
+            continue;
+        }
+        $recommendations[] = $item['product'];
+        $categoryCount[$category] = $count + 1;
+    }
 
     if (count($recommendations) < $limit) {
-        $existingIds = array_column($recommendations, 'id');
-        $remaining = array_filter($products, static function ($product) use ($existingIds) {
-            return !in_array($product['id'], $existingIds, true);
-        });
-        shuffle($remaining);
-        while (count($recommendations) < $limit && count($remaining) > 0) {
-            $recommendations[] = array_shift($remaining);
+        $existingIds = array_map(static fn($p) => intval($p['id'] ?? 0), $recommendations);
+        foreach ($scored as $item) {
+            if (count($recommendations) >= $limit) {
+                break;
+            }
+            $id = intval($item['product']['id'] ?? 0);
+            if (in_array($id, $existingIds, true)) {
+                continue;
+            }
+            $recommendations[] = $item['product'];
+            $existingIds[] = $id;
         }
     }
 
@@ -222,21 +348,24 @@ function findRecommendations(array $products, array $rules, int $limit = 4): arr
 
 function buildSeasonMessage(string $season, array $weather): string {
     $temperature = intval($weather['temp']);
+    $min = intval($weather['temp_min'] ?? $temperature);
+    $max = intval($weather['temp_max'] ?? $temperature);
     switch ($season) {
         case 'ete':
-            return "Il fait chaud ({$temperature}°C), découvrez des smoothies, jus et boissons fraîches !";
+            return "Il fait chaud ({$temperature}°C, min {$min}°C / max {$max}°C), découvrez des smoothies, jus et boissons fraîches !";
         case 'hiver':
-            return "Il fait froid ({$temperature}°C), optez pour des tisanes, chocolats chauds et plats réconfortants !";
+            return "Il fait froid ({$temperature}°C, min {$min}°C / max {$max}°C), optez pour des tisanes, chocolats chauds et plats réconfortants !";
         case 'printemps':
-            return "Le printemps est arrivé, profitez de produits légers, fruits frais et recettes vitaminées !";
+            return "Le printemps est arrivé ({$temperature}°C), profitez de produits légers, fruits frais et recettes vitaminées !";
         case 'automne':
-            return "L'automne s'installe, découvrez des saveurs chaudes et réconfortantes comme noix, potiron et épices !";
+            return "L'automne s'installe ({$temperature}°C), découvrez des saveurs chaudes et réconfortantes comme noix, potiron et épices !";
         default:
             return "Voici des recommandations saisonnières basées sur la météo actuelle et vos produits disponibles.";
     }
 }
 
 function getSeasonalRecommendations(string $location = 'Tunis'): array {
+    $location = sanitizeTunisianCity($location);
     $season = getSeasonFromDate();
     $weather = getWeather($location);
 
@@ -261,7 +390,7 @@ function getSeasonalRecommendations(string $location = 'Tunis'): array {
     }
 
     $rules = buildRecommendationRules($season, $weather);
-    $recommendations = findRecommendations($products, $rules, 4);
+    $recommendations = findRecommendations($products, $rules, $weather, 6);
     $message = buildSeasonMessage($season, $weather);
 
     return [

@@ -16,6 +16,13 @@ foreach ($panier as $id => $item) {
     ];
     $total += $item['prix'] * $item['quantite'];
 }
+
+$tunisianCities = [
+    'Tunis', 'Ariana', 'Ben Arous', 'Manouba', 'Nabeul', 'Zaghouan', 'Bizerte',
+    'Beja', 'Jendouba', 'Le Kef', 'Siliana', 'Sousse', 'Monastir', 'Mahdia',
+    'Sfax', 'Kairouan', 'Kasserine', 'Sidi Bouzid', 'Gabes', 'Medenine',
+    'Tataouine', 'Gafsa', 'Tozeur', 'Kebili'
+];
 ?>
 
 <!DOCTYPE html>
@@ -179,7 +186,12 @@ foreach ($panier as $id => $item) {
                                     </div>
                                     <div class="col-md-8 mb-3">
                                         <label class="form-label">Ville *</label>
-                                        <input type="text" name="ville" id="ville" class="form-control">
+                                        <select name="ville" id="ville" class="form-control">
+                                            <option value="">Sélectionner une ville tunisienne</option>
+                                            <?php foreach($tunisianCities as $city): ?>
+                                                <option value="<?= htmlspecialchars($city) ?>"><?= htmlspecialchars($city) ?></option>
+                                            <?php endforeach; ?>
+                                        </select>
                                         <div class="invalid-feedback">La ville est obligatoire</div>
                                     </div>
                                 </div>

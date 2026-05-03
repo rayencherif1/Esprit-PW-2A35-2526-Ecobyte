@@ -4,6 +4,32 @@
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
+
+function getProductImage($nom) {
+    $nomLower = strtolower(trim($nom));
+    if (strpos($nomLower, 'créatine') !== false || strpos($nomLower, 'creatine') !== false || strpos($nomLower, 'monohydrate') !== false) {
+        return '/marketplace/view/front/images/thumb-creatine.svg';
+    } elseif (strpos($nomLower, 'whey') !== false || strpos($nomLower, 'protéine') !== false || strpos($nomLower, 'proteine') !== false || strpos($nomLower, 'protein') !== false) {
+        return '/marketplace/view/front/images/thumb-whey.svg';
+    } elseif (strpos($nomLower, 'collagène') !== false || strpos($nomLower, 'collagene') !== false) {
+        return '/marketplace/view/front/images/thumb-collagene.svg';
+    } elseif (strpos($nomLower, 'vitamine') !== false || strpos($nomLower, 'vitamines') !== false) {
+        return '/marketplace/view/front/images/thumb-vitamines.svg';
+    } elseif (strpos($nomLower, 'poudre') !== false || strpos($nomLower, 'supplément') !== false || strpos($nomLower, 'supplement') !== false || strpos($nomLower, 'glutamine') !== false || strpos($nomLower, 'électrolytes') !== false || strpos($nomLower, 'electrolytes') !== false) {
+        return '/marketplace/view/front/images/thumb-supplement.svg';
+    } elseif (strpos($nomLower, 'boisson') !== false || strpos($nomLower, 'jus') !== false || strpos($nomLower, 'smoothie') !== false || strpos($nomLower, 'guarana') !== false) {
+        return '/marketplace/view/front/images/product-thumb-1.png';
+    } elseif (strpos($nomLower, 'dattes') !== false || strpos($nomLower, 'pâte') !== false || strpos($nomLower, 'barre') !== false) {
+        return '/marketplace/view/front/images/thumb-biscuits.png';
+    } elseif (strpos($nomLower, 'banane') !== false) {
+        return '/marketplace/view/front/images/thumb-bananas.png';
+    } elseif (strpos($nomLower, 'tomate') !== false) {
+        return '/marketplace/view/front/images/thumb-tomatoes.png';
+    } elseif (strpos($nomLower, 'lait') !== false || strpos($nomLower, 'milk') !== false) {
+        return '/marketplace/view/front/images/thumb-milk.png';
+    }
+    return '';
+}
 ?>
 <!DOCTYPE html>
 <html lang="fr">
@@ -121,7 +147,7 @@ if (session_status() === PHP_SESSION_NONE) {
       <div class="col-sm-8 col-lg-4 d-flex justify-content-end gap-3 align-items-center">
         <div class="support-box text-end d-none d-xl-block">
           <span class="fs-6 text-muted">Service client</span>
-          <h5 class="mb-0">+216 98 765 432</h5>
+          <h5 class="mb-0">+216 20 190 091</h5>
         </div>
         <a href="/marketplace/index.php?controller=commande&action=panier" class="btn btn-outline-success rounded-pill">
           <svg width="20" height="20"><use xlink:href="#cart"></use></svg> Panier
@@ -162,9 +188,12 @@ if (session_status() === PHP_SESSION_NONE) {
                     <path d="M20.16 4.61A6.27 6.27 0 0 0 12 4a6.27 6.27 0 0 0-8.16 9.48l7.45 7.45a1 1 0 0 0 1.42 0l7.45-7.45a6.27 6.27 0 0 0 0-8.87Z"/>
                   </svg>
                 </a>
+                <?php $imagePath = getProductImage($produit['nom'] ?? ''); ?>
+                <?php if (!empty($imagePath)): ?>
                 <figure class="text-center mb-3">
-                    <a href="#"><img src="/marketplace/view/front/images/thumb-tomatoes.png" class="img-fluid" style="max-height: 150px; object-fit: contain;"></a>
+                    <a href="#"><img src="<?= $imagePath ?>" class="img-fluid" style="max-height: 150px; object-fit: contain;"></a>
                 </figure>
+                <?php endif; ?>
                 <h3 class="fs-5 mb-2"><?= htmlspecialchars($produit['nom']) ?></h3>
                 <span class="qty d-block text-muted mb-2"><?= $produit['stock'] ?? 'Disponible' ?> unités</span>
                 <span class="rating d-flex align-items-center mb-2 text-warning">
@@ -292,7 +321,11 @@ function removeFromFavoris(produitId, element) {
     svg.setAttribute('stroke', '#666');
 
     // Requête AJAX pour supprimer
-    fetch(`/marketplace/index.php?controller=favoris&action=remove&id=${produitId}`)
+    fetch(`/marketplace/index.php?controller=favoris&action=remove&id=${produitId}`, {
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
         .then(function(response) {
             let card = document.getElementById('favori-card-' + produitId);
             if (card) {

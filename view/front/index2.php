@@ -49,12 +49,8 @@ if (isset($_GET['search']) && !empty(trim($_GET['search']))) {
     $selected_category_name = 'Tous les produits';
 }
 
-$selected_location = trim($_GET['location'] ?? 'Tunis');
-$selected_location = preg_replace('/[^a-zA-ZÀ-ÿ0-9\s\-]/u', '', $selected_location);
-$selected_location = mb_substr($selected_location, 0, 50);
-if ($selected_location === '') {
-    $selected_location = 'Tunis';
-}
+$tunisianCities = getTunisianCities();
+$selected_location = sanitizeTunisianCity($_GET['location'] ?? 'Tunis');
 $locationQuery = '&location=' . urlencode($selected_location);
 
 // Filtre Nutri‑Score (A-E)
@@ -203,26 +199,30 @@ $displayProduits = $showAll ? $produits : array_slice($produits, 0, 8);
             color: white;
         }
         .seasonal-badge {
-            position: absolute;
-            top: 10px;
-            left: 10px;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
             background: #ff9800;
             color: white;
-            padding: 2px 6px;
-            border-radius: 10px;
-            font-size: 12px;
-            z-index: 10;
+            padding: 3px 8px;
+            border-radius: 999px;
+            font-size: 10px;
+            font-weight: 700;
+            margin-bottom: 10px;
+            letter-spacing: 0.2px;
         }
         .btn-wishlist {
             cursor: pointer;
         }
         .product-img-wrapper {
-            height: 180px;
+            height: 155px;
             display: flex;
             align-items: center;
             justify-content: center;
-            margin-bottom: 15px;
+            margin-bottom: 12px;
             overflow: hidden;
+            border-radius: 12px;
+            background: #f9f9f9;
         }
         .product-img-wrapper img {
             max-height: 100%;
@@ -259,7 +259,62 @@ $displayProduits = $showAll ? $produits : array_slice($produits, 0, 8);
         .nutriscore-C { background: linear-gradient(135deg, #f1c40f, #f39c12); }
         .nutriscore-D { background: linear-gradient(135deg, #ff9800, #f57c00); }
         .nutriscore-E { background: linear-gradient(135deg, #e74c3c, #c0392b); }
-        .product-item { position: relative; }
+        .product-item {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            min-height: 100%;
+            padding-top: 14px;
+        }
+        .product-item .btn-wishlist {
+            width: 38px;
+            height: 38px;
+            top: 12px;
+            right: 12px;
+            z-index: 12;
+        }
+        .product-item .btn-wishlist svg {
+            width: 18px;
+            height: 18px;
+        }
+        .product-title {
+            min-height: 50px;
+            margin-bottom: 4px;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+        .product-item .price {
+            font-size: 22px;
+            line-height: 1.2;
+            min-height: 34px;
+        }
+        .product-actions {
+            margin-top: auto !important;
+        }
+        .product-qty .btn-number {
+            width: 26px;
+            height: 26px;
+            border-radius: 6px;
+            padding: 0;
+            line-height: 1;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .seasonal-collapsible {
+            display: none;
+        }
+        .seasonal-collapsible.is-open {
+            display: block;
+            animation: seasonal-fade-in 0.35s ease;
+        }
+        @keyframes seasonal-fade-in {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
         .nutriscore-skeleton {
             position: absolute;
             top: 12px;
@@ -326,7 +381,11 @@ $displayProduits = $showAll ? $produits : array_slice($produits, 0, 8);
             </select>
           </div>
           <div class="col-4 col-md-3 border-end p-0">
-            <input type="text" name="location" class="form-control border-0 bg-transparent shadow-none" placeholder="Localisation en Tunisie" value="<?= htmlspecialchars($selected_location) ?>" autocomplete="off">
+            <select name="location" class="form-select border-0 bg-transparent shadow-none w-100 text-truncate" style="cursor:pointer; font-size: 14px;">
+              <?php foreach($tunisianCities as $city): ?>
+                <option value="<?= htmlspecialchars($city) ?>" <?= ($selected_location === $city) ? 'selected' : '' ?>><?= htmlspecialchars($city) ?></option>
+              <?php endforeach; ?>
+            </select>
           </div>
           <div class="col-3 col-md-4">
             <input type="text" name="search" id="live_search_input" class="form-control border-0 bg-transparent shadow-none" placeholder="Rechercher un produit..." value="<?= htmlspecialchars($_GET['search'] ?? '') ?>" autocomplete="off">
@@ -340,7 +399,7 @@ $displayProduits = $showAll ? $produits : array_slice($produits, 0, 8);
       <div class="col-sm-8 col-lg-4 d-flex justify-content-end gap-3 align-items-center">
         <div class="support-box text-end d-none d-xl-block">
           <span class="fs-6 text-muted">Service client</span>
-          <h5 class="mb-0">+216 98 765 432</h5>
+          <h5 class="mb-0">+216 20 190 091</h5>
         </div>
         <a href="/marketplace/index.php?controller=commande&action=panier" class="btn btn-outline-success rounded-pill">
           <svg width="20" height="20"><use xlink:href="#cart"></use></svg> Panier
@@ -393,7 +452,7 @@ $displayProduits = $showAll ? $produits : array_slice($produits, 0, 8);
             <div class="categories sale mb-3 pb-3">Saison</div>
             <h3 class="item-title">Recommandations Saisonnières</h3>
             <p class="mb-4">Produits conseillés selon la météo actuelle et la saison. Cliquez pour voir les recommandations réelles.</p>
-            <a href="#seasonal-section" class="d-flex align-items-center nav-link">Voir les recommandations <svg width="24" height="24"><use xlink:href="#arrow-right"></use></svg></a>
+            <a href="#" id="open-seasonal-recommendations" class="d-flex align-items-center nav-link">Voir les recommandations <svg width="24" height="24"><use xlink:href="#arrow-right"></use></svg></a>
           </div>
         </div>
       </div>
@@ -430,7 +489,7 @@ $displayProduits = $showAll ? $produits : array_slice($produits, 0, 8);
 </section>
 
 <!-- Seasonal Recommendations -->
-<section id="seasonal-section" class="py-5 overflow-hidden" style="background: linear-gradient(135deg, #e8f5e8 0%, #f1f8e9 100%);">
+<section id="seasonal-section" class="py-5 overflow-hidden seasonal-collapsible" style="background: linear-gradient(135deg, #e8f5e8 0%, #f1f8e9 100%);">
   <div class="container-fluid">
     <div class="section-header d-flex flex-wrap justify-content-between mb-5">
       <div>
@@ -441,6 +500,12 @@ $displayProduits = $showAll ? $produits : array_slice($produits, 0, 8);
         <div class="weather-info bg-white p-3 rounded shadow-sm">
           <small class="text-muted">Météo actuelle</small><br>
           <strong><?= htmlspecialchars($seasonalData['weather']['temp']) ?>°C - <?= htmlspecialchars($seasonalData['weather']['description']) ?></strong>
+          <div class="small mt-1">Min/Max: <?= htmlspecialchars($seasonalData['weather']['temp_min'] ?? $seasonalData['weather']['temp']) ?>°C / <?= htmlspecialchars($seasonalData['weather']['temp_max'] ?? $seasonalData['weather']['temp']) ?>°C</div>
+          <div class="small mt-1">Jour: <?= htmlspecialchars($seasonalData['weather']['day_description'] ?? $seasonalData['weather']['description']) ?></div>
+          <div class="small mt-1">Nuit: <?= htmlspecialchars($seasonalData['weather']['night_description'] ?? $seasonalData['weather']['description']) ?></div>
+          <?php if (!empty($seasonalData['weather']['sunrise']) || !empty($seasonalData['weather']['sunset'])): ?>
+            <div class="small mt-1">Soleil: <?= htmlspecialchars($seasonalData['weather']['sunrise'] ?? '--') ?> / <?= htmlspecialchars($seasonalData['weather']['sunset'] ?? '--') ?></div>
+          <?php endif; ?>
           <?php if (!empty($seasonalData['location'])): ?>
             <div class="text-muted small mt-1">Localisation : <?= htmlspecialchars($seasonalData['location']) ?></div>
           <?php endif; ?>
@@ -465,12 +530,14 @@ $displayProduits = $showAll ? $produits : array_slice($produits, 0, 8);
               </svg>
             </a>
           <?php $imagePath = getProductImage($rec['nom']); ?>
-          <?php if (!empty($imagePath)): ?>
-            <figure class="product-img-wrapper">
+          <figure class="product-img-wrapper <?= empty($imagePath) ? 'empty-product-icon' : '' ?>">
+            <?php if (!empty($imagePath)): ?>
               <a href="#"><img src="<?= $imagePath ?>" class="tab-image"></a>
-            </figure>
-          <?php endif; ?>
-          <h3><?= htmlspecialchars($rec['nom']) ?></h3>
+            <?php else: ?>
+              <span class="text-muted small">Aperçu</span>
+            <?php endif; ?>
+          </figure>
+          <h3 class="product-title"><?= htmlspecialchars($rec['nom']) ?></h3>
             <?php
               $isPromo = !empty($rec['is_promo']);
               $prixPromo = isset($rec['prix_promo']) && $rec['prix_promo'] !== '' && $rec['prix_promo'] !== null ? floatval($rec['prix_promo']) : null;
@@ -483,7 +550,7 @@ $displayProduits = $showAll ? $produits : array_slice($produits, 0, 8);
             <?php else: ?>
               <span class="price"><?= number_format($rec['prix'],2) ?> DT</span>
             <?php endif; ?>
-            <div class="d-flex align-items-center justify-content-between mt-3">
+            <div class="d-flex align-items-center justify-content-between mt-3 product-actions">
               <div class="input-group product-qty">
                 <span class="input-group-btn">
                   <button class="quantity-left-minus btn btn-danger btn-number" data-type="minus" data-id="<?= $rec['id'] ?>">
@@ -553,12 +620,14 @@ $displayProduits = $showAll ? $produits : array_slice($produits, 0, 8);
                   </svg>
                 </a>
                 <?php $imagePath = getProductImage($produit['nom']); ?>
-                <?php if (!empty($imagePath)): ?>
-                  <figure class="product-img-wrapper">
-                      <a href="#"><img src="<?= $imagePath ?>" class="tab-image"></a>
-                  </figure>
-                <?php endif; ?>
-                <h3><?= htmlspecialchars($produit['nom']) ?></h3>
+                <figure class="product-img-wrapper <?= empty($imagePath) ? 'empty-product-icon' : '' ?>">
+                  <?php if (!empty($imagePath)): ?>
+                    <a href="#"><img src="<?= $imagePath ?>" class="tab-image"></a>
+                  <?php else: ?>
+                    <span class="text-muted small">Aperçu</span>
+                  <?php endif; ?>
+                </figure>
+                <h3 class="product-title"><?= htmlspecialchars($produit['nom']) ?></h3>
                 <span class="qty"><?= $produit['stock'] ?> unités</span>
                 <?php
                   $isPromo = !empty($produit['is_promo']);
@@ -572,7 +641,7 @@ $displayProduits = $showAll ? $produits : array_slice($produits, 0, 8);
                 <?php else: ?>
                   <span class="price"><?= number_format($produit['prix'],2) ?> DT</span>
                 <?php endif; ?>
-                <div class="d-flex align-items-center justify-content-between mt-3">
+                <div class="d-flex align-items-center justify-content-between mt-3 product-actions">
                   <div class="input-group product-qty">
                     <span class="input-group-btn">
                       <button class="quantity-left-minus btn btn-danger btn-number" data-type="minus" data-id="<?= $produit['id'] ?>">
@@ -629,10 +698,15 @@ $displayProduits = $showAll ? $produits : array_slice($produits, 0, 8);
               <path d="M20.16 4.61A6.27 6.27 0 0 0 12 4a6.27 6.27 0 0 0-8.16 9.48l7.45 7.45a1 1 0 0 0 1.42 0l7.45-7.45a6.27 6.27 0 0 0 0-8.87Z"/>
             </svg>
           </a>
-          <figure class="product-img-wrapper">
-            <a href="#"><img src="<?= getProductImage($produit['nom']) ?>" class="tab-image"></a>
+          <?php $imagePath = getProductImage($produit['nom']); ?>
+          <figure class="product-img-wrapper <?= empty($imagePath) ? 'empty-product-icon' : '' ?>">
+            <?php if (!empty($imagePath)): ?>
+              <a href="#"><img src="<?= $imagePath ?>" class="tab-image"></a>
+            <?php else: ?>
+              <span class="text-muted small">Aperçu</span>
+            <?php endif; ?>
           </figure>
-          <h3><?= htmlspecialchars($produit['nom']) ?></h3>
+          <h3 class="product-title"><?= htmlspecialchars($produit['nom']) ?></h3>
           <span class="qty"><?= $produit['stock'] ?> unités</span>
           <?php
             $isPromo = !empty($produit['is_promo']);
@@ -646,7 +720,7 @@ $displayProduits = $showAll ? $produits : array_slice($produits, 0, 8);
           <?php else: ?>
             <span class="price"><?= number_format($produit['prix'],2) ?> DT</span>
           <?php endif; ?>
-          <div class="d-flex align-items-center justify-content-between mt-3">
+          <div class="d-flex align-items-center justify-content-between mt-3 product-actions">
             <div class="input-group product-qty">
               <span class="input-group-btn">
                 <button class="quantity-left-minus btn btn-danger btn-number" data-type="minus" data-id="<?= $produit['id'] ?>">
@@ -710,6 +784,22 @@ $displayProduits = $showAll ? $produits : array_slice($produits, 0, 8);
 <script src="js/script.js"></script>
 
 <script>
+document.addEventListener('DOMContentLoaded', function() {
+    const openSeasonalBtn = document.getElementById('open-seasonal-recommendations');
+    const seasonalSection = document.getElementById('seasonal-section');
+    if (!openSeasonalBtn || !seasonalSection) {
+        return;
+    }
+
+    openSeasonalBtn.addEventListener('click', function(e) {
+        e.preventDefault();
+        seasonalSection.classList.add('is-open');
+        seasonalSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+});
+</script>
+
+<script>
 // Gestion des quantités
 document.addEventListener('DOMContentLoaded', function() {
     // Boutons +
@@ -754,16 +844,22 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // Fonction pour ajouter/retirer des favoris via AJAX
 function addToFavoris(produitId, element) {
-    fetch(`/marketplace/index.php?controller=favoris&action=add&id=${produitId}`)
+    fetch(`/marketplace/index.php?controller=favoris&action=add&id=${produitId}`, {
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
         .then(function(response) {
-            return response.text();
+            return response.json();
         })
-        .then(function() {
-            // Toggle l'état du cœur
-            if (element.classList.contains('active')) {
+        .then(function(data) {
+            if (!data || data.ok !== true) {
+                throw new Error('Echec favoris');
+            }
+            if (data.action === 'removed') {
                 element.classList.remove('active');
                 element.querySelector('svg').setAttribute('fill', 'none');
-            } else {
+            } else if (data.action === 'added') {
                 element.classList.add('active');
                 element.querySelector('svg').setAttribute('fill', 'red');
             }

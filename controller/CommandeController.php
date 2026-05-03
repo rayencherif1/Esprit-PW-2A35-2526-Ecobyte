@@ -12,6 +12,25 @@ class CommandeController {
         $this->db = $commande->getDb();
         $this->produitModel = new Produit();
     }
+
+    private function getTunisianCities() {
+        return [
+            'Tunis', 'Ariana', 'Ben Arous', 'Manouba', 'Nabeul', 'Zaghouan', 'Bizerte',
+            'Beja', 'Jendouba', 'Le Kef', 'Siliana', 'Sousse', 'Monastir', 'Mahdia',
+            'Sfax', 'Kairouan', 'Kasserine', 'Sidi Bouzid', 'Gabes', 'Medenine',
+            'Tataouine', 'Gafsa', 'Tozeur', 'Kebili'
+        ];
+    }
+
+    private function sanitizeTunisianCity($city) {
+        $city = trim((string)$city);
+        foreach ($this->getTunisianCities() as $allowedCity) {
+            if (mb_strtolower($city) === mb_strtolower($allowedCity)) {
+                return $allowedCity;
+            }
+        }
+        return 'Tunis';
+    }
     
     // ========== MÉTHODES SQL ==========
     
@@ -288,6 +307,7 @@ class CommandeController {
             $total = $subtotal + $frais_livraison - $promoDiscount;
             
             // Préparer les données pour la commande
+            $validatedCity = $this->sanitizeTunisianCity($_POST['ville'] ?? '');
             $data = [
                 'civilite' => $_POST['civilite'] ?? 'M.',
                 'client_nom' => $_POST['client_nom'] ?? '',
@@ -298,7 +318,7 @@ class CommandeController {
                 'adresse' => $_POST['adresse'] ?? '',
                 'adresse_complement' => $_POST['adresse_complement'] ?? '',
                 'code_postal' => $_POST['code_postal'] ?? '',
-                'ville' => $_POST['ville'] ?? '',
+                'ville' => $validatedCity,
                 'pays' => $_POST['pays'] ?? 'Tunisie',
                 'instructions_livraison' => $_POST['instructions_livraison'] ?? '',
                 'adresse_facturation' => $_POST['adresse_facturation'] ?? '',
