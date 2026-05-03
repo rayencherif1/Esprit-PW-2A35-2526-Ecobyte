@@ -234,6 +234,10 @@ class UserController {
                 $_SESSION['user_photo'] = $user['photo'];
                 $_SESSION['user_role'] = $user['role'] ?? 'user';
                 $_SESSION['logged_in'] = true;
+                
+                // Vérifier la connexion et envoyer l'alerte (Géolocalisation IP-API)
+                $this->checkAndNotifyLogin($user);
+                
                 return $user;
             }
             $this->errors[] = "Email ou mot de passe incorrect";
@@ -242,6 +246,124 @@ class UserController {
             $this->errors[] = $e->getMessage();
             return false;
         }
+    }
+
+    public function googleLogin($token) {
+        try {
+            // 1. Décoder le token JWT Google (sans validation cryptographique stricte pour simplifier)
+            $parts = explode('.', $token);
+            if (count($parts) !== 3) {
+                $this->errors[] = "Token Google invalide";
+                return false;
+            }
+            
+            $payload = json_decode(base64_decode(str_replace(['-', '_'], ['+', '/'], $parts[1])), true);
+            
+            if (!$payload || !isset($payload['email'])) {
+                $this->errors[] = "Impossible de lire les informations Google";
+                return false;
+            }
+
+            $email = $payload['email'];
+            $google_id = $payload['sub'];
+            $nom = $payload['family_name'] ?? 'Inconnu';
+            $prenom = $payload['given_name'] ?? 'Inconnu';
+            $photo = $payload['picture'] ?? null;
+
+            // 2. Chercher l'utilisateur
+            $user = $this->db_getUserByEmail($email);
+            
+            if ($user) {
+                // Mettre à jour google_id si vide
+                if (empty($user['google_id'])) {
+                    $query = "UPDATE users SET google_id = :google_id WHERE id = :id";
+                    $stmt = $this->db->prepare($query);
+                    $stmt->execute([':google_id' => $google_id, ':id' => $user['id']]);
+                }
+                
+                // Vérifier s'il est banni
+                if ($user['ban_until'] && strtotime($user['ban_until']) > time()) {
+                    $this->errors[] = "Ce compte a été banni.";
+                    return false;
+                }
+                
+                // Créer la session
+                if (session_status() === PHP_SESSION_NONE) session_start();
+                $_SESSION['user_id'] = $user['id'];
+                $_SESSION['user_nom'] = $user['nom'];
+                $_SESSION['user_prenom'] = $user['prenom'];
+                $_SESSION['user_email'] = $user['email'];
+                $_SESSION['user_photo'] = $user['photo'];
+                $_SESSION['user_role'] = $user['role'] ?? 'user';
+                $_SESSION['logged_in'] = true;
+                
+                $this->checkAndNotifyLogin($user);
+                return $user;
+            } else {
+                // 3. Créer un nouveau compte Google
+                $query = "INSERT INTO users (nom, prenom, email, google_id, photo, date_creation) 
+                          VALUES (:nom, :prenom, :email, :google_id, :photo, NOW())";
+                $stmt = $this->db->prepare($query);
+                $stmt->execute([
+                    ':nom' => $nom,
+                    ':prenom' => $prenom,
+                    ':email' => $email,
+                    ':google_id' => $google_id,
+                    ':photo' => $photo
+                ]);
+                
+                $newUserId = $this->db->lastInsertId();
+                $newUser = $this->db_getUserById($newUserId);
+                
+                if (session_status() === PHP_SESSION_NONE) session_start();
+                $_SESSION['user_id'] = $newUser['id'];
+                $_SESSION['user_nom'] = $newUser['nom'];
+                $_SESSION['user_prenom'] = $newUser['prenom'];
+                $_SESSION['user_email'] = $newUser['email'];
+                $_SESSION['user_photo'] = $newUser['photo'];
+                $_SESSION['user_role'] = 'user';
+                $_SESSION['logged_in'] = true;
+                
+                $this->checkAndNotifyLogin($newUser);
+                return $newUser;
+            }
+        } catch (Exception $e) {
+            $this->errors[] = $e->getMessage();
+            return false;
+        }
+    }
+
+    private function checkAndNotifyLogin($user) {
+        $ip = $_SERVER['REMOTE_ADDR'] ?? 'Inconnue';
+        $userAgent = $_SERVER['HTTP_USER_AGENT'] ?? 'Appareil inconnu';
+        
+        // Par défaut pour localhost (WAMP/XAMPP)
+        $location = "Localisation non détectable (Localhost)";
+        
+        // Appel à l'API ip-api.com si ce n'est pas une IP locale
+        if ($ip !== '::1' && $ip !== '127.0.0.1') {
+            $api_url = "http://ip-api.com/json/{$ip}";
+            $response = @file_get_contents($api_url);
+            if ($response) {
+                $data = json_decode($response, true);
+                if (isset($data['status']) && $data['status'] === 'success') {
+                    $location = $data['city'] . ", " . $data['country'];
+                }
+            }
+        }
+
+        $subject = "Nouvelle connexion detectee - Ecobyte";
+        $message = "Bonjour " . $user['prenom'] . ",\n\n";
+        $message .= "Une nouvelle connexion a votre compte Ecobyte a ete detectee.\n\n";
+        $message .= "Details de la connexion :\n";
+        $message .= "- Adresse IP : " . $ip . "\n";
+        $message .= "- Localisation : " . $location . "\n";
+        $message .= "- Appareil / Navigateur : " . $userAgent . "\n";
+        $message .= "- Date : " . date('d/m/Y H:i:s') . "\n\n";
+        $message .= "Si ce n'est pas vous, veuillez reinitialiser votre mot de passe immediatement.";
+
+        // On envoie l'email
+        $this->sendMail($user['email'], $subject, $message);
     }
 
     public function logout() {
@@ -463,6 +585,65 @@ class UserController {
 
     private function validateId($id) {
         return is_numeric($id) && (int)$id > 0;
+    }
+
+    // ==========================================
+    // MÉTHODES FACE ID (CAMÉRA AVEC FACE-API.JS)
+    // ==========================================
+
+    public function registerFaceDescriptor($userId, $descriptor) {
+        try {
+            // Le descriptor est un tableau JSON de 128 valeurs (Float)
+            $query = "UPDATE users SET webauthn_public_key = :descriptor WHERE id = :id";
+            $stmt = $this->db->prepare($query);
+            return $stmt->execute([
+                ':descriptor' => $descriptor,
+                ':id' => $userId
+            ]);
+        } catch (Exception $e) {
+            $this->errors[] = $e->getMessage();
+            return false;
+        }
+    }
+
+    public function getAllFaceDescriptors() {
+        try {
+            $query = "SELECT id, nom, prenom, webauthn_public_key FROM users WHERE webauthn_public_key IS NOT NULL AND webauthn_public_key != ''";
+            $stmt = $this->db->prepare($query);
+            $stmt->execute();
+            return $stmt->fetchAll();
+        } catch (Exception $e) {
+            return [];
+        }
+    }
+
+    public function loginWithFaceId($userId) {
+        try {
+            $user = $this->db_getUserById($userId);
+            if ($user) {
+                if ($user['ban_until'] && strtotime($user['ban_until']) > time()) {
+                    $this->errors[] = "Ce compte a été banni.";
+                    return false;
+                }
+
+                if (session_status() === PHP_SESSION_NONE) session_start();
+                $_SESSION['user_id'] = $user['id'];
+                $_SESSION['user_nom'] = $user['nom'];
+                $_SESSION['user_prenom'] = $user['prenom'];
+                $_SESSION['user_email'] = $user['email'];
+                $_SESSION['user_photo'] = $user['photo'];
+                $_SESSION['user_role'] = $user['role'] ?? 'user';
+                $_SESSION['logged_in'] = true;
+                
+                $this->checkAndNotifyLogin($user);
+                return $user;
+            }
+            $this->errors[] = "Utilisateur introuvable.";
+            return false;
+        } catch (Exception $e) {
+            $this->errors[] = $e->getMessage();
+            return false;
+        }
     }
 
     public function getErrors() { return $this->errors; }

@@ -133,6 +133,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                     <input type="password" name="password" class="form-control">
                                 </div>
 
+                                <div class="mb-4">
+                                    <label class="form-label d-block">Sécurité Avancée</label>
+                                    <button type="button" id="btn-face-id" class="btn btn-outline-dark mb-2">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-camera-video me-2" viewBox="0 0 16 16">
+                                          <path fill-rule="evenodd" d="M0 5a2 2 0 0 1 2-2h7.5a2 2 0 0 1 1.983 1.738l3.11-1.382A1 1 0 0 1 16 4.269v7.462a1 1 0 0 1-1.406.913l-3.111-1.382A2 2 0 0 1 9.5 13H2a2 2 0 0 1-2-2V5zm11.5 5.175 3.5 1.556V4.269l-3.5 1.556v4.35zM2 4a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h7.5a1 1 0 0 0 1-1V5a1 1 0 0 0-1-1H2z"/>
+                                        </svg>
+                                        Configurer la Caméra pour Face ID
+                                    </button>
+                                    
+                                    <div id="camera-container" class="d-none text-center mt-3">
+                                        <div class="position-relative d-inline-block">
+                                            <video id="videoElement" width="320" height="240" autoplay muted class="rounded border shadow-sm"></video>
+                                            <div id="scan-overlay" class="position-absolute top-50 start-50 translate-middle text-white fw-bold d-none" style="background: rgba(0,0,0,0.5); padding: 5px 10px; border-radius: 5px; z-index: 10;">Scan en cours...</div>
+                                        </div>
+                                        <p id="camera-status" class="form-text text-info mt-2">Chargement de l'intelligence artificielle...</p>
+                                    </div>
+
+                                    <div id="face-id-status" class="form-text text-success d-none mt-1">Visage configuré avec succès !</div>
+                                </div>
+
                                 <div class="mt-4 text-end">
                                     <button type="submit" class="btn btn-primary px-5 btn-lg">Enregistrer les modifications</button>
                                 </div>
@@ -145,6 +165,83 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     </section>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
+    <script>
+        const btnFaceId = document.getElementById('btn-face-id');
+        const cameraContainer = document.getElementById('camera-container');
+        const video = document.getElementById('videoElement');
+        const cameraStatus = document.getElementById('camera-status');
+        const scanOverlay = document.getElementById('scan-overlay');
+        let modelsLoaded = false;
+
+        btnFaceId.addEventListener('click', async () => {
+            btnFaceId.classList.add('d-none');
+            cameraContainer.classList.remove('d-none');
+            
+            if (!modelsLoaded) {
+                cameraStatus.innerText = "Chargement de l'IA (veuillez patienter)...";
+                const MODEL_URL = 'https://justadudewhohacks.github.io/face-api.js/models';
+                await faceapi.nets.ssdMobilenetv1.loadFromUri(MODEL_URL);
+                await faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL);
+                await faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL);
+                modelsLoaded = true;
+            }
+
+            cameraStatus.innerText = "Allumage de la caméra...";
+            navigator.mediaDevices.getUserMedia({ video: true })
+                .then(stream => {
+                    video.srcObject = stream;
+                })
+                .catch(err => {
+                    cameraStatus.innerText = "Erreur caméra : " + err;
+                });
+        });
+
+        video.addEventListener('play', () => {
+            cameraStatus.innerText = "Regardez la caméra bien en face.";
+            
+            // On scanne régulièrement jusqu'à trouver un visage
+            const scanInterval = setInterval(async () => {
+                scanOverlay.classList.remove('d-none');
+                
+                const detection = await faceapi.detectSingleFace(video).withFaceLandmarks().withFaceDescriptor();
+                
+                if (detection) {
+                    clearInterval(scanInterval);
+                    scanOverlay.innerText = "Visage détecté ! Enregistrement...";
+                    
+                    // Convertir en tableau classique
+                    const descriptorArray = Array.from(detection.descriptor);
+                    
+                    // Envoyer au serveur
+                    const response = await fetch('?section=front&action=webauthn-register', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ descriptor: descriptorArray })
+                    });
+
+                    const result = await response.json();
+                    
+                    // Éteindre la caméra
+                    const stream = video.srcObject;
+                    const tracks = stream.getTracks();
+                    tracks.forEach(track => track.stop());
+                    
+                    cameraContainer.classList.add('d-none');
+                    btnFaceId.classList.remove('d-none');
+                    
+                    if (result.success) {
+                        document.getElementById('face-id-status').classList.remove('d-none');
+                        alert("Votre visage a été enregistré avec succès ! Vous pouvez maintenant vous connecter avec la caméra.");
+                    } else {
+                        alert("Erreur lors de l'enregistrement : " + result.message);
+                    }
+                } else {
+                    scanOverlay.classList.add('d-none');
+                }
+            }, 1000);
+        });
+    </script>
 </body>
 </html>
 <?php exit; ?>

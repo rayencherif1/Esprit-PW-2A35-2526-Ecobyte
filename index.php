@@ -159,6 +159,65 @@ try {
                 require __DIR__ . '/view/front/change-password.php';
                 break;
 
+            case 'get-face-descriptors':
+                header('Content-Type: application/json');
+                $userController = new UserController();
+                $descriptors = $userController->getAllFaceDescriptors();
+                $result = [];
+                foreach ($descriptors as $d) {
+                    $arr = json_decode($d['webauthn_public_key'], true);
+                    if (is_array($arr)) {
+                        $result[] = [
+                            'userId' => $d['id'],
+                            'nom' => $d['prenom'] . ' ' . $d['nom'],
+                            'descriptor' => $arr
+                        ];
+                    }
+                }
+                echo json_encode($result);
+                exit;
+
+            case 'webauthn-login':
+                header('Content-Type: application/json');
+                if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+                    $input = json_decode(file_get_contents('php://input'), true);
+                    $userId = $input['userId'] ?? null;
+                    
+                    if ($userId) {
+                        $userController = new UserController();
+                        if ($userController->loginWithFaceId($userId)) {
+                            echo json_encode(['success' => true]);
+                            exit;
+                        } else {
+                            echo json_encode(['success' => false, 'message' => $userController->getErrors()[0] ?? 'Erreur']);
+                            exit;
+                        }
+                    }
+                }
+                echo json_encode(['success' => false, 'message' => 'Requête invalide']);
+                exit;
+
+            case 'webauthn-register':
+                header('Content-Type: application/json');
+                if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
+                    echo json_encode(['success' => false, 'message' => 'Non autorisé']);
+                    exit;
+                }
+                if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+                    $input = json_decode(file_get_contents('php://input'), true);
+                    $descriptor = $input['descriptor'] ?? null;
+                    
+                    if ($descriptor) {
+                        $userController = new UserController();
+                        if ($userController->registerFaceDescriptor($_SESSION['user_id'], json_encode($descriptor))) {
+                            echo json_encode(['success' => true]);
+                            exit;
+                        }
+                    }
+                }
+                echo json_encode(['success' => false, 'message' => 'Erreur d\'enregistrement']);
+                exit;
+
             case 'logout':
                 // Déconnexion
                 $userController = new UserController();
