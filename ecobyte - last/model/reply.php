@@ -7,17 +7,23 @@ class Reply
     private ?string $image = null;
     private ?string $datePublication = null;
     private ?int $postId = null;
+    private ?int $idUser = null;
+    private ?string $statut = null;
+    private ?string $raisonSignalement = null;
     private ?int $likes = 0;
     private ?bool $userLiked = false;
     private ?int $parentReplyId = null;
 
-    public function __construct($id = null, $contenu = null, $image = null, $datePublication = null, $postId = null, $likes = 0, $parentReplyId = null)
+    public function __construct($id = null, $contenu = null, $image = null, $datePublication = null, $postId = null, $idUser = null, $statut = 'en_attente', $raisonSignalement = null, $likes = 0, $parentReplyId = null)
     {
         $this->id = $id;
         $this->contenu = $contenu;
         $this->image = $image;
         $this->datePublication = $datePublication;
         $this->postId = $postId;
+        $this->idUser = $idUser;
+        $this->statut = $statut;
+        $this->raisonSignalement = $raisonSignalement;
         $this->likes = $likes;
         $this->parentReplyId = $parentReplyId;
     }
@@ -101,6 +107,39 @@ class Reply
     public function setParentReplyId($parentReplyId)
     {
         $this->parentReplyId = $parentReplyId;
+        return $this;
+    }
+
+    public function getIdUser()
+    {
+        return $this->idUser;
+    }
+
+    public function setIdUser($idUser)
+    {
+        $this->idUser = $idUser;
+        return $this;
+    }
+
+    public function getStatut()
+    {
+        return $this->statut;
+    }
+
+    public function setStatut($statut)
+    {
+        $this->statut = $statut;
+        return $this;
+    }
+
+    public function getRaisonSignalement()
+    {
+        return $this->raisonSignalement;
+    }
+
+    public function setRaisonSignalement($raisonSignalement)
+    {
+        $this->raisonSignalement = $raisonSignalement;
         return $this;
     }
 }

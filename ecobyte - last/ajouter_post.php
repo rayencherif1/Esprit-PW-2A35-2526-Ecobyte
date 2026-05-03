@@ -8,14 +8,28 @@ require_once __DIR__ . '/controller/post.controller.php';
 
 $message = '';
 $error = '';
+$nutritionResult = null;
+
+session_start();
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $titre = trim((string) ($_POST['titre'] ?? ''));
     $contenu = trim((string) ($_POST['contenu'] ?? ''));
     $datePublication = trim((string) ($_POST['datePublication'] ?? ''));
     $categorie = trim((string) ($_POST['categorie'] ?? ''));
+    $submittedNutritionJson = trim((string) ($_POST['nutrition_json'] ?? ''));
+    if ($submittedNutritionJson !== '') {
+        $submittedNutrition = json_decode($submittedNutritionJson, true);
+        if (is_array($submittedNutrition)) {
+            $nutritionResult = $submittedNutrition;
+            $_SESSION['nutritionResult'] = $nutritionResult;
+        }
+    }
     // Gestion de l'upload d'image
     $imagePath = null;
+    if (!isset($nutritionResult)) {
+        $nutritionResult = null;
+    }
     if (isset($_FILES['image']) && $_FILES['image']['error'] === UPLOAD_ERR_OK) {
         $uploadDir = __DIR__ . '/view/uploads/';
         if (!is_dir($uploadDir)) {
@@ -27,6 +41,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         
         if (move_uploaded_file($_FILES['image']['tmp_name'], $targetFile)) {
             $imagePath = 'view/uploads/' . $fileName;
+            // Appel API nutrition
+            $apiUrl = __DIR__ . '/api/nutrition_analyzer.php';
+            $cfile = new CURLFile($targetFile);
+            $postFields = ['image' => $cfile];
+            $ch = curl_init();
+            curl_setopt($ch, CURLOPT_URL, $apiUrl);
+            curl_setopt($ch, CURLOPT_POST, 1);
+            curl_setopt($ch, CURLOPT_POSTFIELDS, $postFields);
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            curl_setopt($ch, CURLOPT_TIMEOUT, 10);
+            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+            $apiResponse = curl_exec($ch);
+            curl_close($ch);
+            if ($apiResponse) {
+                $nutritionResult = json_decode($apiResponse, true);
+                $_SESSION['nutritionResult'] = $nutritionResult;
+            }
         }
     }
 
@@ -40,7 +71,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($datePublication === '') {
             $datePublication = date('Y-m-d');
         }
-        $post = new Post(null, $titre, $contenu, $datePublication, $categorie, $imagePath);
+        $nutritionJson = null;
+        if (is_array($nutritionResult)) {
+            $nutritionJson = json_encode($nutritionResult, JSON_UNESCAPED_UNICODE);
+        }
+
+        $post = new Post(null, $titre, $contenu, $datePublication, $categorie, $imagePath, $nutritionJson);
         try {
             $postC = new PostC();
             $postC->addPost($post);
@@ -55,6 +91,16 @@ $titre = (string) ($_POST['titre'] ?? '');
 $categorie = (string) ($_POST['categorie'] ?? '');
 $datePublication = (string) ($_POST['datePublication'] ?? date('Y-m-d'));
 $contenu = (string) ($_POST['contenu'] ?? '');
+
+if (isset($_POST['nutrition_json']) && $_POST['nutrition_json']) {
+    $nutritionResult = json_decode($_POST['nutrition_json'], true);
+    if (is_array($nutritionResult)) {
+        $_SESSION['nutritionResult'] = $nutritionResult;
+    }
+} elseif (isset($_SESSION['nutritionResult']) && is_array($_SESSION['nutritionResult'])) {
+    $nutritionResult = $_SESSION['nutritionResult'];
+}
+unset($_SESSION['nutritionResult']);
 
 ?>
 <!DOCTYPE html>
@@ -120,10 +166,64 @@ $contenu = (string) ($_POST['contenu'] ?? '');
 
                 <label for="contenu">Contenu</label>
                 <textarea id="contenu" name="contenu" placeholder="Écrivez votre article…"><?= htmlspecialchars($contenu, ENT_QUOTES, 'UTF-8') ?></textarea>
+                <input type="hidden" id="nutrition-json" name="nutrition_json" value="">
 
                 <button type="submit" class="btn">Publier</button>
                 <a href="blog.php" class="btn-ghost">Annuler</a>
             </form>
+            <div id="nutrition-result-js"></div>
+            <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                const imageInput = document.getElementById('image');
+                const resultDiv = document.getElementById('nutrition-result-js');
+                const nutritionJsonInput = document.getElementById('nutrition-json');
+                if (imageInput) {
+                    imageInput.addEventListener('change', function(e) {
+                        resultDiv.innerHTML = '';
+                        nutritionJsonInput.value = '';
+                        if (imageInput.files && imageInput.files[0]) {
+                            const formData = new FormData();
+                            formData.append('image', imageInput.files[0]);
+                            fetch('api/nutrition_analyzer.php', {
+                                method: 'POST',
+                                body: formData
+                            })
+                            .then(r => r.json())
+                            .then(data => {
+                                if (data.success) {
+                                    resultDiv.innerHTML = `
+                                        <div class='ok' style='margin-top:18px;'>
+                                            <strong>🍎 Analyse nutritionnelle de l'image :</strong><br>
+                                            Aliment détecté : <b>${data.food_name}</b><br>
+                                            Calories (100g) : <b>${data.nutrition.calories}</b> kcal<br>
+                                            Protéines : <b>${data.nutrition.protein}</b>g, Lipides : <b>${data.nutrition.fat}</b>g, Glucides : <b>${data.nutrition.carbs}</b>g
+                                        </div>
+                                    `;
+                                    nutritionJsonInput.value = JSON.stringify(data);
+                                } else if (data.error) {
+                                    resultDiv.innerHTML = `<div class='err' style='margin-top:18px;'>❌ ${data.error}</div>`;
+                                    nutritionJsonInput.value = '';
+                                }
+                            })
+                            .catch(() => {
+                                resultDiv.innerHTML = `<div class='err' style='margin-top:18px;'>Erreur lors de l'analyse nutritionnelle.</div>`;
+                                nutritionJsonInput.value = '';
+                            });
+                        }
+                    });
+                }
+            });
+            </script>
+            <?php if ($nutritionResult && isset($nutritionResult['success']) && $nutritionResult['success']) { ?>
+                <div class="ok" style="margin-top:18px;">
+                    <strong>🍎 Analyse nutritionnelle de l'image :</strong><br>
+                    <span>Aliment détecté : <b><?= htmlspecialchars($nutritionResult['food_name'], ENT_QUOTES, 'UTF-8') ?></b></span><br>
+                    <span>Calories (100g) : <b><?= $nutritionResult['nutrition']['calories'] ?></b> kcal</span><br>
+                    <span>Protéines : <b><?= $nutritionResult['nutrition']['protein'] ?></b>g, Lipides : <b><?= $nutritionResult['nutrition']['fat'] ?></b>g, Glucides : <b><?= $nutritionResult['nutrition']['carbs'] ?></b>g</span>
+                </div>
+            <?php } elseif ($nutritionResult && isset($nutritionResult['error'])) { ?>
+                <div class="err" style="margin-top:18px;">❌ <?= htmlspecialchars($nutritionResult['error'], ENT_QUOTES, 'UTF-8') ?></div>
+            <?php } ?>
         </div>
     </div>
 </body>

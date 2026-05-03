@@ -22,8 +22,8 @@ class PostC
      */
     function addPost($post)
     {
-        $sql = "INSERT INTO post
-        VALUES (NULL, :titre, :contenu, :datePublication, :categorie, :image)";
+        $sql = "INSERT INTO post (titre, contenu, datePublication, categorie, image, nutrition)
+        VALUES (:titre, :contenu, :datePublication, :categorie, :image, :nutrition)";
         
         $db = config::getConnexion();
         
@@ -35,6 +35,7 @@ class PostC
                 'datePublication' => $post->getDatePublication(),
                 'categorie'       => $post->getCategorie(),
                 'image'           => $post->getImage(),
+                'nutrition'       => $post->getNutrition(),
             ]);
         } catch (Exception $e) {
             throw $e;
@@ -78,7 +79,8 @@ class PostC
                     contenu = :contenu,
                     datePublication = :datePublication,
                     categorie = :categorie,
-                    image = :image
+                    image = :image,
+                    nutrition = :nutrition
                 WHERE id = :id'
             );
 
@@ -89,6 +91,7 @@ class PostC
                 'datePublication' => $post->getDatePublication(),
                 'categorie'       => $post->getCategorie(),
                 'image'           => $post->getImage(),
+                'nutrition'       => $post->getNutrition(),
             ]);
         } catch (PDOException $e) {
             throw $e;
@@ -109,7 +112,8 @@ class PostC
                     contenu = :contenu,
                     datePublication = :datePublication,
                     categorie = :categorie,
-                    image = :image
+                    image = :image,
+                    nutrition = :nutrition
                 WHERE id = :id'
             );
 
@@ -120,6 +124,7 @@ class PostC
                 'datePublication' => $post->getDatePublication(),
                 'categorie'       => $post->getCategorie(),
                 'image'           => $post->getImage(),
+                'nutrition'       => $post->getNutrition(),
             ]);
         } catch (PDOException $e) {
             throw $e;

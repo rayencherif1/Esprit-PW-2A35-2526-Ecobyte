@@ -39,7 +39,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } elseif ($contenu === '') {
         $error = 'Le contenu est obligatoire.';
     } else {
-        $reply = new Reply(null, $contenu, $imagePath, null, $postId);
+        $reply = new Reply(null, $contenu, $imagePath, null, $postId, null, 'approuve', null, 0, null);
         try {
             $replyC = new ReplyC();
             $replyC->addReply($reply);

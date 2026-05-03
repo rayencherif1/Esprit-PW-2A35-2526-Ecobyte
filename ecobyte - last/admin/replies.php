@@ -16,16 +16,42 @@ if (isset($_GET['deleted'])) {
     $message = 'Réponse mise à jour.';
 }
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_id'])) {
-    $id = (int) $_POST['delete_id'];
-    if ($id > 0) {
-        try {
-            $replyC = new ReplyC();
-            $replyC->deleteReply($id);
-            header('Location: replies.php?deleted=1');
-            exit;
-        } catch (Exception $e) {
-            $error = $e->getMessage();
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    if (isset($_POST['delete_id'])) {
+        $id = (int) $_POST['delete_id'];
+        if ($id > 0) {
+            try {
+                $replyC = new ReplyC();
+                $replyC->deleteReply($id);
+                header('Location: replies.php?deleted=1');
+                exit;
+            } catch (Exception $e) {
+                $error = $e->getMessage();
+            }
+        }
+    } elseif (isset($_POST['approve_id'])) {
+        $id = (int) $_POST['approve_id'];
+        if ($id > 0) {
+            try {
+                $replyC = new ReplyC();
+                $replyC->approveReply($id);
+                header('Location: replies.php?updated=1');
+                exit;
+            } catch (Exception $e) {
+                $error = $e->getMessage();
+            }
+        }
+    } elseif (isset($_POST['reject_id'])) {
+        $id = (int) $_POST['reject_id'];
+        if ($id > 0) {
+            try {
+                $replyC = new ReplyC();
+                $replyC->rejectReply($id);
+                header('Location: replies.php?updated=1');
+                exit;
+            } catch (Exception $e) {
+                $error = $e->getMessage();
+            }
         }
     }
 }
@@ -62,7 +88,10 @@ admin_layout_start('Gestion des réponses', 'replies');
                     <thead>
                         <tr>
                             <th>Article</th>
+                            <th>Auteur</th>
                             <th>Réponse</th>
+                            <th>Statut</th>
+                            <th>Signalement</th>
                             <th>Date</th>
                             <th></th>
                         </tr>
@@ -72,7 +101,10 @@ admin_layout_start('Gestion des réponses', 'replies');
                             $id = (int) ($row['id'] ?? 0);
                             $postId = (int) ($row['post_id'] ?? 0);
                             $postTitre = (string) ($row['post_titre'] ?? '');
+                            $author = (string) ($row['author'] ?? 'Visiteur');
                             $contenu = (string) ($row['contenu'] ?? '');
+                            $statut = (string) ($row['statut'] ?? 'en_attente');
+                            $raisonSignalement = (string) ($row['raisonSignalement'] ?? '');
                             $date = (string) ($row['datePublication'] ?? '');
                             ?>
                             <tr>
@@ -81,11 +113,26 @@ admin_layout_start('Gestion des réponses', 'replies');
                                         <strong><?= htmlspecialchars($postTitre, ENT_QUOTES, 'UTF-8') ?></strong>
                                     </a>
                                 </td>
+                                <td><?= htmlspecialchars($author, ENT_QUOTES, 'UTF-8') ?></td>
                                 <td><?= nl2br(htmlspecialchars($contenu, ENT_QUOTES, 'UTF-8')) ?></td>
+                                <td><?= htmlspecialchars($statut, ENT_QUOTES, 'UTF-8') ?></td>
+                                <td><?= $raisonSignalement !== '' ? nl2br(htmlspecialchars($raisonSignalement, ENT_QUOTES, 'UTF-8')) : '—' ?></td>
                                 <td><?= $date !== '' ? htmlspecialchars($date, ENT_QUOTES, 'UTF-8') : '—' ?></td>
                                 <td>
                                     <div class="row-actions">
                                         <a href="edit_reply.php?id=<?= $id ?>" class="btn" style="margin-top:0;padding:6px 12px;font-size:0.85rem;">Modifier</a>
+                                        <?php if ($statut !== 'approuve') { ?>
+                                        <form method="post" action="" style="display:inline;">
+                                            <input type="hidden" name="approve_id" value="<?= $id ?>">
+                                            <button type="submit" class="btn" style="margin-top:0;padding:6px 12px;font-size:0.85rem;">Approuver</button>
+                                        </form>
+                                        <?php } ?>
+                                        <?php if ($statut !== 'rejete') { ?>
+                                        <form method="post" action="" style="display:inline;">
+                                            <input type="hidden" name="reject_id" value="<?= $id ?>">
+                                            <button type="submit" class="btn btn-sm btn-danger" style="margin-top:0;padding:6px 12px;font-size:0.85rem;">Rejeter</button>
+                                        </form>
+                                        <?php } ?>
                                         <form method="post" action="" style="display:inline;" onsubmit="return confirm('Supprimer cette réponse ?');">
                                             <input type="hidden" name="delete_id" value="<?= $id ?>">
                                             <button type="submit" class="btn btn-danger" style="margin-top:0;padding:6px 12px;font-size:0.85rem;">Supprimer</button>

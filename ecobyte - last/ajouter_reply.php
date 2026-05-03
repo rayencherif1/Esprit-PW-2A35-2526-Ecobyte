@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/config.php';
+require_once __DIR__ . '/controller/image_utils.php';
 require_once __DIR__ . '/model/reply.php';
 require_once __DIR__ . '/controller/reply.controller.php';
 require_once __DIR__ . '/controller/post.controller.php';
@@ -28,23 +29,33 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     
     // Gestion de l'upload d'image
     $imagePath = null;
+    $uploadError = '';
     if (isset($_FILES['image']) && $_FILES['image']['error'] === UPLOAD_ERR_OK) {
-        $uploadDir = __DIR__ . '/view/uploads/';
-        if (!is_dir($uploadDir)) {
-            mkdir($uploadDir, 0755, true);
-        }
-        
-        $fileName = uniqid() . '_' . basename($_FILES['image']['name']);
-        $targetFile = $uploadDir . $fileName;
-        
-        if (move_uploaded_file($_FILES['image']['tmp_name'], $targetFile)) {
-            $imagePath = 'view/uploads/' . $fileName;
+        // Valider l'image d'abord
+        $imageValidation = validateUploadedImage($_FILES['image']['tmp_name']);
+        if (!$imageValidation['valid']) {
+            $uploadError = 'Image invalide: ' . $imageValidation['message'];
+        } else {
+            $uploadDir = __DIR__ . '/view/uploads/';
+            if (!is_dir($uploadDir)) {
+                mkdir($uploadDir, 0755, true);
+            }
+            
+            $fileName = uniqid() . '_' . basename($_FILES['image']['name']);
+            $targetFile = $uploadDir . $fileName;
+            
+            if (move_uploaded_file($_FILES['image']['tmp_name'], $targetFile)) {
+                $imagePath = 'view/uploads/' . $fileName;
+            }
         }
     }
 
     if ($contenu === '') {
         $error = 'Le contenu est obligatoire.';
+    } elseif (!empty($uploadError)) {
+        $error = $uploadError;
     } else {
+        $contenu = nettoyerCommentaire($contenu);
         $reply = new Reply(null, $contenu, $imagePath, null, $postId);
         try {
             $replyC = new ReplyC();
@@ -95,6 +106,7 @@ $postTitre = (string) ($post['titre'] ?? '');
     <div class="wrap">
         <div class="top">
             <a href="blog.php#post-<?= $postId ?>">← Retour au post</a>
+            <a href="nutrition_analyzer_test.php">🍎 Nutritionnel</a>
             <a href="view/Front office/FoodMart-1.0.0/FoodMart-1.0.0/index.html">Accueil du site</a>
         </div>
         <h1>Répondre</h1>

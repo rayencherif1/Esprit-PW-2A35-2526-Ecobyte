@@ -2,6 +2,19 @@
 
 require_once __DIR__ . '/../config.php';
 
+function nettoyerCommentaire(string $texte): string
+{
+    $motsInterdits = ['movaise', 'mauvaise', 'mauvais', 'immoral', 'immorale', 'insulte', 'con', 'salaud', 'pute', 'merde', 'putain', 'connard', 'salope'];
+    $texteNormalise = mb_strtolower($texte, 'UTF-8');
+
+    foreach ($motsInterdits as $mot) {
+        $pattern = '/\b' . preg_quote($mot, '/') . '\b/ui';
+        $texte = preg_replace($pattern, str_repeat('*', mb_strlen($mot)), $texte);
+    }
+
+    return $texte;
+}
+
 class ReplyC
 {
     private function requireAdmin(): void
@@ -22,7 +35,7 @@ class ReplyC
     {
         try {
             $parentId = $reply->getParentReplyId();
-            $sql = 'INSERT INTO reply (id, contenu, image, post_id, parent_reply_id) VALUES (NULL, :contenu, :image, :post_id, :parent_id)';
+            $sql = 'INSERT INTO reply (id, contenu, image, post_id, idUser, statut, raisonSignalement, parent_reply_id) VALUES (NULL, :contenu, :image, :post_id, :idUser, :statut, :raisonSignalement, :parent_id)';
             $db = config::getConnexion();
 
             $query = $db->prepare($sql);
@@ -30,6 +43,9 @@ class ReplyC
                 'contenu' => $reply->getContenu(),
                 'image' => $reply->getImage(),
                 'post_id' => $reply->getPostId(),
+                'idUser' => $reply->getIdUser() > 0 ? $reply->getIdUser() : null,
+                'statut' => $reply->getStatut() ?? 'en_attente',
+                'raisonSignalement' => $reply->getRaisonSignalement(),
                 'parent_id' => $parentId > 0 ? $parentId : null,
             ]);
         } catch (PDOException $e) {
@@ -53,6 +69,54 @@ class ReplyC
         return $row ?: null;
     }
 
+    public function getOrCreateUserByPseudo(string $pseudo): int
+    {
+        $db = config::getConnexion();
+        $stmt = $db->prepare('SELECT id FROM users WHERE pseudo = :pseudo LIMIT 1');
+        $stmt->execute(['pseudo' => $pseudo]);
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        if ($row && isset($row['id'])) {
+            return (int) $row['id'];
+        }
+
+        $stmt = $db->prepare('INSERT INTO users (pseudo) VALUES (:pseudo)');
+        $stmt->execute(['pseudo' => $pseudo]);
+        return (int) $db->lastInsertId();
+    }
+
+    public function approveReply(int $replyId): bool
+    {
+        try {
+            $db = config::getConnexion();
+            $stmt = $db->prepare('UPDATE reply SET statut = :statut, raisonSignalement = NULL WHERE id = :id');
+            return $stmt->execute(['statut' => 'approuve', 'id' => $replyId]);
+        } catch (PDOException $e) {
+            return false;
+        }
+    }
+
+    public function rejectReply(int $replyId): bool
+    {
+        try {
+            $db = config::getConnexion();
+            $stmt = $db->prepare('UPDATE reply SET statut = :statut WHERE id = :id');
+            return $stmt->execute(['statut' => 'rejete', 'id' => $replyId]);
+        } catch (PDOException $e) {
+            return false;
+        }
+    }
+
+    public function signalReply(int $replyId, string $reason): bool
+    {
+        try {
+            $db = config::getConnexion();
+            $stmt = $db->prepare('UPDATE reply SET statut = :statut, raisonSignalement = :raisonSignalement WHERE id = :id');
+            return $stmt->execute(['statut' => 'signale', 'raisonSignalement' => $reason, 'id' => $replyId]);
+        } catch (PDOException $e) {
+            return false;
+        }
+    }
+
     /**
      * @return array<int,array<string,mixed>>
      */
@@ -60,7 +124,13 @@ class ReplyC
     {
         try {
             $db = config::getConnexion();
-            $stmt = $db->prepare('SELECT * FROM reply WHERE post_id = :post_id ORDER BY datePublication DESC, id DESC');
+            $stmt = $db->prepare(
+                'SELECT r.*, u.pseudo AS author
+                 FROM reply r
+                 LEFT JOIN users u ON r.idUser = u.id
+                 WHERE r.post_id = :post_id AND r.statut IN ("approuve", "signale")
+                 ORDER BY r.datePublication DESC, r.id DESC'
+            );
             $stmt->execute(['post_id' => $postId]);
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
         } catch (PDOException $e) {
@@ -81,9 +151,10 @@ class ReplyC
         try {
             $db = config::getConnexion();
             $stmt = $db->query(
-                'SELECT r.*, p.titre AS post_titre
+                'SELECT r.*, p.titre AS post_titre, u.pseudo AS author
                  FROM reply r
                  JOIN post p ON p.id = r.post_id
+                 LEFT JOIN users u ON r.idUser = u.id
                  ORDER BY r.datePublication DESC, r.id DESC'
             );
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -104,9 +175,10 @@ class ReplyC
         try {
             $db = config::getConnexion();
             $stmt = $db->prepare(
-                'SELECT r.*, p.titre AS post_titre
+                'SELECT r.*, p.titre AS post_titre, u.pseudo AS author
                  FROM reply r
                  JOIN post p ON p.id = r.post_id
+                 LEFT JOIN users u ON r.idUser = u.id
                  WHERE r.post_id = :post_id
                  ORDER BY r.datePublication DESC, r.id DESC'
             );

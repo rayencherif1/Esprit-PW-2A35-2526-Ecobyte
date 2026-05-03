@@ -38,6 +38,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($contenu === '') {
         $error = 'Le contenu est obligatoire.';
     } else {
+        $contenu = nettoyerCommentaire($contenu);
         $reply = new Reply($id, $contenu, null, $postId);
         try {
             $replyC->updateReply($reply, $id);
