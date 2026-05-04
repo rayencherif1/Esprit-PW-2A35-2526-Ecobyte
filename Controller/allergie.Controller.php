@@ -121,18 +121,5 @@ class AllergieC
             return false;
         }
     }
-
-    // ✅ NOUVELLE MÉTHODE : Récupérer tous les noms d'allergies (pour le chatbot)
-    function getAllAllergieNames()
-    {
-        $db = config::getConnexion();
-        try {
-            $query = $db->query("SELECT id_allergie, nom FROM allergie ORDER BY nom");
-            return $query->fetchAll(PDO::FETCH_ASSOC);
-        } catch (PDOException $e) {
-            error_log('Erreur getAllAllergieNames: ' . $e->getMessage());
-            return [];
-        }
-    }
 }
 ?>

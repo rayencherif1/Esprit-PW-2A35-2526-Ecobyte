@@ -252,6 +252,18 @@ if (!is_array($traitements)) {
         .ia-alert-critical { background: #fef2f2; border-left: 4px solid #dc2626; padding: 12px; border-radius: 8px; margin-bottom: 16px; }
         .ia-resume { background: #f0fdf4; border-radius: 12px; padding: 16px; margin-bottom: 16px; }
         .ia-footer { background: #f9fafb; border-radius: 12px; padding: 12px; text-align: center; font-size: 11px; color: #6b7280; }
+        
+        /* Badge score */
+        .score-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        .score-high { background: #10b981; color: white; }
+        .score-medium { background: #f59e0b; color: white; }
+        .score-low { background: #ef4444; color: white; }
     </style>
 </head>
 
@@ -345,7 +357,7 @@ if (!is_array($traitements)) {
                                         <button type="button"
                                             onclick="openAnalysisModal(<?= $t['id_traitement'] ?>, '<?= htmlspecialchars($t['nom_traitement']) ?>', <?= $id_allergie ? $id_allergie : 'null' ?>)"
                                             class="btn-analysis px-3 py-1 rounded inline-flex items-center gap-1">
-                                            🤖 IA Analyser
+                                            🤖 Analyser
                                         </button>
 
                                         <a href="traitement_edit.php?id=<?= $t['id_traitement'] ?><?= $id_allergie ? '&id_allergie=' . urlencode($id_allergie) : '' ?>"
@@ -411,20 +423,19 @@ if (!is_array($traitements)) {
         </div>
     </div>
 
-    <!-- Modal d'analyse contextuelle IA -->
+    <!-- Modal d'analyse médicale -->
     <div id="analysisModal" class="modal">
         <div class="modal-content">
             <div class="modal-header medical">
                 <h3 class="text-lg font-semibold flex items-center gap-2">
-                    <span>🤖</span> Assistant IA Médical
-                    <span class="text-xs ml-2 opacity-75">Ollama • phi3:mini</span>
+                    <span>🩺</span> Analyse Médicale Intelligente
+                    <span class="text-xs ml-2 opacity-75">Expert Allergologie</span>
                 </h3>
             </div>
             <div class="modal-body" id="analysisBody">
                 <div class="text-center py-8">
                     <div class="loading-spinner"></div>
-                    <p class="mt-4 text-gray-600">Connexion à l'IA locale...</p>
-                    <p class="text-sm text-gray-400 mt-2">Vérifiez qu'Ollama est lancé (ollama serve)</p>
+                    <p class="mt-4 text-gray-600">Analyse en cours...</p>
                 </div>
             </div>
             <div class="modal-footer">
@@ -478,21 +489,20 @@ if (!is_array($traitements)) {
             allergieId = null;
         }
 
-        // Fonction MODIFIÉE pour appeler l'API Ollama
+        // Fonction d'analyse médicale
         async function openAnalysisModal(traitementId, traitementNom, allergieId) {
             const modal = document.getElementById('analysisModal');
             const analysisBody = document.getElementById('analysisBody');
             
-            // Afficher l'interface de réflexion IA
+            // Afficher l'interface de chargement
             analysisBody.innerHTML = `
                 <div class="ia-thinking">
                     <div class="ia-brain">🧠</div>
-                    <div style="margin-top: 20px; font-weight: 500;">Analyse IA en cours</div>
+                    <div style="margin-top: 20px; font-weight: 500;">Analyse en cours</div>
                     <div class="ia-progress">
                         <div class="ia-progress-fill" id="iaProgressFill"></div>
                     </div>
-                    <div class="ia-step" id="iaStepText">🔍 Initialisation de l'IA...</div>
-                    <p class="text-sm text-gray-400 mt-4">Modèle: phi3:mini via Ollama</p>
+                    <div class="ia-step" id="iaStepText">🔍 Récupération des données...</div>
                 </div>
             `;
             
@@ -501,9 +511,9 @@ if (!is_array($traitements)) {
             
             // Animation de progression
             const steps = [
-                "🔍 Analyse des données du traitement...",
-                "🧬 Recherche des interactions médicamenteuses...",
-                "🩺 Évaluation du contexte allergologique...",
+                "🔍 Récupération des données du traitement...",
+                "🧬 Analyse de compatibilité allergique...",
+                "🩺 Évaluation des risques et interactions...",
                 "📊 Génération des recommandations..."
             ];
             let stepIndex = 0;
@@ -511,17 +521,17 @@ if (!is_array($traitements)) {
             const stepText = document.getElementById('iaStepText');
             
             const interval = setInterval(() => {
-                if (stepIndex < steps.length) {
+                if (stepIndex < steps.length && progressFill && stepText) {
                     stepText.innerHTML = steps[stepIndex];
                     const progress = ((stepIndex + 1) / steps.length) * 100;
-                    if (progressFill) progressFill.style.width = progress + '%';
+                    progressFill.style.width = progress + '%';
                     stepIndex++;
                 }
-            }, 800);
+            }, 600);
             
             try {
-                // Appel à l'API Ollama
-                const response = await fetch('ollama_api.php', {
+                // Appel à l'API d'analyse intégrée
+                const response = await fetch('analyse_api.php', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
@@ -550,9 +560,8 @@ if (!is_array($traitements)) {
                 analysisBody.innerHTML = `
                     <div class="text-center py-8 text-red-600">
                         <p class="text-4xl mb-4">⚠️</p>
-                        <p class="font-semibold">Erreur de connexion à l'IA</p>
+                        <p class="font-semibold">Erreur d'analyse</p>
                         <p class="text-sm mt-2">${error.message}</p>
-                        <p class="text-sm text-gray-500 mt-4">Vérifiez qu'Ollama est lancé : <strong>ollama serve</strong></p>
                         <button class="mt-4 bg-blue-600 text-white px-4 py-2 rounded" onclick="hideAnalysisModal()">Fermer</button>
                     </div>
                 `;
@@ -562,19 +571,35 @@ if (!is_array($traitements)) {
         function displayAnalysisResults(data, traitementNom) {
             const analysisBody = document.getElementById('analysisBody');
             
+            // Couleurs selon niveau d'alerte
+            const alerteConfig = {
+                critique: { bg: '#fef2f2', border: '#dc2626', icon: '🚨', text: 'ALERTE CRITIQUE', class: 'score-low' },
+                warning: { bg: '#fffbeb', border: '#f59e0b', icon: '⚠️', text: 'PRUDENCE REQUISE', class: 'score-medium' },
+                normal: { bg: '#f0fdf4', border: '#10b981', icon: '✅', text: 'COMPATIBLE', class: 'score-high' },
+                info: { bg: '#eff6ff', border: '#3b82f6', icon: 'ℹ️', text: 'INFORMATION', class: 'score-high' }
+            };
+            
+            const alerte = data.alerte || 'normal';
+            const config = alerteConfig[alerte] || alerteConfig.normal;
+            const compat = data.compatibilite || {};
+            const score = compat.score || 50;
+            
+            // Classe CSS pour le score
+            let scoreClass = 'score-high';
+            if (score < 50) scoreClass = 'score-low';
+            else if (score < 75) scoreClass = 'score-medium';
+            
             // Construction des interactions
             let interactionsHtml = '';
-            if (data.interactions && data.interactions.length > 0) {
-                data.interactions.forEach(i => {
-                    let badgeClass = i.niveau === 'danger' ? 'ia-badge-danger' : (i.niveau === 'warning' ? 'ia-badge-warning' : 'ia-badge-info');
-                    let badgeText = i.niveau === 'danger' ? 'DANGER' : (i.niveau === 'warning' ? 'PRUDENCE' : 'INFO');
+            if (data.interactions_medicamenteuses && data.interactions_medicamenteuses.length > 0) {
+                data.interactions_medicamenteuses.forEach(i => {
                     interactionsHtml += `
                         <div class="ia-item">
                             <div style="flex:1">
-                                <div class="ia-item-nom">⚠️ ${escapeHtml(i.nom)}</div>
-                                <div class="ia-item-detail">${escapeHtml(i.detail)}</div>
+                                <div class="ia-item-nom">⚠️ ${escapeHtml(i.avec)}</div>
+                                <div class="ia-item-detail">${escapeHtml(i.effet)}</div>
+                                <div class="text-xs text-blue-600 mt-1">💡 ${escapeHtml(i.conduite_a_tenir)}</div>
                             </div>
-                            <span class="${badgeClass}">${badgeText}</span>
                         </div>
                     `;
                 });
@@ -582,112 +607,162 @@ if (!is_array($traitements)) {
                 interactionsHtml = '<div class="ia-item"><span>✅</span><span>Aucune interaction majeure détectée</span></div>';
             }
             
-            // Populations
-            let populationsHtml = '';
-            if (data.populations && data.populations.length > 0) {
-                data.populations.forEach(p => {
-                    populationsHtml += `
+            // Construction des risques
+            let risquesHtml = '';
+            if (data.risques && data.risques.length > 0) {
+                data.risques.forEach(r => {
+                    let badgeClass = r.probabilite === 'haute' ? 'ia-badge-danger' : 
+                                    (r.probabilite === 'moyenne' ? 'ia-badge-warning' : 'ia-badge-info');
+                    let badgeText = r.probabilite === 'haute' ? 'RISQUE ÉLEVÉ' : 
+                                    (r.probabilite === 'moyenne' ? 'RISQUE MODÉRÉ' : 'RISQUE FAIBLE');
+                    risquesHtml += `
                         <div class="ia-item">
-                            <div>
-                                <div class="ia-item-nom">👥 ${escapeHtml(p.groupe)}</div>
-                                <div class="ia-item-detail">${escapeHtml(p.conseil)}</div>
+                            <div style="flex:1">
+                                <div class="ia-item-nom">⚠️ ${escapeHtml(r.type)}</div>
+                                <div class="ia-item-detail">${escapeHtml(r.description)}</div>
                             </div>
+                            <span class="${badgeClass}">${badgeText}</span>
                         </div>
                     `;
                 });
             }
             
-            // Conseils
-            let conseilsHtml = '';
-            if (data.conseils && data.conseils.length > 0) {
-                data.conseils.forEach(c => {
-                    conseilsHtml += `<div class="ia-item"><span>✓</span><span>${escapeHtml(c)}</span></div>`;
+            // Construction des effets secondaires
+            let effetsHtml = '';
+            if (data.effets_secondaires && data.effets_secondaires.length > 0) {
+                data.effets_secondaires.forEach(e => {
+                    effetsHtml += `<div class="ia-item"><span>📋</span><span>${escapeHtml(e)}</span></div>`;
                 });
             }
             
-            // Alternatives
-            let alternativesHtml = '';
-            if (data.alternatives && data.alternatives.length > 0) {
-                data.alternatives.forEach(a => {
-                    alternativesHtml += `
-                        <div class="ia-item">
-                            <div>
-                                <div class="ia-item-nom">💊 ${escapeHtml(a.nom)}</div>
-                                <div class="ia-item-detail">${escapeHtml(a.avantage)}</div>
-                            </div>
-                        </div>
-                    `;
+            // Construction des recommandations
+            let recommandationsHtml = '';
+            if (data.recommandations_personnalisees && data.recommandations_personnalisees.length > 0) {
+                data.recommandations_personnalisees.forEach(r => {
+                    recommandationsHtml += `<div class="ia-item"><span>✓</span><span>${escapeHtml(r)}</span></div>`;
+                });
+            }
+            
+            // Construction de la surveillance
+            let surveillanceHtml = '';
+            if (data.conseils_surveillance && data.conseils_surveillance.length > 0) {
+                data.conseils_surveillance.forEach(s => {
+                    surveillanceHtml += `<div class="ia-item"><span>👁️</span><span>${escapeHtml(s)}</span></div>`;
                 });
             }
             
             // Alerte critique
             let alertHtml = '';
-            if (data.alerte === 'critique') {
+            if (alerte === 'critique') {
                 alertHtml = `
                     <div class="ia-alert-critical">
                         <div style="display:flex;align-items:center;gap:12px;">
                             <span style="font-size:24px;">🚨</span>
                             <div>
-                                <strong style="color:#dc2626;">ALERTE CRITIQUE</strong>
-                                <p style="font-size:12px;color:#991b1b;">Consultation médicale OBLIGATOIRE avant administration</p>
+                                <strong style="color:#dc2626;">ALERTE CRITIQUE - CONTRE-INDICATION</strong>
+                                <p style="font-size:12px;color:#991b1b;margin-top:4px;">Consultation médicale OBLIGATOIRE avant toute utilisation</p>
                             </div>
                         </div>
                     </div>
                 `;
             }
             
+            // Section urgence
+            let urgenceHtml = '';
+            if (data.urgence && data.urgence.necessaire) {
+                urgenceHtml = `
+                    <div class="ia-card" style="background:#fef3c7; border-color:#f59e0b;">
+                        <div class="ia-card-title" style="color:#92400e;">
+                            <span>🚨 URGENCE</span>
+                        </div>
+                        <p class="text-sm" style="color:#92400e;">${escapeHtml(data.urgence.quoi_faire)}</p>
+                    </div>
+                `;
+            }
+            
             analysisBody.innerHTML = `
                 <div>
+                    <!-- En-tête -->
                     <div class="ia-card" style="background: linear-gradient(135deg, #1e293b, #0f172a); color: white; text-align: center;">
-                        <div style="font-size:40px;">🤖</div>
-                        <h3 style="margin-top:8px;">Analyse IA — ${escapeHtml(traitementNom)}</h3>
-                        <p style="font-size:11px; opacity:0.7; margin-top:4px;">Généré par phi3:mini via Ollama</p>
+                        <div style="font-size:40px;">${config.icon}</div>
+                        <div style="margin-top:8px; font-weight:bold;">${escapeHtml(traitementNom)}</div>
+                        <div style="background: ${config.bg}; color: ${config.border}; padding: 4px 12px; border-radius: 20px; display: inline-block; margin-top: 10px; font-size: 12px; font-weight: bold;">
+                            ${config.text}
+                        </div>
                     </div>
                     
                     ${alertHtml}
                     
+                    <!-- Score de compatibilité -->
                     <div class="ia-card">
                         <div class="ia-card-title">
-                            <span>⚠️ Interactions à risque</span>
-                            <span class="ia-badge-warning">${data.interactions?.length || 0}</span>
+                            <span>📊 Compatibilité</span>
+                            <span class="${scoreClass} score-badge">${score}%</span>
+                        </div>
+                        <div style="background: #e5e7eb; border-radius: 10px; height: 8px; margin: 10px 0; overflow: hidden;">
+                            <div style="background: ${score >= 70 ? '#10b981' : (score >= 50 ? '#f59e0b' : '#ef4444')}; width: ${score}%; height: 100%; transition: width 0.5s ease;"></div>
+                        </div>
+                        <p class="text-sm text-gray-600">${escapeHtml(compat.explication || '')}</p>
+                    </div>
+                    
+                    <!-- Risques -->
+                    ${risquesHtml ? `
+                    <div class="ia-card">
+                        <div class="ia-card-title">
+                            <span>⚠️ Risques identifiés</span>
+                            <span class="ia-badge-warning">${data.risques?.length || 0}</span>
+                        </div>
+                        ${risquesHtml}
+                    </div>
+                    ` : ''}
+                    
+                    <!-- Interactions -->
+                    <div class="ia-card">
+                        <div class="ia-card-title">
+                            <span>🔄 Interactions médicamenteuses</span>
+                            <span class="ia-badge-info">${data.interactions_medicamenteuses?.length || 0}</span>
                         </div>
                         ${interactionsHtml}
                     </div>
                     
+                    <!-- Effets secondaires -->
                     <div class="ia-card">
                         <div class="ia-card-title">
-                            <span>👥 Populations à surveiller</span>
-                            <span class="ia-badge-info">${data.populations?.length || 0}</span>
+                            <span>📋 Effets secondaires possibles</span>
                         </div>
-                        ${populationsHtml || '<div class="ia-item"><span>✅</span><span>Aucune population spécifique</span></div>'}
+                        ${effetsHtml}
                     </div>
                     
+                    <!-- Recommandations -->
                     <div class="ia-card">
                         <div class="ia-card-title">
-                            <span>💡 Conseils renforcés IA</span>
-                            <span class="ia-badge-info">PERSONNALISÉ</span>
+                            <span>💡 Recommandations personnalisées</span>
                         </div>
-                        ${conseilsHtml}
+                        ${recommandationsHtml}
                     </div>
                     
-                    <div class="ia-card">
+                    <!-- Surveillance -->
+                    <div class="ia-card" style="background:#eff6ff;">
                         <div class="ia-card-title">
-                            <span>🔄 Alternatives suggérées</span>
-                            <span class="ia-badge-info">À DISCUTER</span>
+                            <span>👀 Conseils de surveillance</span>
                         </div>
-                        ${alternativesHtml}
+                        ${surveillanceHtml}
                     </div>
                     
-                    ${data.resume ? `
+                    ${urgenceHtml}
+                    
+                    <!-- Synthèse patient -->
                     <div class="ia-resume">
-                        <div style="font-weight:600;margin-bottom:8px;">📋 Synthèse clinique IA</div>
-                        <p style="font-size:13px;line-height:1.5;">${escapeHtml(data.resume)}</p>
+                        <div style="font-weight:600;margin-bottom:8px;">📋 Synthèse pour le patient</div>
+                        <p style="font-size:13px;line-height:1.5;">${escapeHtml(data.synthese_patient || data.resume || 'Suivez les recommandations médicales.')}</p>
                     </div>
-                    ` : ''}
                     
+                    <!-- Footer -->
                     <div class="ia-footer">
-                        <div>🤖 Analyse générée par IA locale via Ollama</div>
-                        <div style="font-size:10px;margin-top:4px;">Modèle: phi3:mini • 100% confidentiel</div>
+                        <div>🩺 Analyse médicale intelligente</div>
+                        <div style="font-size:10px;margin-top:4px;">
+                            ${data.meta?.analyse_realisee_le || ''} • Version ${data.meta?.version || '1.0'}
+                        </div>
                     </div>
                 </div>
             `;

@@ -2,7 +2,7 @@
 // ===== AJOUTEZ CES LIGNES AU DÉBUT DE VOTRE FICHIER config.php =====
 // Configuration Ollama (IA locale)
 define('OLLAMA_HOST', 'http://localhost:11434');
-define('OLLAMA_MODEL', 'llama3.1:8b');  // ou 'mistral:7b' ou 'biomistral:7b'
+define('OLLAMA_MODEL', 'phi3:mini');
 // ===== FIN DE L'AJOUT =====
 
 class config

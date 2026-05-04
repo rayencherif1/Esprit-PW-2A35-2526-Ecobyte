@@ -1,15 +1,19 @@
 <?php
 class Traitement
 {
-    private $id_traitement;
-    private $nom_traitement;
-    private $conseils;
-    private $interdiction;
-    private $id_allergie;
+    private ?int $id_traitement = null;
+    private ?string $nom_traitement = null;
+    private ?string $conseils = null;
+    private ?string $interdiction = null;
+    private ?int $id_allergie = null;
 
-    // Constructeur
-    public function __construct($id_traitement, $nom_traitement, $conseils, $interdiction, $id_allergie)
-    {
+    public function __construct(
+        $id_traitement = null,
+        $nom_traitement = null,
+        $conseils = null,
+        $interdiction = null,
+        $id_allergie = null
+    ) {
         $this->id_traitement = $id_traitement;
         $this->nom_traitement = $nom_traitement;
         $this->conseils = $conseils;
@@ -17,7 +21,8 @@ class Traitement
         $this->id_allergie = $id_allergie;
     }
 
-    // Getters
+    // GETTERS
+
     public function getIdTraitement()
     {
         return $this->id_traitement;
@@ -43,30 +48,30 @@ class Traitement
         return $this->id_allergie;
     }
 
-    // Setters
-    public function setIdTraitement($id_traitement)
-    {
-        $this->id_traitement = $id_traitement;
-    }
+    // SETTERS
 
     public function setNomTraitement($nom_traitement)
     {
         $this->nom_traitement = $nom_traitement;
+        return $this;
     }
 
     public function setConseils($conseils)
     {
         $this->conseils = $conseils;
+        return $this;
     }
 
     public function setInterdiction($interdiction)
     {
         $this->interdiction = $interdiction;
+        return $this;
     }
 
     public function setIdAllergie($id_allergie)
     {
         $this->id_allergie = $id_allergie;
+        return $this;
     }
 }
 ?>
