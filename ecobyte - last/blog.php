@@ -437,10 +437,12 @@ try {
         ?>
           <article class="card"<?= $id > 0 ? ' id="post-' . $id . '"' : '' ?>>
             <?php if ($image !== '' && $image !== null) { ?>
-              <img class="cover" src="<?= htmlspecialchars($image, ENT_QUOTES, 'UTF-8') ?>" alt="<?= htmlspecialchars($titre, ENT_QUOTES, 'UTF-8') ?>">
+              <a href="article.php?id=<?= $id ?>">
+                <img class="cover" src="<?= htmlspecialchars($image, ENT_QUOTES, 'UTF-8') ?>" alt="<?= htmlspecialchars($titre, ENT_QUOTES, 'UTF-8') ?>">
+              </a>
             <?php } ?>
             <div class="card-inner">
-              <h2 class="title"><?= htmlspecialchars($titre, ENT_QUOTES, 'UTF-8') ?></h2>
+              <h2 class="title"><a href="article.php?id=<?= $id ?>" style="color:inherit;text-decoration:none;"><?= htmlspecialchars($titre, ENT_QUOTES, 'UTF-8') ?></a></h2>
               <div class="meta">
                 <?php if ($categorie !== '') { ?><span class="badge"><?= htmlspecialchars($categorie, ENT_QUOTES, 'UTF-8') ?></span><?php } ?>
                 <?php if ($date !== '') { ?><span><?= htmlspecialchars($date, ENT_QUOTES, 'UTF-8') ?></span><?php } ?>

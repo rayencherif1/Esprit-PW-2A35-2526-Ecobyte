@@ -10,6 +10,71 @@ $message = '';
 $error = '';
 $nutritionResult = null;
 
+/**
+ * Construit l'URL HTTP absolue d'une API locale.
+ */
+function buildLocalApiUrl(string $relativeApiPath): ?string
+{
+    $host = $_SERVER['HTTP_HOST'] ?? '';
+    if ($host === '') {
+        return null;
+    }
+
+    $isHttps = !empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off';
+    $scheme = $isHttps ? 'https' : 'http';
+    $baseDir = rtrim(str_replace('\\', '/', dirname($_SERVER['SCRIPT_NAME'] ?? '/')), '/');
+    if ($baseDir === '' || $baseDir === '.') {
+        $baseDir = '';
+    }
+    $relativeApiPath = ltrim($relativeApiPath, '/');
+
+    return $scheme . '://' . $host . $baseDir . '/' . $relativeApiPath;
+}
+
+/**
+ * Envoie l'image à une API locale et retourne le JSON décodé.
+ */
+function callLocalImageApi(string $relativeApiPath, string $imagePath, int $timeout = 20): ?array
+{
+    if (!is_file($imagePath)) {
+        return null;
+    }
+    $apiUrl = buildLocalApiUrl($relativeApiPath);
+    if ($apiUrl === null) {
+        return null;
+    }
+
+    $ch = curl_init();
+    $postFields = ['image' => new CURLFile($imagePath)];
+    curl_setopt($ch, CURLOPT_URL, $apiUrl);
+    curl_setopt($ch, CURLOPT_POST, 1);
+    curl_setopt($ch, CURLOPT_POSTFIELDS, $postFields);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_TIMEOUT, $timeout);
+    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+    $apiResponse = curl_exec($ch);
+    curl_close($ch);
+
+    if (!is_string($apiResponse) || $apiResponse === '') {
+        return null;
+    }
+
+    $decoded = json_decode($apiResponse, true);
+    if (!is_array($decoded) || !($decoded['success'] ?? false)) {
+        return null;
+    }
+
+    return $decoded;
+}
+
+/**
+ * Génère un brouillon d'article depuis une image uploadée.
+ */
+function generateArticleFromImage(string $imagePath): ?array
+{
+    return callLocalImageApi('api/generate_article.php', $imagePath, 20);
+}
+
 session_start();
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -27,6 +92,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
     // Gestion de l'upload d'image
     $imagePath = null;
+    $generatedArticle = null;
     if (!isset($nutritionResult)) {
         $nutritionResult = null;
     }
@@ -41,23 +107,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         
         if (move_uploaded_file($_FILES['image']['tmp_name'], $targetFile)) {
             $imagePath = 'view/uploads/' . $fileName;
-            // Appel API nutrition
-            $apiUrl = __DIR__ . '/api/nutrition_analyzer.php';
-            $cfile = new CURLFile($targetFile);
-            $postFields = ['image' => $cfile];
-            $ch = curl_init();
-            curl_setopt($ch, CURLOPT_URL, $apiUrl);
-            curl_setopt($ch, CURLOPT_POST, 1);
-            curl_setopt($ch, CURLOPT_POSTFIELDS, $postFields);
-            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-            curl_setopt($ch, CURLOPT_TIMEOUT, 10);
-            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-            $apiResponse = curl_exec($ch);
-            curl_close($ch);
-            if ($apiResponse) {
-                $nutritionResult = json_decode($apiResponse, true);
+            $generatedArticle = generateArticleFromImage($targetFile);
+            // Appel API nutrition (même pour un article simple)
+            $nutritionApiResult = callLocalImageApi('api/nutrition_analyzer.php', $targetFile, 10);
+            if (is_array($nutritionApiResult)) {
+                $nutritionResult = $nutritionApiResult;
                 $_SESSION['nutritionResult'] = $nutritionResult;
             }
+        }
+    }
+
+    // Auto-remplissage avancé: applique la génération uniquement si le bouton a été utilisé
+    // et que les champs sont renvoyés remplis côté formulaire.
+    if (is_array($generatedArticle)) {
+        if ($titre === '' && !empty($generatedArticle['title'])) {
+            $titre = trim((string) $generatedArticle['title']);
+        }
+        if ($contenu === '' && !empty($generatedArticle['content'])) {
+            $contenu = trim((string) $generatedArticle['content']);
+        }
+        if ($categorie === '' && !empty($generatedArticle['category'])) {
+            $categorie = trim((string) $generatedArticle['category']);
+        } elseif ($categorie === '') {
+            $categorie = 'Article auto-généré';
         }
     }
 
@@ -163,6 +235,7 @@ unset($_SESSION['nutritionResult']);
                 <label for="image">Image</label>
                 <label for="image" class="btn" style="cursor: pointer; display: inline-block;">Choisir une image</label>
                 <input type="file" id="image" name="image" accept="image/*" style="display: none;">
+                <button type="button" id="btn-generate-article" class="btn" style="margin-top:10px;" disabled>Générer l'article depuis l'image</button>
 
                 <label for="contenu">Contenu</label>
                 <textarea id="contenu" name="contenu" placeholder="Écrivez votre article…"><?= htmlspecialchars($contenu, ENT_QUOTES, 'UTF-8') ?></textarea>
@@ -175,41 +248,114 @@ unset($_SESSION['nutritionResult']);
             <script>
             document.addEventListener('DOMContentLoaded', function() {
                 const imageInput = document.getElementById('image');
+                const titreInput = document.getElementById('titre');
+                const categorieInput = document.getElementById('categorie');
+                const contenuInput = document.getElementById('contenu');
                 const resultDiv = document.getElementById('nutrition-result-js');
                 const nutritionJsonInput = document.getElementById('nutrition-json');
+                const generateBtn = document.getElementById('btn-generate-article');
+
+                const generateArticleFromImage = function() {
+                    if (!imageInput || !imageInput.files || !imageInput.files[0]) {
+                        resultDiv.innerHTML = "<div class='err' style='margin-top:18px;'>Veuillez d'abord choisir une image.</div>";
+                        return;
+                    }
+
+                    resultDiv.innerHTML = "<div class='ok' style='margin-top:18px;'>Génération de l'article en cours...</div>";
+                    nutritionJsonInput.value = '';
+                    if (generateBtn) {
+                        generateBtn.disabled = true;
+                    }
+
+                    const formData = new FormData();
+                    formData.append('image', imageInput.files[0]);
+                    const articleFormData = new FormData();
+                    articleFormData.append('image', imageInput.files[0]);
+                    const nutritionFormData = new FormData();
+                    nutritionFormData.append('image', imageInput.files[0]);
+
+                    Promise.all([
+                        fetch('api/generate_article.php', {
+                            method: 'POST',
+                            body: articleFormData
+                        }).then(async r => {
+                            if (!r.ok) {
+                                const text = await r.text();
+                                throw new Error('HTTP ' + r.status + ' - ' + text);
+                            }
+                            return r.json();
+                        }),
+                        fetch('api/nutrition_analyzer.php', {
+                            method: 'POST',
+                            body: nutritionFormData
+                        }).then(async r => {
+                            if (!r.ok) {
+                                const text = await r.text();
+                                throw new Error('Nutrition HTTP ' + r.status + ' - ' + text);
+                            }
+                            return r.json();
+                        })
+                    ])
+                    .then(([articleData, nutritionData]) => {
+                        if (!articleData.success) {
+                            resultDiv.innerHTML = `<div class='err' style='margin-top:18px;'>❌ ${articleData.error || 'Impossible de générer l\'article.'}</div>`;
+                            return;
+                        }
+
+                        titreInput.value = articleData.title || titreInput.value;
+                        categorieInput.value = articleData.category || categorieInput.value;
+                        contenuInput.value = articleData.content || contenuInput.value;
+
+                        let nutritionHtml = "<span>Analyse nutritionnelle non trouvée.</span>";
+                        nutritionJsonInput.value = '';
+                        if (nutritionData && nutritionData.success) {
+                            nutritionJsonInput.value = JSON.stringify(nutritionData);
+                            nutritionHtml = `
+                                <span>Aliment détecté : <b>${nutritionData.food_name}</b></span><br>
+                                <span>Calories (100g) : <b>${nutritionData.nutrition.calories}</b> kcal</span><br>
+                                <span>Protéines : <b>${nutritionData.nutrition.protein}</b>g, Lipides : <b>${nutritionData.nutrition.fat}</b>g, Glucides : <b>${nutritionData.nutrition.carbs}</b>g</span>
+                            `;
+                        }
+
+                        resultDiv.innerHTML = `
+                            <div class='ok' style='margin-top:18px;'>
+                                <strong>📝 Article généré automatiquement :</strong><br>
+                                <b>Titre :</b> ${articleData.title}<br>
+                                <b>Catégorie :</b> ${articleData.category || 'Article auto-généré'}<br>
+                                <b>Contenu :</b> ${articleData.content.split('\n')[0]}<br>
+                                <small>${articleData.article_hint}</small>
+                            </div>
+                            <div class='ok' style='margin-top:8px;'>
+                                <strong>🍎 Analyse nutritionnelle :</strong><br>
+                                ${nutritionHtml}
+                            </div>
+                        `;
+                    })
+                    .catch(err => {
+                        console.error('generate_article error:', err);
+                        resultDiv.innerHTML = `<div class='err' style='margin-top:18px;'>Erreur lors de la génération d'article : ${err.message}</div>`;
+                        nutritionJsonInput.value = '';
+                    })
+                    .finally(() => {
+                        if (generateBtn) {
+                            generateBtn.disabled = false;
+                        }
+                    });
+                };
+
                 if (imageInput) {
-                    imageInput.addEventListener('change', function(e) {
+                    imageInput.addEventListener('change', function() {
                         resultDiv.innerHTML = '';
                         nutritionJsonInput.value = '';
-                        if (imageInput.files && imageInput.files[0]) {
-                            const formData = new FormData();
-                            formData.append('image', imageInput.files[0]);
-                            fetch('api/nutrition_analyzer.php', {
-                                method: 'POST',
-                                body: formData
-                            })
-                            .then(r => r.json())
-                            .then(data => {
-                                if (data.success) {
-                                    resultDiv.innerHTML = `
-                                        <div class='ok' style='margin-top:18px;'>
-                                            <strong>🍎 Analyse nutritionnelle de l'image :</strong><br>
-                                            Aliment détecté : <b>${data.food_name}</b><br>
-                                            Calories (100g) : <b>${data.nutrition.calories}</b> kcal<br>
-                                            Protéines : <b>${data.nutrition.protein}</b>g, Lipides : <b>${data.nutrition.fat}</b>g, Glucides : <b>${data.nutrition.carbs}</b>g
-                                        </div>
-                                    `;
-                                    nutritionJsonInput.value = JSON.stringify(data);
-                                } else if (data.error) {
-                                    resultDiv.innerHTML = `<div class='err' style='margin-top:18px;'>❌ ${data.error}</div>`;
-                                    nutritionJsonInput.value = '';
-                                }
-                            })
-                            .catch(() => {
-                                resultDiv.innerHTML = `<div class='err' style='margin-top:18px;'>Erreur lors de l'analyse nutritionnelle.</div>`;
-                                nutritionJsonInput.value = '';
-                            });
+                        if (generateBtn) {
+                            generateBtn.disabled = !(imageInput.files && imageInput.files[0]);
                         }
+                    });
+                }
+                if (generateBtn) {
+                    generateBtn.addEventListener('click', function(event) {
+                        event.preventDefault();
+                        generateArticleFromImage();
                     });
                 }
             });

@@ -95,9 +95,31 @@ function recognizeFoodAndGetNutrition(string $fileName, string $tmpPath): array
     $detectedFood = detectFoodInImage($nameWithoutExt, $foodDatabase);
 
     if ($detectedFood === null) {
+        // Fallback: on retourne une estimation nutritionnelle générique
+        // pour garantir un résultat même si l'aliment exact n'est pas reconnu.
         return [
-            'success' => false,
-            'error' => 'Aliment non reconnu. Essayez avec: pomme, banane, pain, poulet, riz, etc.',
+            'success' => true,
+            'estimated' => true,
+            'food_name' => 'Aliment non reconnu (estimation)',
+            'food_type' => 'generic',
+            'quantity' => 100,
+            'unit' => 'g',
+            'nutrition' => [
+                'calories' => 120.0,
+                'protein' => 4.0,
+                'fat' => 3.5,
+                'carbs' => 18.0,
+                'fiber' => 2.0,
+                'sugar' => 5.0,
+            ],
+            'nutrition_unit' => 'g (sauf calories en kcal)',
+            'macros' => [
+                'protein_percentage' => 13,
+                'fat_percentage' => 26,
+                'carbs_percentage' => 60,
+            ],
+            'health_info' => ['Estimation automatique', 'Affinez le nom du fichier pour une meilleure précision'],
+            'note' => 'Aliment non reconnu précisément. Valeurs estimées appliquées.',
             'suggestions' => array_keys($foodDatabase),
         ];
     }
