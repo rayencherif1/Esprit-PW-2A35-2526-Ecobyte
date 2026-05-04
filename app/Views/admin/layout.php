@@ -26,7 +26,7 @@ $pageTitle = $pageTitle ?? 'Admin';
 <aside class="fixed inset-y-0 flex-wrap items-center justify-between block w-full p-0 my-4 overflow-y-auto antialiased transition-transform duration-200 -translate-x-full bg-white border-0 shadow-xl dark:shadow-none dark:bg-slate-850 max-w-64 ease-nav-brand z-990 xl:ml-6 rounded-2xl xl:left-0 xl:translate-x-0" aria-expanded="false">
     <div class="h-19 px-8 py-6">
         <span class="font-bold text-slate-700 dark:text-white">Nutrition — Admin</span>
-        <p class="text-xs text-slate-500 mt-1">Module entraînement</p>
+        <p class="text-xs text-slate-500 mt-1">Gestion du contenu</p>
     </div>
     <hr class="h-px mt-0 bg-transparent bg-gradient-to-r from-transparent via-black/40 to-transparent" />
     <ul class="flex flex-col pl-0 mb-0">

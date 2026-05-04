@@ -17,7 +17,7 @@ final class ExerciseModel
     {
         $pdo = Database::getPdo(); // Connexion partagée
 
-        $sql = 'SELECT * FROM exercice WHERE 1=1'; // Base de la requête
+        $sql = 'SELECT * FROM exercices WHERE 1=1'; // Base de la requête
         $params = []; // Paramètres liés (sécurité injection SQL)
 
         if ($typeFilter !== null && $typeFilter !== '') {
@@ -47,7 +47,7 @@ final class ExerciseModel
     {
         $pdo = Database::getPdo();
 
-        $sql = 'SELECT type_exercice, COUNT(*) AS total FROM exercice GROUP BY type_exercice';
+        $sql = 'SELECT type_exercice, COUNT(*) AS total FROM exercices GROUP BY type_exercice';
         $stmt = $pdo->query($sql); // Pas de variable utilisateur — query acceptable
 
         $out = ['musculation' => 0, 'cardio' => 0, 'perte_de_poids' => 0]; // Valeurs par défaut
@@ -68,7 +68,7 @@ final class ExerciseModel
     {
         $pdo = Database::getPdo();
 
-        $sql = 'SELECT * FROM exercice WHERE id = :id LIMIT 1'; // Une seule ligne attendue
+        $sql = 'SELECT * FROM exercices WHERE id = :id LIMIT 1'; // Une seule ligne attendue
         $stmt = $pdo->prepare($sql);
         $stmt->execute(['id' => $id]); // Liaison nommée
 
@@ -84,7 +84,7 @@ final class ExerciseModel
     {
         $pdo = Database::getPdo();
 
-        $sql = 'INSERT INTO exercice (nom, type_exercice, etapes, benefices, url_image, url_video, nb_repetitions_suggerees, muscle_wger_id)
+        $sql = 'INSERT INTO exercices (nom, type_exercice, etapes, benefices, url_image, url_video, nb_repetitions_suggerees, muscle_wger_id)
                 VALUES (:nom, :type_exercice, :etapes, :benefices, :url_image, :url_video, :nb_rep, :muscle_wger_id)';
 
         $stmt = $pdo->prepare($sql);
@@ -109,7 +109,7 @@ final class ExerciseModel
     {
         $pdo = Database::getPdo();
 
-        $sql = 'UPDATE exercice SET nom = :nom, type_exercice = :type_exercice, etapes = :etapes, benefices = :benefices,
+        $sql = 'UPDATE exercices SET nom = :nom, type_exercice = :type_exercice, etapes = :etapes, benefices = :benefices,
                 url_image = :url_image, url_video = :url_video, nb_repetitions_suggerees = :nb_rep, muscle_wger_id = :muscle_wger_id
                 WHERE id = :id';
 
@@ -134,7 +134,7 @@ final class ExerciseModel
     {
         $pdo = Database::getPdo();
 
-        $sql = 'DELETE FROM exercice WHERE id = :id'; // Suppression dure
+        $sql = 'DELETE FROM exercices WHERE id = :id'; // Suppression dure
         $stmt = $pdo->prepare($sql);
         $stmt->execute(['id' => $id]);
     }

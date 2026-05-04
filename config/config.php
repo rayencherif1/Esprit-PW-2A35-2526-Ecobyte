@@ -79,7 +79,8 @@ const TYPES_ENTRAINEMENT = ['musculation', 'cardio', 'perte_de_poids'];
  * 3. Vérifier DB_USER / DB_PASS dans ce fichier si votre MySQL n’est pas root sans mot de passe.
  * 4. Ajuster BASE_URL, ADMIN_URL, URL_FOODMART et URL_ARGON_ASSETS selon htdocs.
  * 5. Front : {BASE_URL}/index.php?action=home — Admin : {ADMIN_URL}/index.php?action=dashboard
- * 6. Gardez les dossiers FoodMart-1.0.0 et argon-dashboard-tailwind-1.0.1 à côté de /public.
+ * 6. Logo : placez public/images/mylogo.png (bandeau du site).
+ * 7. Gardez les dossiers FoodMart-1.0.0 et argon-dashboard-tailwind-1.0.1 à côté de /public (thèmes).
  * -------------------------------------------------------------------------
  */
 

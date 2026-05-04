@@ -1,25 +1,31 @@
 /**
- * Scripts front — appels aux APIs distantes (BMI, wger, conseils).
- * Rien n’est « stocké en local » : tout part du navigateur vers Internet.
- * Sur un autre PC, vérifiez seulement la connexion réseau et pas de blocage CORS (ces APIs l’autorisent).
+ * Script du site — appels depuis le navigateur vers des services publics.
+ *
+ * Les 3 familles d’outils distants :
+ *   1) BMI — calcul d’IMC.
+ *   2) wger — exercices de remplacement (« je ne peux pas… ») : liste par muscle,
+ *      textes via exercise-translation, vidéos via /api/v2/video/.
+ *   3) Advice Slip — petit conseil sur l’accueil.
+ *
+ * YouTube : lien de recherche seulement (pas de clé API), comme sur les fiches principales.
  */
 (function () {
   'use strict';
 
-  /** URL de l’API BMI (poids en kg, taille en mètres dans le chemin) */
   var BMI_BASE = 'https://bmicalculatorapi.vercel.app/api/bmi';
-  /** Liste d’exercices filtrée par muscle (wger) */
   var WGER_EX = 'https://wger.de/api/v2/exercise';
-  /** Traductions françaises / anglais des exercices */
   var WGER_TR = 'https://wger.de/api/v2/exercise-translation';
-  /** Conseil court aléatoire */
+  /** Vidéos hébergées sur wger, liées à l’id d’exercice (même base que les alternatives). */
+  var WGER_VIDEO = 'https://wger.de/api/v2/video';
   var ADVICE = 'https://api.adviceslip.com/advice';
 
-  /**
-   * Enlève les balises HTML d’une chaîne (aperçu texte).
-   * @param {string} html
-   * @returns {string}
-   */
+  /** id langue dans l’API wger — voir https://wger.de/api/v2/language/ */
+  var WGER_LANG_FR = 12;
+  var WGER_LANG_EN = 2;
+
+  var MAX_ALTERNATIVES = 7;
+  var DESC_PREVIEW_LEN = 1200;
+
   function stripHtml(html) {
     var d = document.createElement('div');
     d.innerHTML = html || '';
@@ -27,9 +33,15 @@
     return t.replace(/\s+/g, ' ').trim();
   }
 
-  /**
-   * Charge un conseil depuis l’API Advice Slip.
-   */
+  /** Pour mettre une URL dans un attribut HTML sans casser les guillemets. */
+  function escapeHtmlAttr(s) {
+    return String(s)
+      .replace(/&/g, '&amp;')
+      .replace(/"/g, '&quot;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;');
+  }
+
   function loadQuote() {
     var el = document.getElementById('nf-quote');
     if (!el) return;
@@ -44,9 +56,6 @@
       });
   }
 
-  /**
-   * Calcule l’IMC via l’API distante.
-   */
   function calcBmi() {
     var hCm = document.getElementById('nf-bmi-h');
     var wKg = document.getElementById('nf-bmi-w');
@@ -86,29 +95,73 @@
   }
 
   /**
-   * Récupère le nom + description EN pour un id exercice wger.
-   * @param {number} exerciseId
-   * @returns {Promise<{name:string,desc:string}|null>}
+   * Récupère nom + description : on prend le français (langue 12) si wger l’a,
+   * sinon l’anglais (2), sinon la première langue disponible. Ce n’est pas une
+   * traduction automatique : ce sont des fiches déjà saisies sur wger.
    */
-  function fetchTranslation(exerciseId) {
-    var u = WGER_TR + '/?exercise=' + exerciseId + '&language=2';
-    return fetch(u)
+  function fetchExerciseCopy(exerciseId) {
+    return fetch(WGER_TR + '/?exercise=' + exerciseId)
       .then(function (r) { return r.json(); })
       .then(function (data) {
         var rows = data.results || [];
+        var fr = null;
+        var en = null;
+        var any = null;
         var i;
         for (i = 0; i < rows.length; i++) {
-          if (rows[i].language === 2) {
-            return { name: rows[i].name, desc: stripHtml(rows[i].description) };
+          var row = rows[i];
+          if (!any) {
+            any = row;
+          }
+          if (row.language === WGER_LANG_FR) {
+            fr = row;
+          }
+          if (row.language === WGER_LANG_EN) {
+            en = row;
           }
         }
-        return null;
+        var pick = fr || en || any;
+        if (!pick || !pick.name) {
+          return null;
+        }
+        var langLabel = fr ? 'fr' : (en ? 'en' : 'autre');
+        return {
+          name: pick.name,
+          desc: stripHtml(pick.description),
+          langLabel: langLabel
+        };
       });
   }
 
   /**
-   * Mélange un tableau (Fisher–Yates simplifié).
+   * Première vidéo liée à l’exercice (on préfère celle marquée is_main si présente).
+   * Les fichiers peuvent être en .MOV / HEVC : le lecteur du navigateur ne lit pas toujours ;
+   * d’où le lien « ouvrir dans un nouvel onglet » en secours.
    */
+  function fetchVideoForExercise(exerciseId) {
+    return fetch(WGER_VIDEO + '/?exercise=' + exerciseId)
+      .then(function (r) { return r.json(); })
+      .then(function (data) {
+        var rows = data.results || [];
+        if (!rows.length) {
+          return null;
+        }
+        var i;
+        var main = null;
+        for (i = 0; i < rows.length; i++) {
+          if (rows[i].is_main) {
+            main = rows[i];
+            break;
+          }
+        }
+        var v = main || rows[0];
+        return v && v.video ? String(v.video) : null;
+      })
+      .catch(function () {
+        return null;
+      });
+  }
+
   function shuffle(arr) {
     var a = arr.slice();
     var i, j, t;
@@ -122,9 +175,10 @@
   }
 
   /**
-   * Affiche jusqu’à 5 alternatives pour un muscle wger.
-   * @param {number} muscleId
-   * @param {HTMLElement} wrap
+   * Comment les remplacements sont choisis :
+   * 1) On demande à wger la liste des exercices qui ciblent ce muscle (même id que dans votre admin).
+   * 2) On mélange une partie des ids pour varier, puis pour chaque id on charge texte + vidéo.
+   * 3) On garde les premiers qui ont au moins un nom.
    */
   function loadAlternatives(muscleId, wrap) {
     var loading = wrap.querySelector('.nf-alt-loading');
@@ -136,19 +190,29 @@
       errEl.classList.add('d-none');
       errEl.textContent = '';
     }
-    var url = WGER_EX + '/?language=2&muscles=' + muscleId + '&limit=40';
+    // Pas de filtre langue ici : on prend tous les exercices du muscle, puis le texte FR / EN au cas par cas.
+    var url = WGER_EX + '/?muscles=' + muscleId + '&limit=40';
     fetch(url)
       .then(function (r) { return r.json(); })
       .then(function (data) {
         var ids = (data.results || []).map(function (x) { return x.id; });
-        ids = shuffle(ids).slice(0, 12);
+        ids = shuffle(ids).slice(0, 18);
         var chain = Promise.resolve();
         var found = [];
         ids.forEach(function (id) {
           chain = chain.then(function () {
-            if (found.length >= 5) return null;
-            return fetchTranslation(id).then(function (t) {
-              if (t && t.name) found.push(t);
+            if (found.length >= MAX_ALTERNATIVES) return null;
+            return fetchExerciseCopy(id).then(function (copy) {
+              if (!copy || !copy.name) return null;
+              return fetchVideoForExercise(id).then(function (videoUrl) {
+                if (found.length >= MAX_ALTERNATIVES) return;
+                found.push({
+                  name: copy.name,
+                  desc: copy.desc,
+                  langLabel: copy.langLabel,
+                  videoUrl: videoUrl
+                });
+              });
             });
           });
         });
@@ -165,10 +229,34 @@
           return;
         }
         list.innerHTML = alts.map(function (a) {
-          var d = a.desc ? a.desc.slice(0, 220) : '';
-          if (a.desc && a.desc.length > 220) d += '…';
-          return '<div class="mb-2 p-2 bg-light rounded"><strong class="text-success">' +
-            escapeHtml(a.name) + '</strong><br><span class="text-muted">' +
+          var d = a.desc ? a.desc.slice(0, DESC_PREVIEW_LEN) : '';
+          if (a.desc && a.desc.length > DESC_PREVIEW_LEN) d += '…';
+          var langHint = a.langLabel === 'fr'
+            ? '<span class="badge text-bg-light border mb-1">Texte : français (wger)</span>'
+            : (a.langLabel === 'en'
+              ? '<span class="badge text-bg-warning border mb-1">Texte : anglais — pas de fiche FR sur wger pour cet exercice</span>'
+              : '<span class="badge text-bg-secondary border mb-1">Texte : autre langue sur wger</span>');
+          var videoHtml = '';
+          if (a.videoUrl) {
+            videoHtml =
+              '<div class="mb-2">' +
+              '<video controls class="w-100 rounded border nf-alt-vid" style="max-height:14rem;background:#000" preload="metadata">' +
+              '<source src="' + escapeHtmlAttr(a.videoUrl) + '" type="video/mp4">' +
+              '<source src="' + escapeHtmlAttr(a.videoUrl) + '">' +
+              '</video>' +
+              '<a class="small" href="' + escapeHtmlAttr(a.videoUrl) + '" target="_blank" rel="noopener">Ouvrir la vidéo (nouvel onglet)</a>' +
+              '</div>';
+          } else {
+            videoHtml = '<p class="small text-muted mb-1">Pas de vidéo sur wger pour cet exercice — utilisez YouTube ci-dessous.</p>';
+          }
+          var yt = 'https://www.youtube.com/results?search_query=' + encodeURIComponent(a.name + ' exercice démonstration');
+          var ytBtn = '<a class="btn btn-outline-danger btn-sm" href="' + yt + '" target="_blank" rel="noopener">YouTube</a>';
+          return '<div class="mb-3 p-2 bg-light rounded border border-light-subtle">' +
+            langHint +
+            '<strong class="text-success d-block mb-1">' + escapeHtml(a.name) + '</strong>' +
+            videoHtml +
+            '<div class="mb-1">' + ytBtn + '</div>' +
+            '<span class="text-muted d-block" style="white-space:pre-wrap;word-break:break-word;">' +
             escapeHtml(d) + '</span></div>';
         }).join('');
       })
@@ -206,7 +294,7 @@
         if (!mid || mid < 1) {
           wrap.querySelector('.nf-alt-error').classList.remove('d-none');
           wrap.querySelector('.nf-alt-error').textContent =
-            'Aucun muscle n’est défini pour cet exercice : complétez le champ dans l’admin (API wger).';
+            'Aucun muscle n’est défini pour cet exercice : complétez le champ dans l’admin (wger).';
           return;
         }
         loadAlternatives(mid, wrap);

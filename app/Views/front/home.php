@@ -8,7 +8,7 @@ ob_start();
 <div class="row g-4">
     <div class="col-lg-8">
         <h1 class="h3 mb-3">Programmes d’entraînement</h1>
-        <p class="text-muted">Recherchez par nom ou par type, puis lancez une séance. Les exercices viennent de votre base MySQL.</p>
+        <p class="text-muted">Recherchez par nom ou par type, puis lancez une séance. Les fiches d’exercices viennent de votre catalogue.</p>
 
         <form method="get" action="<?= e(BASE_URL) ?>/index.php" class="row g-2 align-items-end mb-4">
             <input type="hidden" name="action" value="home" />
@@ -72,13 +72,6 @@ ob_start();
                 <button type="button" class="btn btn-nf btn-sm" id="nf-bmi-btn">Calculer</button>
                 <p id="nf-bmi-out" class="small mt-2 mb-0 text-muted"></p>
                 <p id="nf-bmi-err" class="small mt-1 mb-0 text-danger"></p>
-            </div>
-        </div>
-        <div class="card nf-card">
-            <div class="card-body">
-                <h2 class="h6">Assistant parcours</h2>
-                <p class="small text-muted">Questionnaire simple pour suggérer un programme (règles métier).</p>
-                <a href="<?= e(BASE_URL) ?>/index.php?action=recommandation_ia" class="btn btn-outline-success btn-sm">Ouvrir</a>
             </div>
         </div>
     </div>

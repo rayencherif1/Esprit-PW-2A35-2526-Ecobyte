@@ -50,7 +50,7 @@ $fm = rtrim(URL_FOODMART, '/');
           <div class="col-sm-6 col-lg-4 text-center text-sm-start">
             <div class="main-logo">
               <a href="<?= e(BASE_URL) ?>/index.php?action=home">
-                <img src="<?= e($fm) ?>/images/logo.png" alt="Logo" class="img-fluid" />
+                <img src="<?= e(BASE_URL) ?>/images/mylogo.png" alt="Logo du site" class="img-fluid" />
               </a>
             </div>
           </div>
@@ -59,9 +59,6 @@ $fm = rtrim(URL_FOODMART, '/');
               <ul class="navbar-nav flex-row gap-3 ms-auto d-none d-lg-flex">
                 <li class="nav-item">
                   <a class="nav-link" href="<?= e(BASE_URL) ?>/index.php?action=home">Programmes</a>
-                </li>
-                <li class="nav-item">
-                  <a class="nav-link" href="<?= e(BASE_URL) ?>/index.php?action=recommandation_ia">Assistant parcours</a>
                 </li>
                 <li class="nav-item">
                   <a class="nav-link" href="<?= e(ADMIN_URL) ?>/index.php?action=dashboard">Admin</a>
@@ -79,9 +76,6 @@ $fm = rtrim(URL_FOODMART, '/');
                   <ul class="navbar-nav gap-2">
                     <li class="nav-item">
                       <a class="nav-link" href="<?= e(BASE_URL) ?>/index.php?action=home">Programmes</a>
-                    </li>
-                    <li class="nav-item">
-                      <a class="nav-link" href="<?= e(BASE_URL) ?>/index.php?action=recommandation_ia">Assistant parcours</a>
                     </li>
                     <li class="nav-item">
                       <a class="nav-link" href="<?= e(ADMIN_URL) ?>/index.php?action=dashboard">Admin</a>
@@ -106,7 +100,7 @@ $fm = rtrim(URL_FOODMART, '/');
     <footer class="py-5 border-top">
       <div class="container-fluid">
         <div class="container">
-          <p class="text-muted small mb-0">Projet groupe — module entraînement &amp; santé. APIs : IMC, wger, conseils.</p>
+          <p class="text-muted small mb-0">Nutrition &amp; entraînement. Outils : calcul IMC, idées d’exercices (wger), conseils du jour.</p>
         </div>
       </div>
     </footer>

@@ -16,7 +16,7 @@ final class ProgramModel
     {
         $pdo = Database::getPdo();
 
-        $sql = 'SELECT * FROM programme WHERE 1=1';
+        $sql = 'SELECT * FROM programmes WHERE 1=1';
         $params = [];
 
         if ($typeFilter !== null && $typeFilter !== '') {
@@ -46,7 +46,7 @@ final class ProgramModel
     {
         $pdo = Database::getPdo();
 
-        $stmt = $pdo->prepare('SELECT * FROM programme WHERE id = :id LIMIT 1');
+        $stmt = $pdo->prepare('SELECT * FROM programmes WHERE id = :id LIMIT 1');
         $stmt->execute(['id' => $id]);
         $program = $stmt->fetch();
 
@@ -56,7 +56,7 @@ final class ProgramModel
 
         $sql = 'SELECT e.*, pe.ordre, pe.repetitions AS repetitions_programme
                 FROM programme_exercice pe
-                INNER JOIN exercice e ON e.id = pe.exercice_id
+                INNER JOIN exercices e ON e.id = pe.exercice_id
                 WHERE pe.programme_id = :pid
                 ORDER BY pe.ordre ASC';
 
@@ -82,7 +82,7 @@ final class ProgramModel
     public function findFirstByType(string $type): ?array
     {
         $pdo = Database::getPdo();
-        $stmt = $pdo->prepare('SELECT * FROM programme WHERE type_programme = :t ORDER BY id ASC LIMIT 1');
+        $stmt = $pdo->prepare('SELECT * FROM programmes WHERE type_programme = :t ORDER BY id ASC LIMIT 1');
         $stmt->execute(['t' => $type]);
         $row = $stmt->fetch();
 
@@ -102,7 +102,7 @@ final class ProgramModel
 
         try {
             $stmt = $pdo->prepare(
-                'INSERT INTO programme (nom, duree_semaines, type_programme) VALUES (:nom, :duree, :type)'
+                'INSERT INTO programmes (nom, duree_semaines, type_programme) VALUES (:nom, :duree, :type)'
             );
             $stmt->execute(['nom' => $nom, 'duree' => $dureeSemaines, 'type' => $type]);
             $pid = (int) $pdo->lastInsertId();
@@ -125,7 +125,7 @@ final class ProgramModel
 
         try {
             $stmt = $pdo->prepare(
-                'UPDATE programme SET nom = :nom, duree_semaines = :duree, type_programme = :type WHERE id = :id'
+                'UPDATE programmes SET nom = :nom, duree_semaines = :duree, type_programme = :type WHERE id = :id'
             );
             $stmt->execute(['nom' => $nom, 'duree' => $dureeSemaines, 'type' => $type, 'id' => $id]);
 
@@ -175,7 +175,7 @@ final class ProgramModel
     public function delete(int $id): void
     {
         $pdo = Database::getPdo();
-        $stmt = $pdo->prepare('DELETE FROM programme WHERE id = :id');
+        $stmt = $pdo->prepare('DELETE FROM programmes WHERE id = :id');
         $stmt->execute(['id' => $id]);
     }
 }

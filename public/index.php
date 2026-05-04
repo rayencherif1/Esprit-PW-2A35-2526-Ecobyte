@@ -12,4 +12,4 @@ require dirname(__DIR__) . '/app/bootstrap.php'; // Autoload + helpers
 $action = isset($_GET['action']) ? (string) $_GET['action'] : 'home'; // Action demandée
 
 $controller = new FrontController(); // Contrôleur dédié au site public
-$controller->dispatch($action); // Délègue à home, program_start, recommandation_ia, etc.
+$controller->dispatch($action); // Délègue à home, program_start, etc.
