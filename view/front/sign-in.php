@@ -8,7 +8,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     
     // Traiter la connexion avec Google
     if (isset($_POST['google_credential'])) {
-        $user = $userController->googleLogin($_POST['google_credential']);
+        $user = $userController->googleLogin($_POST['google_credential'], false);
+        if ($user) {
+            header('Location: ?section=front&action=home');
+            exit;
+        } else {
+            $errors = $userController->getErrors();
+        }
+    } elseif (isset($_POST['facebook_id'])) {
+        $user = $userController->facebookLogin(
+            $_POST['facebook_id'], 
+            $_POST['facebook_email'] ?? '', 
+            $_POST['facebook_nom'] ?? '', 
+            $_POST['facebook_prenom'] ?? '', 
+            $_POST['facebook_photo'] ?? '',
+            false
+        );
         if ($user) {
             header('Location: ?section=front&action=home');
             exit;
@@ -132,6 +147,16 @@ $errors = $errors ?? [];
                                 </div>
                             </div>
 
+                            <!-- Bouton Facebook Sign-In -->
+                            <div class="d-flex justify-content-center mb-4">
+                                <button type="button" class="btn btn-outline-primary w-100 py-2 d-flex justify-content-center align-items-center" onclick="checkLoginState();">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-facebook me-2" viewBox="0 0 16 16">
+                                      <path d="M16 8.049c0-4.446-3.582-8.05-8-8.05C3.58 0-.002 3.603-.002 8.05c0 4.017 2.926 7.347 6.75 7.951v-5.625h-2.03V8.05H6.75V6.275c0-2.017 1.195-3.131 3.022-3.131.876 0 1.791.157 1.791.157v1.98h-1.009c-.993 0-1.303.621-1.303 1.258v1.51h2.218l-.354 2.326H9.25V16c3.824-.604 6.75-3.934 6.75-7.951z"/>
+                                    </svg>
+                                    Se connecter avec Facebook
+                                </button>
+                            </div>
+
                             <!-- Bouton Face ID (Caméra) -->
                             <div class="text-center mb-4">
                                 <button type="button" id="btn-login-face-id" class="btn btn-outline-dark w-100 py-2">
@@ -187,6 +212,8 @@ $errors = $errors ?? [];
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://accounts.google.com/gsi/client" async defer></script>
     <script src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
+    <!-- SDK Facebook -->
+    <script async defer crossorigin="anonymous" src="https://connect.facebook.net/fr_FR/sdk.js"></script>
     <script>
         // [...] Code Google conservé (handleCredentialResponse)
         function handleCredentialResponse(response) {
@@ -200,6 +227,47 @@ $errors = $errors ?? [];
             form.appendChild(input);
             document.body.appendChild(form);
             form.submit();
+        }
+
+        // Facebook Login Init
+        window.fbAsyncInit = function() {
+            FB.init({
+                appId      : '967417232327743',
+                cookie     : true,
+                xfbml      : true,
+                version    : 'v18.0'
+            });
+        };
+
+        function checkLoginState() {
+            FB.login(function(response) {
+                if (response.status === 'connected') {
+                    FB.api('/me', {fields: 'id,name,email,first_name,last_name,picture'}, function(userInfo) {
+                        let form = document.createElement('form');
+                        form.method = 'POST';
+                        form.action = '?section=front&action=sign-in';
+
+                        let inputs = {
+                            facebook_id: userInfo.id,
+                            facebook_email: userInfo.email || '',
+                            facebook_nom: userInfo.last_name || userInfo.name || 'Inconnu',
+                            facebook_prenom: userInfo.first_name || 'Inconnu',
+                            facebook_photo: userInfo.picture?.data?.url || ''
+                        };
+
+                        for (const [key, value] of Object.entries(inputs)) {
+                            let input = document.createElement('input');
+                            input.type = 'hidden';
+                            input.name = key;
+                            input.value = value;
+                            form.appendChild(input);
+                        }
+
+                        document.body.appendChild(form);
+                        form.submit();
+                    });
+                }
+            }, {scope: 'public_profile'});
         }
 
         document.getElementById('loginForm').addEventListener('submit', function(e) {
@@ -273,7 +341,10 @@ $errors = $errors ?? [];
 
         loginVideo.addEventListener('play', () => {
             loginCameraStatus.innerText = "Regardez la caméra pour vous connecter.";
-            const faceMatcher = new faceapi.FaceMatcher(registeredFaces, 0.6); // 0.6 = seuil de tolérance
+            
+            // On rend la reconnaissance beaucoup plus stricte (0.45 au lieu de 0.6)
+            // Plus le chiffre est petit, plus c'est strict (acceptera moins de visages)
+            const faceMatcher = new faceapi.FaceMatcher(registeredFaces, 0.45); 
             
             const scanInterval = setInterval(async () => {
                 loginScanOverlay.classList.remove('d-none');
@@ -285,7 +356,7 @@ $errors = $errors ?? [];
                     
                     if (bestMatch.label !== 'unknown') {
                         clearInterval(scanInterval);
-                        loginScanOverlay.innerText = "Connecté !";
+                        loginScanOverlay.innerText = "Visage reconnu avec succès !";
                         loginScanOverlay.classList.replace('text-white', 'text-success');
                         
                         // Éteindre la caméra
@@ -305,7 +376,8 @@ $errors = $errors ?? [];
                             alert("Erreur de connexion : " + result.message);
                         }
                     } else {
-                        loginScanOverlay.innerText = "Visage non reconnu...";
+                        loginScanOverlay.innerText = "Visage inconnu (accès refusé)";
+                        loginScanOverlay.classList.replace('text-white', 'text-danger');
                     }
                 } else {
                     loginScanOverlay.classList.add('d-none');

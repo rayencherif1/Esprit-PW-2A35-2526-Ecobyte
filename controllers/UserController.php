@@ -248,7 +248,7 @@ class UserController {
         }
     }
 
-    public function googleLogin($token) {
+    public function googleLogin($token, $is_signup = false) {
         try {
             // 1. Décoder le token JWT Google (sans validation cryptographique stricte pour simplifier)
             $parts = explode('.', $token);
@@ -300,6 +300,11 @@ class UserController {
                 $this->checkAndNotifyLogin($user);
                 return $user;
             } else {
+                if (!$is_signup) {
+                    $this->errors[] = "Aucun compte n'est associé à ce profil Google. Veuillez créer un compte d'abord.";
+                    return false;
+                }
+                
                 // 3. Créer un nouveau compte Google
                 $query = "INSERT INTO users (nom, prenom, email, google_id, photo, date_creation) 
                           VALUES (:nom, :prenom, :email, :google_id, :photo, NOW())";
@@ -309,6 +314,89 @@ class UserController {
                     ':prenom' => $prenom,
                     ':email' => $email,
                     ':google_id' => $google_id,
+                    ':photo' => $photo
+                ]);
+                
+                $newUserId = $this->db->lastInsertId();
+                $newUser = $this->db_getUserById($newUserId);
+                
+                if (session_status() === PHP_SESSION_NONE) session_start();
+                $_SESSION['user_id'] = $newUser['id'];
+                $_SESSION['user_nom'] = $newUser['nom'];
+                $_SESSION['user_prenom'] = $newUser['prenom'];
+                $_SESSION['user_email'] = $newUser['email'];
+                $_SESSION['user_photo'] = $newUser['photo'];
+                $_SESSION['user_role'] = 'user';
+                $_SESSION['logged_in'] = true;
+                
+                $this->checkAndNotifyLogin($newUser);
+                return $newUser;
+            }
+        } catch (Exception $e) {
+            $this->errors[] = $e->getMessage();
+            return false;
+        }
+    }
+
+    public function facebookLogin($facebook_id, $email, $nom, $prenom, $photo, $is_signup = false) {
+        try {
+            if (empty($facebook_id)) {
+                $this->errors[] = "ID Facebook invalide";
+                return false;
+            }
+
+            // Si l'utilisateur n'a pas partagé d'email, on crée un faux email basé sur son ID pour respecter la contrainte UNIQUE
+            if (empty($email)) {
+                $email = $facebook_id . "@facebook.com";
+            }
+
+            // Chercher l'utilisateur par email ou par facebook_id
+            $query = "SELECT * FROM users WHERE email = :email OR facebook_id = :facebook_id LIMIT 1";
+            $stmt = $this->db->prepare($query);
+            $stmt->execute([':email' => $email, ':facebook_id' => $facebook_id]);
+            $user = $stmt->fetch();
+            
+            if ($user) {
+                // Mettre à jour facebook_id si vide
+                if (empty($user['facebook_id'])) {
+                    $query = "UPDATE users SET facebook_id = :facebook_id WHERE id = :id";
+                    $stmt = $this->db->prepare($query);
+                    $stmt->execute([':facebook_id' => $facebook_id, ':id' => $user['id']]);
+                }
+                
+                // Vérifier s'il est banni
+                if ($user['ban_until'] && strtotime($user['ban_until']) > time()) {
+                    $this->errors[] = "Ce compte a été banni.";
+                    return false;
+                }
+                
+                // Créer la session
+                if (session_status() === PHP_SESSION_NONE) session_start();
+                $_SESSION['user_id'] = $user['id'];
+                $_SESSION['user_nom'] = $user['nom'];
+                $_SESSION['user_prenom'] = $user['prenom'];
+                $_SESSION['user_email'] = $user['email'];
+                $_SESSION['user_photo'] = $user['photo'];
+                $_SESSION['user_role'] = $user['role'] ?? 'user';
+                $_SESSION['logged_in'] = true;
+                
+                $this->checkAndNotifyLogin($user);
+                return $user;
+            } else {
+                if (!$is_signup) {
+                    $this->errors[] = "Aucun compte n'est associé à ce profil Facebook. Veuillez créer un compte d'abord.";
+                    return false;
+                }
+                
+                // Créer un nouveau compte Facebook
+                $query = "INSERT INTO users (nom, prenom, email, facebook_id, photo, date_creation) 
+                          VALUES (:nom, :prenom, :email, :facebook_id, :photo, NOW())";
+                $stmt = $this->db->prepare($query);
+                $stmt->execute([
+                    ':nom' => $nom,
+                    ':prenom' => $prenom,
+                    ':email' => $email,
+                    ':facebook_id' => $facebook_id,
                     ':photo' => $photo
                 ]);
                 
