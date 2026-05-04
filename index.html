@@ -1,0 +1,802 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TrainFlow — Programs, BMI & alternatives</title>
+  <style>
+    :root {
+      --bg: #0c0f14;
+      --surface: #141a24;
+      --elevated: #1b2330;
+      --border: #2a3548;
+      --text: #e9eef6;
+      --muted: #8b98ad;
+      --accent: #5b8def;
+      --accent-dim: rgba(91, 141, 239, 0.15);
+      --ok: #5ee0a0;
+      --warn: #f0b429;
+      --bad: #f08080;
+      --radius: 14px;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: "Segoe UI", system-ui, sans-serif;
+      background: radial-gradient(100% 80% at 50% -30%, #1a2a48, var(--bg));
+      color: var(--text);
+      line-height: 1.45;
+    }
+
+    a { color: var(--accent); }
+
+    .wrap {
+      max-width: 920px;
+      margin: 0 auto;
+      padding: 1rem 1.25rem 3rem;
+    }
+
+    header.site {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      padding: 1rem 0 1.5rem;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 1.5rem;
+    }
+
+    .brand {
+      font-weight: 700;
+      font-size: 1.35rem;
+      letter-spacing: -0.03em;
+    }
+
+    .brand span { color: var(--accent); }
+
+    nav.tabs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.35rem;
+    }
+
+    nav.tabs button {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--muted);
+      padding: 0.45rem 0.85rem;
+      border-radius: 999px;
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s, border-color 0.15s;
+    }
+
+    nav.tabs button:hover {
+      color: var(--text);
+      border-color: var(--muted);
+    }
+
+    nav.tabs button.active {
+      background: var(--accent-dim);
+      border-color: var(--accent);
+      color: var(--text);
+    }
+
+    .quote-bar {
+      background: var(--elevated);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 0.85rem 1.1rem;
+      font-size: 0.92rem;
+      color: var(--muted);
+      margin-bottom: 1.5rem;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 0.75rem;
+    }
+
+    .quote-bar strong { color: var(--text); display: block; margin-bottom: 0.25rem; }
+    .quote-bar .qtext { color: var(--text); font-style: italic; }
+    .quote-bar .qactions { flex-shrink: 0; }
+
+    button.small {
+      font-size: 0.78rem;
+      padding: 0.35rem 0.65rem;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--text);
+      cursor: pointer;
+    }
+
+    button.small:hover { border-color: var(--accent); }
+
+    h1.page-title {
+      font-size: 1.55rem;
+      margin: 0 0 0.35rem;
+      letter-spacing: -0.02em;
+    }
+
+    .lead {
+      color: var(--muted);
+      margin: 0 0 1.5rem;
+      max-width: 52ch;
+    }
+
+    .grid-programs {
+      display: grid;
+      gap: 1rem;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    }
+
+    .card-program {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.25rem;
+      cursor: pointer;
+      text-align: left;
+      transition: border-color 0.15s, transform 0.1s;
+      color: inherit;
+      font: inherit;
+    }
+
+    .card-program:hover {
+      border-color: var(--accent);
+      transform: translateY(-2px);
+    }
+
+    .tag {
+      display: inline-block;
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--accent);
+      margin-bottom: 0.35rem;
+    }
+
+    .card-program h2 {
+      margin: 0 0 0.5rem;
+      font-size: 1.1rem;
+    }
+
+    .card-program p {
+      margin: 0;
+      font-size: 0.88rem;
+      color: var(--muted);
+    }
+
+    .back-row {
+      margin-bottom: 1rem;
+    }
+
+    button.linkish {
+      background: none;
+      border: none;
+      color: var(--accent);
+      cursor: pointer;
+      font-size: 0.9rem;
+      padding: 0;
+    }
+
+    .program-meta {
+      font-size: 0.85rem;
+      color: var(--muted);
+      margin-bottom: 1.25rem;
+    }
+
+    .exercise-list {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .exercise {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1rem 1.15rem;
+    }
+
+    .exercise h3 {
+      margin: 0 0 0.35rem;
+      font-size: 1.05rem;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: baseline;
+      gap: 0.5rem;
+    }
+
+    .muscle-hint {
+      font-size: 0.72rem;
+      font-weight: 500;
+      color: var(--muted);
+      border: 1px solid var(--border);
+      padding: 0.15rem 0.45rem;
+      border-radius: 6px;
+    }
+
+    .exercise .desc {
+      font-size: 0.9rem;
+      color: var(--muted);
+      margin: 0 0 0.85rem;
+    }
+
+    .ex-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      align-items: center;
+    }
+
+    .btn-alt {
+      background: rgba(240, 180, 41, 0.12);
+      border: 1px solid rgba(240, 180, 41, 0.45);
+      color: var(--warn);
+      padding: 0.45rem 0.75rem;
+      border-radius: 10px;
+      font-size: 0.82rem;
+      cursor: pointer;
+    }
+
+    .btn-alt:hover { filter: brightness(1.08); }
+
+    .btn-alt:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+    }
+
+    .alt-panel {
+      margin-top: 1rem;
+      padding-top: 1rem;
+      border-top: 1px dashed var(--border);
+      display: none;
+    }
+
+    .alt-panel.visible { display: block; }
+
+    .alt-panel.loading { color: var(--muted); font-size: 0.88rem; }
+
+    .alt-item {
+      background: var(--elevated);
+      border-radius: 10px;
+      padding: 0.65rem 0.75rem;
+      margin-bottom: 0.5rem;
+      font-size: 0.86rem;
+    }
+
+    .alt-item h4 {
+      margin: 0 0 0.25rem;
+      font-size: 0.9rem;
+      color: var(--ok);
+    }
+
+    .alt-item p { margin: 0; color: var(--muted); }
+
+    .alt-error { color: var(--bad); font-size: 0.85rem; }
+
+    .bmi-panel {
+      max-width: 440px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.5rem;
+    }
+
+    .bmi-panel label {
+      display: block;
+      font-size: 0.78rem;
+      color: var(--muted);
+      margin-bottom: 0.35rem;
+    }
+
+    .bmi-panel .field { margin-bottom: 1rem; }
+
+    .bmi-panel input[type="number"] {
+      width: 100%;
+      padding: 0.6rem 0.75rem;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: var(--bg);
+      color: var(--text);
+      font-size: 1rem;
+    }
+
+    .bmi-panel button[type="submit"] {
+      width: 100%;
+      padding: 0.65rem;
+      border-radius: 10px;
+      border: none;
+      background: var(--accent);
+      color: #0a1428;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .bmi-panel button[type="submit"]:disabled {
+      opacity: 0.55;
+      cursor: not-allowed;
+    }
+
+    .bmi-result {
+      margin-top: 1rem;
+      padding: 1rem;
+      border-radius: 12px;
+      background: var(--elevated);
+      border: 1px solid var(--border);
+      display: none;
+    }
+
+    .bmi-result.visible { display: block; }
+
+    .bmi-result .val {
+      font-size: 1.75rem;
+      font-weight: 700;
+      color: var(--ok);
+    }
+
+    .apis-footnote {
+      margin-top: 2.5rem;
+      padding-top: 1.25rem;
+      border-top: 1px solid var(--border);
+      font-size: 0.78rem;
+      color: var(--muted);
+    }
+
+    .apis-footnote ul {
+      margin: 0.35rem 0 0;
+      padding-left: 1.15rem;
+    }
+
+    .hidden { display: none !important; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header class="site">
+      <div class="brand">Train<span>Flow</span></div>
+      <nav class="tabs" id="nav">
+        <button type="button" data-view="programs" class="active">Programs</button>
+        <button type="button" data-view="bmi">BMI calculator</button>
+      </nav>
+    </header>
+
+    <div class="quote-bar" id="quote-bar">
+      <div>
+        <strong>Motivation</strong>
+        <span class="qtext" id="quote-text">Loading…</span>
+      </div>
+      <div class="qactions">
+        <button type="button" class="small" id="quote-refresh">New tip</button>
+      </div>
+    </div>
+
+    <main id="view-programs">
+      <h1 class="page-title">Training programs</h1>
+      <p class="lead">
+        Pick a goal, follow the exercises, and if something is not possible for you, use
+        <strong style="color: var(--text)">“I can’t do this exercise”</strong> — we pull related moves from the open exercise database (by muscle group).
+      </p>
+      <div class="grid-programs" id="program-grid"></div>
+    </main>
+
+    <main id="view-program-detail" class="hidden">
+      <div class="back-row">
+        <button type="button" class="linkish" id="btn-back-programs">← All programs</button>
+      </div>
+      <h1 class="page-title" id="detail-title"></h1>
+      <p class="program-meta" id="detail-meta"></p>
+      <p class="lead" id="detail-lead"></p>
+      <div class="exercise-list" id="exercise-list"></div>
+    </main>
+
+    <main id="view-bmi" class="hidden">
+      <h1 class="page-title">BMI calculator</h1>
+      <p class="lead">Height (cm) and weight (kg) are sent to the calculator API; BMI and category come back as JSON.</p>
+      <div class="bmi-panel">
+        <form id="bmi-form" novalidate>
+          <div class="field">
+            <label for="height-cm">Height (cm)</label>
+            <input id="height-cm" type="number" inputmode="decimal" min="50" max="280" step="0.1" placeholder="e.g. 175" required />
+          </div>
+          <div class="field">
+            <label for="weight-kg">Weight (kg)</label>
+            <input id="weight-kg" type="number" inputmode="decimal" min="20" max="400" step="0.1" placeholder="e.g. 70" required />
+          </div>
+          <button type="submit" id="bmi-submit">Calculate BMI</button>
+        </form>
+        <div class="bmi-result" id="bmi-result" aria-live="polite">
+          <div style="font-size:0.75rem;text-transform:uppercase;letter-spacing:0.06em;color:var(--muted);margin-bottom:0.35rem;">Your BMI</div>
+          <div class="val" id="bmi-val"></div>
+          <div id="bmi-cat" style="margin-top:0.35rem;"></div>
+          <div id="bmi-meta" style="margin-top:0.65rem;font-size:0.82rem;color:var(--muted);"></div>
+        </div>
+        <p id="bmi-error" style="display:none;margin-top:1rem;color:var(--bad);font-size:0.88rem;"></p>
+      </div>
+    </main>
+
+    <footer class="apis-footnote">
+      <strong>APIs used on this site (3)</strong>
+      <ul>
+        <li><strong>BMI:</strong> <code>bmicalculatorapi.vercel.app</code> — <code>GET /api/bmi/{kg}/{m}</code></li>
+        <li><strong>Exercise alternatives:</strong> <code>wger.de/api/v2</code> — exercises filtered by muscle, plus English names/descriptions via <code>exercise-translation</code></li>
+        <li><strong>Motivation line:</strong> <code>api.adviceslip.com/advice</code> — random short advice JSON</li>
+      </ul>
+      <p style="margin-top:0.75rem;">
+        Serve this folder over HTTP (e.g. <code>serve.ps1</code> or Python’s <code>http.server</code>) so browser requests behave reliably.
+      </p>
+    </footer>
+  </div>
+
+  <script>
+    const BMI_API = "https://bmicalculatorapi.vercel.app/api/bmi";
+    const WGER_EXERCISE = "https://wger.de/api/v2/exercise";
+    const WGER_TRANSLATION = "https://wger.de/api/v2/exercise-translation";
+    const ADVICE_API = "https://api.adviceslip.com/advice";
+
+    const MUSCLE_LABEL = {
+      1: "Biceps",
+      2: "Shoulders",
+      3: "Serratus",
+      4: "Chest",
+      5: "Triceps",
+      6: "Abs",
+      7: "Calves",
+      8: "Glutes",
+      9: "Traps",
+      10: "Quads",
+      11: "Hamstrings",
+      12: "Lats",
+      13: "Brachialis",
+      14: "Obliques",
+      15: "Soleus",
+    };
+
+    const PROGRAMS = [
+      {
+        id: "weight-loss",
+        title: "Metabolic circuit",
+        typeLabel: "Weight loss",
+        summary: "Higher reps, minimal rest — burns calories while keeping movement quality.",
+        lead: "3–4 rounds. Rest 30–45s between moves, 90s between rounds. Adjust tempo if you are new.",
+        exercises: [
+          {
+            name: "Jumping jacks",
+            muscles: [10, 7],
+            description: "Jump feet out while hands clap overhead; land soft, keep ribs down.",
+          },
+          {
+            name: "Bodyweight squat",
+            muscles: [10, 8],
+            description: "Hips back and down, knees track over toes, chest tall, full depth if comfortable.",
+          },
+          {
+            name: "Push-up (incline if needed)",
+            muscles: [4, 5],
+            description: "Hands under shoulders, brace core, lower chest to floor or bench, press up.",
+          },
+          {
+            name: "Reverse lunge",
+            muscles: [10, 8],
+            description: "Step back softly, knee hovers off ground, drive through front heel to stand.",
+          },
+          {
+            name: "Mountain climber",
+            muscles: [10, 6],
+            description: "Plank position, alternate knees toward chest at a steady rhythm.",
+          },
+          {
+            name: "Dead bug",
+            muscles: [6, 14],
+            description: "On back, arms up, knees 90°, slowly extend opposite arm and leg without arching.",
+          },
+        ],
+      },
+      {
+        id: "musculation",
+        title: "Strength & hypertrophy full body",
+        typeLabel: "Musculation",
+        summary: "Classic compound lifts pattern — stimulate chest, back, legs, and shoulders.",
+        lead: "3–5 sets × 6–12 reps per lift depending on weight; leave 1–2 reps in reserve unless noted.",
+        exercises: [
+          {
+            name: "Barbell or dumbbell bench press",
+            muscles: [4, 5],
+            description: "Stable shoulder blades, slight arch if comfortable, lower with control, press evenly.",
+          },
+          {
+            name: "Barbell row / chest-supported row",
+            muscles: [12, 11],
+            description: "Hinge at hips or lean on bench, pull elbows toward hips, squeeze shoulder blades.",
+          },
+          {
+            name: "Back squat or goblet squat",
+            muscles: [10, 8],
+            description: "Brace core, control descent, knees out over toes, drive up through mid-foot.",
+          },
+          {
+            name: "Overhead press",
+            muscles: [2, 5],
+            description: "Ribs down, glutes tight, press straight up without shrugging ears.",
+          },
+          {
+            name: "Romanian deadlift",
+            muscles: [11, 8],
+            description: "Soft knees, hips hinge back, bar stays close to legs, feel hamstrings lengthen.",
+          },
+          {
+            name: "Farmer carry",
+            muscles: [9, 1],
+            description: "Heavy dumbbells at sides, tall posture, short controlled steps for distance or time.",
+          },
+        ],
+      },
+      {
+        id: "conditioning",
+        title: "Conditioning & core engine",
+        typeLabel: "Endurance / athletic conditioning",
+        summary: "Intervals and carries — builds work capacity without forgetting trunk stability.",
+        lead: "Alternate work/rest (e.g. 40s on / 20s off) for 15–25 minutes total.",
+        exercises: [
+          {
+            name: "Kettlebell or dumbbell swing",
+            muscles: [11, 8],
+            description: "Hinge snap, arms act like ropes; stop at shoulder height unless advanced.",
+          },
+          {
+            name: "High knees or stationary march",
+            muscles: [10, 8],
+            description: "Drive knees up rhythmically; stay tall and quiet through mid-foot.",
+          },
+          {
+            name: "Renegade row (light)",
+            muscles: [12, 6],
+            description: "Plank on bells or dumbbells; row without twisting hips.",
+          },
+          {
+            name: "Split squat isometric hold",
+            muscles: [10, 8],
+            description: "Back knee hovers, torso stacked over hips; switch legs halfway.",
+          },
+          {
+            name: "Bicycle crunch",
+            muscles: [6, 14],
+            description: "Slow rotations, elbow meets opposite knee, lower back stays imprinted.",
+          },
+          {
+            name: "Side plank",
+            muscles: [6, 14],
+            description: "Elbow under shoulder, hips lifted in one line; breathe steadily.",
+          },
+        ],
+      },
+    ];
+
+    function stripHtml(html) {
+      if (!html) return "";
+      const d = document.createElement("div");
+      d.innerHTML = html;
+      const t = d.textContent || "";
+      return t.replace(/\s+/g, " ").trim();
+    }
+
+    function shuffle(arr) {
+      const a = arr.slice();
+      for (let i = a.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [a[i], a[j]] = [a[j], a[i]];
+      }
+      return a;
+    }
+
+    async function fetchAdviceSlip() {
+      const res = await fetch(ADVICE_API);
+      if (!res.ok) throw new Error("Advice API failed");
+      const data = await res.json();
+      const slip = data && data.slip;
+      return slip && slip.advice ? slip.advice : "Keep showing up — consistency beats intensity.";
+    }
+
+    async function fetchEnglishTranslation(exerciseId) {
+      const url = `${WGER_TRANSLATION}/?exercise=${exerciseId}&language=2`;
+      const res = await fetch(url);
+      if (!res.ok) return null;
+      const data = await res.json();
+      const rows = data.results || [];
+      const en = rows.find((r) => r.language === 2);
+      return en ? { name: en.name, description: stripHtml(en.description) } : null;
+    }
+
+    async function fetchAlternatives(primaryMuscleId, maxResults = 5) {
+      const listUrl = `${WGER_EXERCISE}/?language=2&muscles=${primaryMuscleId}&limit=40`;
+      const res = await fetch(listUrl);
+      if (!res.ok) throw new Error("Could not load exercises from wger");
+      const data = await res.json();
+      const ids = shuffle((data.results || []).map((r) => r.id)).slice(0, maxResults + 8);
+      const out = [];
+      for (const id of ids) {
+        if (out.length >= maxResults) break;
+        const t = await fetchEnglishTranslation(id);
+        if (t && t.name) out.push(t);
+      }
+      return out;
+    }
+
+    function setView(name) {
+      document.getElementById("view-programs").classList.toggle("hidden", name !== "programs");
+      document.getElementById("view-program-detail").classList.toggle("hidden", name !== "program-detail");
+      document.getElementById("view-bmi").classList.toggle("hidden", name !== "bmi");
+      document.querySelectorAll("#nav button").forEach((b) => {
+        b.classList.toggle("active", b.dataset.view === (name === "program-detail" ? "programs" : name));
+      });
+    }
+
+    function renderProgramGrid() {
+      const grid = document.getElementById("program-grid");
+      grid.innerHTML = "";
+      PROGRAMS.forEach((p) => {
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "card-program";
+        btn.innerHTML = `<span class="tag">${escapeHtml(p.typeLabel)}</span><h2>${escapeHtml(p.title)}</h2><p>${escapeHtml(p.summary)}</p>`;
+        btn.addEventListener("click", () => openProgram(p.id));
+        grid.appendChild(btn);
+      });
+    }
+
+    function escapeHtml(s) {
+      const d = document.createElement("div");
+      d.textContent = s;
+      return d.innerHTML;
+    }
+
+    function openProgram(id) {
+      const p = PROGRAMS.find((x) => x.id === id);
+      if (!p) return;
+      document.getElementById("detail-title").textContent = p.title;
+      document.getElementById("detail-meta").textContent = `${p.typeLabel} · ${p.exercises.length} exercises`;
+      document.getElementById("detail-lead").textContent = p.lead;
+      const list = document.getElementById("exercise-list");
+      list.innerHTML = "";
+
+      p.exercises.forEach((ex, idx) => {
+        const wrap = document.createElement("article");
+        wrap.className = "exercise";
+        const muscleBadges = ex.muscles
+          .map((mid) => `<span class="muscle-hint">${escapeHtml(MUSCLE_LABEL[mid] || "Muscle " + mid)}</span>`)
+          .join(" ");
+
+        wrap.innerHTML = `
+          <h3>${escapeHtml(ex.name)} ${muscleBadges}</h3>
+          <p class="desc">${escapeHtml(ex.description)}</p>
+          <div class="ex-actions">
+            <button type="button" class="btn-alt" data-ex-idx="${idx}">I can’t do this exercise — suggest alternatives</button>
+          </div>
+          <div class="alt-panel" id="alt-${idx}">
+            <div class="alt-loading hidden">Looking up moves from wger…</div>
+            <div class="alt-body"></div>
+          </div>
+        `;
+
+        const btn = wrap.querySelector(".btn-alt");
+        const panel = wrap.querySelector(`#alt-${idx}`);
+        const loading = panel.querySelector(".alt-loading");
+        const body = panel.querySelector(".alt-body");
+
+        btn.addEventListener("click", async () => {
+          panel.classList.add("visible");
+          loading.classList.remove("hidden");
+          body.innerHTML = "";
+          btn.disabled = true;
+          try {
+            const primary = ex.muscles[0];
+            const alts = await fetchAlternatives(primary, 5);
+            loading.classList.add("hidden");
+            if (!alts.length) {
+              body.innerHTML = `<p class="alt-error">No alternatives returned. Try again or pick another muscle-heavy exercise.</p>`;
+              return;
+            }
+            body.innerHTML = alts
+              .map(
+                (a) =>
+                  `<div class="alt-item"><h4>${escapeHtml(a.name)}</h4><p>${escapeHtml((a.description || "").slice(0, 280))}${a.description && a.description.length > 280 ? "…" : ""}</p></div>`
+              )
+              .join("");
+          } catch (e) {
+            loading.classList.add("hidden");
+            body.innerHTML = `<p class="alt-error">${escapeHtml(e.message || "Network error")}</p>`;
+          } finally {
+            btn.disabled = false;
+          }
+        });
+
+        list.appendChild(wrap);
+      });
+
+      setView("program-detail");
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+
+    async function refreshQuote() {
+      const el = document.getElementById("quote-text");
+      el.textContent = "Loading…";
+      try {
+        el.textContent = await fetchAdviceSlip();
+      } catch {
+        el.textContent = "Stay consistent — small sessions still move you forward.";
+      }
+    }
+
+    document.getElementById("quote-refresh").addEventListener("click", refreshQuote);
+
+    document.querySelectorAll("#nav button").forEach((b) => {
+      b.addEventListener("click", () => {
+        if (b.dataset.view === "programs") setView("programs");
+        if (b.dataset.view === "bmi") setView("bmi");
+      });
+    });
+
+    document.getElementById("btn-back-programs").addEventListener("click", () => setView("programs"));
+
+    document.getElementById("bmi-form").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const errEl = document.getElementById("bmi-error");
+      const resultEl = document.getElementById("bmi-result");
+      errEl.style.display = "none";
+      resultEl.classList.remove("visible");
+
+      const hCm = parseFloat(document.getElementById("height-cm").value);
+      const wKg = parseFloat(document.getElementById("weight-kg").value);
+      if (!Number.isFinite(hCm) || hCm <= 0) {
+        errEl.textContent = "Enter a valid height in cm.";
+        errEl.style.display = "block";
+        return;
+      }
+      if (!Number.isFinite(wKg) || wKg <= 0) {
+        errEl.textContent = "Enter a valid weight in kg.";
+        errEl.style.display = "block";
+        return;
+      }
+
+      const hM = hCm / 100;
+      const url = `${BMI_API}/${encodeURIComponent(wKg)}/${encodeURIComponent(hM)}`;
+      const submit = document.getElementById("bmi-submit");
+      submit.disabled = true;
+
+      try {
+        const res = await fetch(url);
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) {
+          errEl.textContent = data.Error || data.error || `Request failed (${res.status}).`;
+          errEl.style.display = "block";
+          return;
+        }
+        if (typeof data.bmi !== "number") {
+          errEl.textContent = "Unexpected API response.";
+          errEl.style.display = "block";
+          return;
+        }
+        document.getElementById("bmi-val").textContent = data.bmi.toFixed(1);
+        document.getElementById("bmi-cat").textContent = data.Category || "";
+        document.getElementById("bmi-meta").textContent = `Sent: ${wKg} kg · ${hM.toFixed(2)} m`;
+        resultEl.classList.add("visible");
+      } catch {
+        errEl.textContent = "Network error.";
+        errEl.style.display = "block";
+      } finally {
+        submit.disabled = false;
+      }
+    });
+
+    renderProgramGrid();
+    setView("programs");
+    refreshQuote();
+  </script>
+</body>
+</html>
