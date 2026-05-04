@@ -7,6 +7,7 @@ require_once __DIR__ . '/controller/image_utils.php';
 require_once __DIR__ . '/model/reply.php';
 require_once __DIR__ . '/controller/reply.controller.php';
 require_once __DIR__ . '/controller/post.controller.php';
+require_once __DIR__ . '/controller/ai_reply.php';
 
 $postId = (int) ($_GET['post_id'] ?? 0);
 if ($postId <= 0) {
@@ -23,8 +24,10 @@ if ($post === null) {
 
 $message = '';
 $error = '';
+$pseudo = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $pseudo = trim((string) ($_POST['pseudo'] ?? ''));
     $contenu = trim((string) ($_POST['contenu'] ?? ''));
     
     // Gestion de l'upload d'image
@@ -50,17 +53,35 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
 
-    if ($contenu === '') {
+    if ($pseudo === '') {
+        $error = 'Votre nom est obligatoire.';
+    } elseif ($contenu === '') {
         $error = 'Le contenu est obligatoire.';
     } elseif (!empty($uploadError)) {
         $error = $uploadError;
     } else {
         $contenu = nettoyerCommentaire($contenu);
-        $reply = new Reply(null, $contenu, $imagePath, null, $postId);
+        $isQuestion = isQuestion($contenu);
+        $statutToSave = $isQuestion ? 'approuve' : 'en_attente';
+        $reply = new Reply(null, $contenu, $imagePath, null, $postId, null, $statutToSave);
         try {
             $replyC = new ReplyC();
-            $replyC->addReply($reply);
-            header('Location: blog.php#post-' . $postId);
+            $replyId = $replyC->addReply($reply);
+
+            if ($isQuestion) {
+                $postContent = $post['contenu'] ?? '';
+                $aiResponse = generateAiReplyText($postContent, $contenu);
+
+                if ($aiResponse !== null && $aiResponse !== '') {
+                    $aiReply = new Reply(null, $aiResponse, null, null, $postId, null, 'approuve', null, 0, $replyId, true);
+                    $replyC->addReply($aiReply);
+                }
+
+                header('Location: blog.php?reply_created=1#post-' . $postId);
+            } else {
+                header('Location: blog.php?reply_pending=1#post-' . $postId);
+            }
+
             exit;
         } catch (Exception $e) {
             $error = $e->getMessage();
@@ -117,6 +138,12 @@ $postTitre = (string) ($post['titre'] ?? '');
                 <div class="err"><?= htmlspecialchars($error, ENT_QUOTES, 'UTF-8') ?></div>
             <?php } ?>
             <form method="post" action="" enctype="multipart/form-data">
+                <?php if ($error !== '') { ?>
+                    <div class="err"><?= htmlspecialchars($error, ENT_QUOTES, 'UTF-8') ?></div>
+                <?php } ?>
+                <label for="pseudo">Nom *</label>
+                <input id="pseudo" name="pseudo" type="text" value="<?= htmlspecialchars($pseudo ?? '', ENT_QUOTES, 'UTF-8') ?>" placeholder="Votre nom">
+
                 <label for="contenu">Commentaire / Réponse *</label>
                 <textarea id="contenu" name="contenu" placeholder="Écrivez votre réponse…"><?= htmlspecialchars($contenu, ENT_QUOTES, 'UTF-8') ?></textarea>
 

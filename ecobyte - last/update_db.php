@@ -88,6 +88,15 @@ try {
     } else {
         echo "ℹ️ La colonne 'nutrition' existe déjà<br>";
     }
+
+    // Vérifier si la colonne is_ai_generated existe déjà dans reply
+    $stmt = $db->query("SHOW COLUMNS FROM reply LIKE 'is_ai_generated'");
+    if ($stmt->rowCount() === 0) {
+        $db->exec("ALTER TABLE `reply` ADD COLUMN `is_ai_generated` TINYINT(1) NOT NULL DEFAULT 0 AFTER `parent_reply_id`");
+        echo "✅ Colonne 'is_ai_generated' ajoutée à la table 'reply'<br>";
+    } else {
+        echo "ℹ️ La colonne 'is_ai_generated' existe déjà<br>";
+    }
     
     echo "<br>🎉 Mise à jour terminée avec succès !";
     

@@ -53,6 +53,17 @@ function admin_layout_start(string $pageTitle, string $active = 'posts'): void
         .muted { color: #64748b; font-size: 0.875rem; }
         .row-actions { display: flex; flex-wrap: wrap; gap: 8px; }
         .row-actions a, .row-actions button { font-size: 0.875rem; }
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); z-index: 1000; }
+        .modal-overlay.active { display: flex; align-items: center; justify-content: center; }
+        .modal-box { background: #fff; border-radius: 14px; padding: 28px; box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2); max-width: 420px; width: 90%; }
+        .modal-title { font-size: 18px; font-weight: 800; margin: 0 0 12px; color: #0f172a; }
+        .modal-message { color: #64748b; font-size: 15px; margin-bottom: 24px; line-height: 1.6; }
+        .modal-actions { display: flex; gap: 10px; justify-content: flex-end; }
+        .modal-btn { padding: 10px 20px; border: none; border-radius: 10px; font-size: 14px; font-weight: 600; cursor: pointer; }
+        .modal-btn-cancel { background: #e2e8f0; color: #0f172a; }
+        .modal-btn-cancel:hover { background: #cbd5e1; }
+        .modal-btn-confirm { background: #dc2626; color: #fff; }
+        .modal-btn-confirm:hover { background: #b91c1c; }
     </style>
 </head>
 <body>
@@ -71,6 +82,52 @@ function admin_layout_end(): void
 {
     ?>
     </div>
+    <!-- Modal de confirmation -->
+    <div id="deleteModal" class="modal-overlay">
+      <div class="modal-box">
+        <h2 class="modal-title">Confirmer la suppression</h2>
+        <p class="modal-message" id="deleteMessage">Êtes-vous sûr de vouloir supprimer cet élément ?</p>
+        <div class="modal-actions">
+          <button type="button" class="modal-btn modal-btn-cancel" onclick="closeDeleteModal()">Annuler</button>
+          <button type="button" class="modal-btn modal-btn-confirm" onclick="confirmDelete()">Supprimer</button>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      let deleteForm = null;
+
+      function openDeleteModal(message, form) {
+        deleteForm = form;
+        document.getElementById('deleteMessage').textContent = message;
+        document.getElementById('deleteModal').classList.add('active');
+      }
+
+      function closeDeleteModal() {
+        document.getElementById('deleteModal').classList.remove('active');
+        deleteForm = null;
+      }
+
+      function confirmDelete() {
+        if (deleteForm) {
+          deleteForm.submit();
+        }
+      }
+
+      // Fermer la modale en cliquant en dehors
+      document.getElementById('deleteModal').addEventListener('click', function(e) {
+        if (e.target === this) {
+          closeDeleteModal();
+        }
+      });
+
+      // Clavier (Échap pour fermer)
+      document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+          closeDeleteModal();
+        }
+      });
+    </script>
 </body>
 </html>
     <?php

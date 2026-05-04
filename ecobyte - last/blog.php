@@ -3,6 +3,7 @@
 require_once __DIR__ . '/controller/post.controller.php';
 require_once __DIR__ . '/controller/reply.controller.php';
 require_once __DIR__ . '/controller/image_utils.php';
+require_once __DIR__ . '/controller/ai_reply.php';
 require_once __DIR__ . '/model/reply.php';
 
 if (session_status() !== PHP_SESSION_ACTIVE) {
@@ -18,6 +19,7 @@ $flashMessage = '';
 $flashError = '';
 $replyError = '';
 $pendingReplyPostId = 0;
+$pendingReplyParentId = 0;
 $pendingReplyContent = '';
 $pendingReplyPseudo = '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -42,6 +44,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $pseudo = trim((string) ($_POST['pseudo'] ?? ''));
         $parentReplyId = (int) ($_POST['parent_reply_id'] ?? 0);
         $pendingReplyPostId = $postId;
+        $pendingReplyParentId = $parentReplyId;
         $pendingReplyContent = (string) ($_POST['contenu'] ?? '');
         $pendingReplyPseudo = $pseudo;
 
@@ -80,9 +83,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             try {
                 $contenu = nettoyerCommentaire($contenu);
                 $userId = $replyC->getOrCreateUserByPseudo($pseudo);
-                $reply = new Reply(null, $contenu, $imagePath, null, $postId, $userId, 'en_attente', null, 0, $parentReplyId);
-                $replyC->addReply($reply);
-                header('Location: blog.php?reply_pending=1#post-' . $postId);
+                $isQuestion = isQuestion($contenu);
+                $statutToSave = $isQuestion ? 'approuve' : 'en_attente';
+                $reply = new Reply(null, $contenu, $imagePath, null, $postId, $userId, $statutToSave, null, 0, $parentReplyId);
+                $replyId = $replyC->addReply($reply);
+
+                if ($isQuestion) {
+                    $postData = $postC->getPostById($postId);
+                    $postContent = $postData['contenu'] ?? '';
+                    $aiResponse = generateAiReplyText($postContent, $contenu);
+
+                    if ($aiResponse !== null && $aiResponse !== '') {
+                        $aiReply = new Reply(null, $aiResponse, null, null, $postId, null, 'approuve', null, 0, $replyId, true);
+                        $replyC->addReply($aiReply);
+                    }
+
+                    header('Location: blog.php?reply_created=1#post-' . $postId);
+                } else {
+                    header('Location: blog.php?reply_pending=1#post-' . $postId);
+                }
+
                 exit;
             } catch (Exception $e) {
                 $flashError = $e->getMessage();
@@ -148,6 +168,8 @@ if (isset($_GET['deleted'])) {
     $flashMessage = 'Article supprimé.';
 } elseif (isset($_GET['reply_pending'])) {
     $flashMessage = 'Votre commentaire est en attente de modération.';
+} elseif (isset($_GET['reply_created'])) {
+    $flashMessage = 'Votre commentaire a été publié.';
 } elseif (isset($_GET['reported'])) {
     $flashMessage = 'Merci, le signalement a bien été pris en compte.';
 } elseif (isset($_GET['reply_deleted'])) {
@@ -364,6 +386,17 @@ try {
       .btn-sm { padding: 7px 10px; font-size: 12.5px; border-radius: 10px; }
       .btn-liked { background: rgba(239, 68, 68, 0.1); border-color: rgba(239, 68, 68, 0.3); color: #dc2626; }
       .reply-nested { margin-left: 24px; border-left: 3px solid rgba(99, 102, 241, 0.25); background: rgba(249, 250, 251, 0.9); }
+      .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); z-index: 1000; }
+      .modal-overlay.active { display: flex; align-items: center; justify-content: center; }
+      .modal-box { background: #fff; border-radius: 14px; padding: 28px; box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2); max-width: 420px; width: 90%; }
+      .modal-title { font-size: 18px; font-weight: 800; margin: 0 0 12px; color: #0f172a; }
+      .modal-message { color: #64748b; font-size: 15px; margin-bottom: 24px; line-height: 1.6; }
+      .modal-actions { display: flex; gap: 10px; justify-content: flex-end; }
+      .modal-btn { padding: 10px 20px; border: none; border-radius: 10px; font-size: 14px; font-weight: 600; cursor: pointer; }
+      .modal-btn-cancel { background: #e2e8f0; color: #0f172a; }
+      .modal-btn-cancel:hover { background: #cbd5e1; }
+      .modal-btn-confirm { background: #ef4444; color: #fff; }
+      .modal-btn-confirm:hover { background: #dc2626; }
     </style>
   </head>
   <body>
@@ -465,7 +498,7 @@ try {
               <?php if ($id > 0 && $isAdmin) { ?>
                 <div class="actions">
                   <a class="btn" href="modifier_post.php?id=<?= $id ?>">Modifier</a>
-                  <form method="post" action="" style="display:inline;" onsubmit="return confirm('Supprimer cet article ?');">
+                  <form method="post" action="" style="display:inline;" onsubmit="openDeleteModal('Êtes-vous sûr de vouloir supprimer cet article ?', this); return false;">
                     <input type="hidden" name="delete_id" value="<?= $id ?>">
                     <button type="submit" class="btn btn-danger">Supprimer</button>
                   </form>
@@ -522,6 +555,10 @@ try {
                         $rimage = (string) ($reply['image'] ?? '');
                         $rdate = (string) ($reply['datePublication'] ?? '');
                         $rlikes = (int) ($reply['likes'] ?? 0);
+                        $isAi = (int) ($reply['is_ai_generated'] ?? 0);
+                        if ($isAi) {
+                            $rauthor = 'IA Ecobyte';
+                        }
                         $userLiked = $rid > 0 && $replyC->userHasLiked($rid);
                         $childReplies = $nestedReplies[$rid] ?? [];
                         ?>
@@ -529,6 +566,9 @@ try {
                         <div class="reply-meta">
                           <?php if ($rauthor !== '') { ?><span><?= htmlspecialchars($rauthor, ENT_QUOTES, 'UTF-8') ?></span><?php } ?>
                           <?php if ($rdate !== '') { ?><span><?= htmlspecialchars($rdate, ENT_QUOTES, 'UTF-8') ?></span><?php } ?>
+                          <?php if ($isAi) { ?>
+                            <span class="badge" style="background: rgba(59, 130, 246, 0.18); color: #1e40af; border-color: rgba(59, 130, 246, 0.4);">🤖 IA</span>
+                          <?php } ?>
                           <?php if ($rid > 0) { ?>
                             <span class="like-count"><?= $rlikes ?> j'aime</span>
                           <?php } ?>
@@ -564,19 +604,24 @@ try {
                             <?php } ?>
                             <?php if ($isAdmin) { ?>
                               <a class="btn btn-sm" href="modifier_reply.php?id=<?= $rid ?>">Modifier</a>
-                              <form method="post" action="" style="display:inline;" onsubmit="return confirm('Supprimer cette réponse ?');">
+                              <form method="post" action="" style="display:inline;" onsubmit="openDeleteModal('Êtes-vous sûr de vouloir supprimer cette réponse ?', this); return false;">
                                 <input type="hidden" name="delete_reply_id" value="<?= $rid ?>">
                                 <input type="hidden" name="reply_post_id" value="<?= $id ?>">
                                 <button type="submit" class="btn btn-sm btn-danger">Supprimer</button>
                               </form>
                             <?php } ?>
                           </div>
-                          <div id="reply-form-<?= $rid ?>" class="reply-form" style="display:none; margin-top:10px;">
+                          <div id="reply-form-<?= $rid ?>" class="reply-form" style="<?= $pendingReplyParentId === $rid && $replyError !== '' ? 'display:block;' : 'display:none;' ?> margin-top:10px;">
                             <form method="post" action="blog.php#post-<?= $id ?>" enctype="multipart/form-data">
                               <input type="hidden" name="add_reply" value="1">
                               <input type="hidden" name="post_id" value="<?= $id ?>">
                               <input type="hidden" name="parent_reply_id" value="<?= $rid ?>">
-                              <textarea name="contenu" placeholder="Répondre à ce commentaire…" required></textarea>
+                              <label for="pseudo-<?= $rid ?>" style="display:block;margin-top:0;font-size:12.5px;font-weight:600;">Nom *</label>
+                              <input id="pseudo-<?= $rid ?>" type="text" name="pseudo" value="<?= htmlspecialchars($pendingReplyParentId === $rid ? $pendingReplyPseudo : '', ENT_QUOTES, 'UTF-8') ?>" placeholder="Votre nom" style="width:100%;padding:10px 12px;border:1px solid rgba(148, 163, 184, 0.35);border-radius:12px;background:rgba(255,255,255,0.92);font:inherit;">
+                              <textarea name="contenu" placeholder="Répondre à ce commentaire…"><?= htmlspecialchars($pendingReplyParentId === $rid ? $pendingReplyContent : '', ENT_QUOTES, 'UTF-8') ?></textarea>
+                              <?php if ($pendingReplyParentId === $rid && $replyError !== '') { ?>
+                                <div class="field-error" style="margin-top:8px;color:#991b1b;background:#fee2e2;padding:10px;border-radius:8px;"><?= htmlspecialchars($replyError, ENT_QUOTES, 'UTF-8') ?></div>
+                              <?php } ?>
                               <label style="display:block;margin-top:8px;font-size:12.5px;font-weight:600;">Image (optionnel)</label>
                               <label for="image-<?= $rid ?>" class="btn btn-sm" style="cursor: pointer; display: inline-block; margin-top:4px;">Choisir une image</label>
                               <input type="file" id="image-<?= $rid ?>" name="image" accept="image/*" style="display: none;">
@@ -643,7 +688,7 @@ try {
                               <?php } ?>
                               <?php if ($isAdmin) { ?>
                                 <a class="btn btn-sm" href="modifier_reply.php?id=<?= $childId ?>">Modifier</a>
-                                <form method="post" action="" style="display:inline;" onsubmit="return confirm('Supprimer cette réponse ?');">
+                                <form method="post" action="" style="display:inline;" onsubmit="openDeleteModal('Êtes-vous sûr de vouloir supprimer cette réponse ?', this); return false;">
                                   <input type="hidden" name="delete_reply_id" value="<?= $childId ?>">
                                   <input type="hidden" name="reply_post_id" value="<?= $id ?>">
                                   <button type="submit" class="btn btn-sm btn-danger">Supprimer</button>
@@ -802,6 +847,53 @@ try {
           fetchAndRender();
         });
       })();
+    </script>
+
+    <!-- Modal de confirmation -->
+    <div id="deleteModal" class="modal-overlay">
+      <div class="modal-box">
+        <h2 class="modal-title">Confirmer la suppression</h2>
+        <p class="modal-message" id="deleteMessage">Êtes-vous sûr de vouloir supprimer cet élément ?</p>
+        <div class="modal-actions">
+          <button type="button" class="modal-btn modal-btn-cancel" onclick="closeDeleteModal()">Annuler</button>
+          <button type="button" class="modal-btn modal-btn-confirm" onclick="confirmDelete()">Supprimer</button>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      let deleteForm = null;
+
+      function openDeleteModal(message, form) {
+        deleteForm = form;
+        document.getElementById('deleteMessage').textContent = message;
+        document.getElementById('deleteModal').classList.add('active');
+      }
+
+      function closeDeleteModal() {
+        document.getElementById('deleteModal').classList.remove('active');
+        deleteForm = null;
+      }
+
+      function confirmDelete() {
+        if (deleteForm) {
+          deleteForm.submit();
+        }
+      }
+
+      // Fermer la modale en cliquant en dehors
+      document.getElementById('deleteModal').addEventListener('click', function(e) {
+        if (e.target === this) {
+          closeDeleteModal();
+        }
+      });
+
+      // Clavier (Échap pour fermer)
+      document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+          closeDeleteModal();
+        }
+      });
     </script>
   </body>
 </html>

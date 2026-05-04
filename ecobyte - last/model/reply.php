@@ -13,8 +13,9 @@ class Reply
     private ?int $likes = 0;
     private ?bool $userLiked = false;
     private ?int $parentReplyId = null;
+    private ?bool $isAiGenerated = false;
 
-    public function __construct($id = null, $contenu = null, $image = null, $datePublication = null, $postId = null, $idUser = null, $statut = 'en_attente', $raisonSignalement = null, $likes = 0, $parentReplyId = null)
+    public function __construct($id = null, $contenu = null, $image = null, $datePublication = null, $postId = null, $idUser = null, $statut = 'en_attente', $raisonSignalement = null, $likes = 0, $parentReplyId = null, $isAiGenerated = false)
     {
         $this->id = $id;
         $this->contenu = $contenu;
@@ -26,6 +27,7 @@ class Reply
         $this->raisonSignalement = $raisonSignalement;
         $this->likes = $likes;
         $this->parentReplyId = $parentReplyId;
+        $this->isAiGenerated = $isAiGenerated;
     }
 
     public function getId()
@@ -140,6 +142,17 @@ class Reply
     public function setRaisonSignalement($raisonSignalement)
     {
         $this->raisonSignalement = $raisonSignalement;
+        return $this;
+    }
+
+    public function getIsAiGenerated()
+    {
+        return $this->isAiGenerated;
+    }
+
+    public function setIsAiGenerated($isAiGenerated)
+    {
+        $this->isAiGenerated = $isAiGenerated;
         return $this;
     }
 }

@@ -107,7 +107,7 @@ admin_layout_start('Gestion des articles', 'posts');
                                     <div class="row-actions">
                                         <a href="edit_post.php?id=<?= $id ?>" class="btn" style="margin-top:0;padding:6px 12px;font-size:0.85rem;">Modifier le contenu</a>
                                         <a href="replies.php?post_id=<?= $id ?>" class="btn btn-ghost" style="margin-top:0;padding:6px 12px;font-size:0.85rem;text-decoration:none;display:inline-block;">Voir réponses</a>
-                                        <form method="post" action="" style="display:inline;" onsubmit="return confirm('Supprimer cet article ?');">
+                                        <form method="post" action="" style="display:inline;" onsubmit="openDeleteModal('Êtes-vous sûr de vouloir supprimer cet article ?', this); return false;">
                                             <input type="hidden" name="delete_id" value="<?= $id ?>">
                                             <button type="submit" class="btn btn-danger" style="margin-top:0;padding:6px 12px;font-size:0.85rem;">Supprimer</button>
                                         </form>

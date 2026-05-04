@@ -133,7 +133,7 @@ admin_layout_start('Gestion des réponses', 'replies');
                                             <button type="submit" class="btn btn-sm btn-danger" style="margin-top:0;padding:6px 12px;font-size:0.85rem;">Rejeter</button>
                                         </form>
                                         <?php } ?>
-                                        <form method="post" action="" style="display:inline;" onsubmit="return confirm('Supprimer cette réponse ?');">
+                                        <form method="post" action="" style="display:inline;" onsubmit="openDeleteModal('Êtes-vous sûr de vouloir supprimer cette réponse ?', this); return false;">
                                             <input type="hidden" name="delete_id" value="<?= $id ?>">
                                             <button type="submit" class="btn btn-danger" style="margin-top:0;padding:6px 12px;font-size:0.85rem;">Supprimer</button>
                                         </form>

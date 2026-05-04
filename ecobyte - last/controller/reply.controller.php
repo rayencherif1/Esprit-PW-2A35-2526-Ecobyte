@@ -14,7 +14,25 @@ function nettoyerCommentaire(string $texte): string
 
     return $texte;
 }
+function isQuestion(string $texte): bool
+{
+    // Vérifier si contient un point d'interrogation
+    if (strpos($texte, '?') !== false) {
+        return true;
+    }
 
+    // Mots-clés indiquant une question
+    $questionKeywords = ['est-ce que', 'puis-je', 'peux-tu', 'calories', 'valeurs nutritionnelles', 'bon pour', 'mauvais pour', 'régime', 'allergie', 'intolérance'];
+
+    $texteLower = mb_strtolower($texte, 'UTF-8');
+    foreach ($questionKeywords as $keyword) {
+        if (strpos($texteLower, $keyword) !== false) {
+            return true;
+        }
+    }
+
+    return false;
+}
 class ReplyC
 {
     private function requireAdmin(): void
@@ -31,11 +49,11 @@ class ReplyC
     /**
      * Insertion : accessible depuis le front-office.
      */
-    public function addReply($reply): void
+    public function addReply($reply): int
     {
         try {
             $parentId = $reply->getParentReplyId();
-            $sql = 'INSERT INTO reply (id, contenu, image, post_id, idUser, statut, raisonSignalement, parent_reply_id) VALUES (NULL, :contenu, :image, :post_id, :idUser, :statut, :raisonSignalement, :parent_id)';
+            $sql = 'INSERT INTO reply (id, contenu, image, post_id, idUser, statut, raisonSignalement, parent_reply_id, is_ai_generated) VALUES (NULL, :contenu, :image, :post_id, :idUser, :statut, :raisonSignalement, :parent_id, :is_ai_generated)';
             $db = config::getConnexion();
 
             $query = $db->prepare($sql);
@@ -47,7 +65,10 @@ class ReplyC
                 'statut' => $reply->getStatut() ?? 'en_attente',
                 'raisonSignalement' => $reply->getRaisonSignalement(),
                 'parent_id' => $parentId > 0 ? $parentId : null,
+                'is_ai_generated' => $reply->getIsAiGenerated() ? 1 : 0,
             ]);
+
+            return (int) $db->lastInsertId();
         } catch (PDOException $e) {
             if (($e->getCode() ?? '') === '42S02') {
                 throw new Exception("La table 'reply' n'existe pas dans la base de données. Crée-la (via ecobyte.sql ou phpMyAdmin) puis réessaie.");
