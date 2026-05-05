@@ -1,267 +1,223 @@
-<?php
-require_once __DIR__ . '/../../config.php';
-require_once __DIR__ . '/../../Model/allergie.php';
-require_once __DIR__ . '/../../Controller/allergie.Controller.php';
-require_once __DIR__ . '/../../Controller/traitement.Controller.php';
-
-session_start();
-
-$allergieController = new AllergieC();
-$allergies = $allergieController->listAllergie();
-$traitementController = new TraitementC();
-
-function getAllergiesContext($allergies, $traitementController) {
-    $context = "=== BASE DE CONNAISSANCES SUR LES ALLERGIES ===\n\n";
-    
-    if (empty($allergies)) {
-        $context .= "Aucune allergie dans la base de données.\n";
-        return $context;
-    }
-    
-    foreach ($allergies as $allergie) {
-        $context .= "📌 ALLERGIE: " . ($allergie['nom'] ?? 'Nom inconnu') . "\n";
-        $context .= "   ⚠️ Gravité: " . ($allergie['gravite'] ?? 'Non spécifiée') . "\n";
-        $context .= "   📝 Description: " . ($allergie['description'] ?? 'Aucune') . "\n";
-        $context .= "   🤧 Symptômes: " . ($allergie['symptomes'] ?? 'Aucun') . "\n";
-        
-        $traitements = $traitementController->listTraitementByAllergie($allergie['id_allergie']);
-        if (!empty($traitements) && is_array($traitements)) {
-            $context .= "   💊 Traitements:\n";
-            foreach ($traitements as $traitement) {
-                $context .= "      - " . ($traitement['nom_traitement'] ?? 'Sans nom') . "\n";
-                if (!empty($traitement['conseils'])) {
-                    $context .= "        ✅ Conseils: " . $traitement['conseils'] . "\n";
-                }
-                if (!empty($traitement['interdiction'])) {
-                    $context .= "        🚫 Interdictions: " . $traitement['interdiction'] . "\n";
-                }
-            }
-        }
-        $context .= "\n";
-    }
-    
-    return $context;
-}
-
-$allergiesContext = getAllergiesContext($allergies, $traitementController);
-?>
-
 <!DOCTYPE html>
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AllergieBot - Assistant IA spécialisé</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <title>AllergieBot - Assistant IA</title>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
-        * { font-family: 'Inter', sans-serif; }
-        
-        .chat-container { height: calc(100vh - 200px); display: flex; flex-direction: column; }
-        .messages-area { flex: 1; overflow-y: auto; padding: 1rem; }
-        .message { animation: slideIn 0.3s ease; }
-        
-        @keyframes slideIn {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
         }
-        
-        .typing-indicator { display: inline-flex; align-items: center; gap: 4px; padding: 8px 12px; }
-        .typing-indicator span { width: 8px; height: 8px; border-radius: 50%; background-color: #9CA3AF; animation: typing 1.4s infinite; }
+        .chat-container {
+            width: 90%;
+            max-width: 800px;
+            height: 600px;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        .chat-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+        .chat-header h1 { font-size: 24px; margin-bottom: 5px; }
+        .chat-header p { font-size: 12px; opacity: 0.9; }
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            background: #f8f9fa;
+        }
+        .message { margin-bottom: 15px; display: flex; }
+        .message.user { justify-content: flex-end; }
+        .message.bot { justify-content: flex-start; }
+        .message-content {
+            max-width: 70%;
+            padding: 10px 15px;
+            border-radius: 18px;
+            font-size: 14px;
+            line-height: 1.4;
+        }
+        .user .message-content {
+            background: #667eea;
+            color: white;
+            border-bottom-right-radius: 4px;
+        }
+        .bot .message-content {
+            background: white;
+            color: #333;
+            border-bottom-left-radius: 4px;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+        }
+        .chat-input {
+            padding: 20px;
+            background: white;
+            border-top: 1px solid #e0e0e0;
+            display: flex;
+            gap: 10px;
+        }
+        .chat-input input {
+            flex: 1;
+            padding: 12px;
+            border: 1px solid #e0e0e0;
+            border-radius: 25px;
+            outline: none;
+            font-size: 14px;
+        }
+        .chat-input input:focus { border-color: #667eea; }
+        .chat-input button {
+            padding: 12px 24px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        .typing-indicator {
+            display: flex;
+            gap: 5px;
+            padding: 10px 15px;
+        }
+        .typing-indicator span {
+            width: 8px;
+            height: 8px;
+            background: #999;
+            border-radius: 50%;
+            animation: typing 1.4s infinite;
+        }
         .typing-indicator span:nth-child(2) { animation-delay: 0.2s; }
         .typing-indicator span:nth-child(3) { animation-delay: 0.4s; }
-        
         @keyframes typing {
             0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
             30% { transform: translateY(-10px); opacity: 1; }
         }
-        
-        .suggestion-chip { transition: all 0.2s ease; cursor: pointer; }
-        .suggestion-chip:hover { transform: translateY(-2px); box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); }
-        .message-content { line-height: 1.5; }
-        .message-content ul, .message-content ol { margin-left: 1.5rem; margin-top: 0.5rem; margin-bottom: 0.5rem; }
-        ::-webkit-scrollbar { width: 8px; }
-        ::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 10px; }
-        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        .suggestions {
+            padding: 10px 20px;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            background: #f8f9fa;
+            border-top: 1px solid #e0e0e0;
+        }
+        .suggestion-btn {
+            padding: 6px 12px;
+            background: white;
+            border: 1px solid #e0e0e0;
+            border-radius: 20px;
+            font-size: 12px;
+            cursor: pointer;
+        }
+        .suggestion-btn:hover {
+            background: #667eea;
+            color: white;
+        }
     </style>
 </head>
-<body class="bg-gradient-to-br from-blue-50 to-purple-50">
-
-    <!-- Header -->
-    <div class="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white shadow-lg">
-        <div class="container mx-auto px-4 py-4">
-            <div class="flex justify-between items-center">
-                <div class="flex items-center gap-3">
-                    <div class="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
-                        <span class="text-2xl">🤖</span>
-                    </div>
-                    <div>
-                        <h1 class="text-2xl font-bold">AllergieBot</h1>
-                        <p class="text-xs opacity-90">Assistant IA spécialisé en allergies</p>
-                    </div>
-                </div>
-                <div class="flex gap-2">
-                    <button onclick="clearChat()" class="bg-white/20 hover:bg-white/30 rounded-lg px-3 py-2 text-sm transition flex items-center gap-2">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
-                        </svg>
-                        Effacer
-                    </button>
-                    <a href="allergie.php" class="bg-white/20 hover:bg-white/30 rounded-lg px-4 py-2 text-sm transition flex items-center gap-2">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
-                        </svg>
-                        Retour
-                    </a>
+<body>
+    <div class="chat-container">
+        <div class="chat-header">
+            <h1>🤖 AllergieBot</h1>
+            <p>Assistant IA - Réponses intelligentes et naturelles</p>
+        </div>
+        
+        <div class="chat-messages" id="chatMessages">
+            <div class="message bot">
+                <div class="message-content">
+                    👋 Bonjour ! Je suis AllergieBot, votre assistant IA.<br>
+                    Je peux répondre à toutes vos questions sur les allergies ou autre chose !<br><br>
+                    Que voulez-vous savoir ?
                 </div>
             </div>
         </div>
-    </div>
-
-    <!-- Stats -->
-    <div class="container mx-auto px-4 mt-4">
-        <div class="bg-white rounded-lg shadow-md p-3 flex justify-around items-center">
-            <div class="text-center"><div class="text-2xl font-bold text-blue-600"><?= count($allergies) ?></div><div class="text-xs text-gray-500">Allergies</div></div>
-            <div class="h-8 w-px bg-gray-300"></div>
-            <div class="text-center"><div class="text-2xl font-bold text-green-600">🤖</div><div class="text-xs text-gray-500">IA Active</div></div>
-            <div class="h-8 w-px bg-gray-300"></div>
-            <div class="text-center"><div class="text-2xl font-bold text-purple-600">✅</div><div class="text-xs text-gray-500">Prêt</div></div>
+        
+        <div class="suggestions">
+            <button class="suggestion-btn" onclick="sendMessage('Quels sont les symptômes d\'une allergie ?')">🤧 Symptômes</button>
+            <button class="suggestion-btn" onclick="sendMessage('Comment soigner une allergie alimentaire ?')">💊 Traitements</button>
+            <button class="suggestion-btn" onclick="sendMessage('Que faire en cas de choc anaphylactique ?')">🚨 Urgence</button>
+            <button class="suggestion-btn" onclick="sendMessage('Salut, comment vas-tu ?')">👋 Dis bonjour</button>
         </div>
-    </div>
-
-    <!-- Chat Container -->
-    <div class="container mx-auto px-4 py-4">
-        <div class="chat-container bg-white rounded-xl shadow-2xl overflow-hidden border border-gray-200">
-            <div id="messagesArea" class="messages-area bg-gradient-to-b from-gray-50 to-white">
-                <div class="message mb-4 flex justify-start">
-                    <div class="bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-2xl rounded-tl-none px-5 py-3 max-w-[85%] shadow-md">
-                        <div class="flex items-center gap-2 mb-2">
-                            <span class="text-lg">🤖</span>
-                            <span class="font-semibold">AllergieBot</span>
-                            <span class="text-xs opacity-75">● En ligne</span>
-                        </div>
-                        <div class="message-content text-sm">
-                            <p>Bonjour ! 👋 Je suis votre assistant médical spécialisé dans les allergies.</p>
-                            <p class="mt-2">Je peux vous renseigner sur :</p>
-                            <ul class="mt-1"><li>✅ Les différents types d'allergies</li><li>✅ Les symptômes associés</li><li>✅ Les traitements disponibles</li><li>✅ Les conseils et précautions</li></ul>
-                            <p class="mt-2 font-semibold">Posez-moi toutes vos questions ! 🌿</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Suggestions -->
-            <div class="px-4 py-3 bg-white border-t border-gray-200">
-                <div class="flex gap-2 overflow-x-auto pb-2">
-                    <button onclick="sendSuggestion('Quels sont les types d\'allergies les plus courants ?')" class="suggestion-chip bg-blue-100 hover:bg-blue-200 rounded-full px-4 py-2 text-xs font-medium whitespace-nowrap transition shadow-sm">🤧 Types d'allergies</button>
-                    <button onclick="sendSuggestion('Comment reconnaître les symptômes d\'une allergie ?')" class="suggestion-chip bg-green-100 hover:bg-green-200 rounded-full px-4 py-2 text-xs font-medium whitespace-nowrap transition shadow-sm">🩺 Symptômes</button>
-                    <button onclick="sendSuggestion('Quels traitements existent contre les allergies ?')" class="suggestion-chip bg-yellow-100 hover:bg-yellow-200 rounded-full px-4 py-2 text-xs font-medium whitespace-nowrap transition shadow-sm">💊 Traitements</button>
-                    <button onclick="sendSuggestion('Comment réagir en cas de choc anaphylactique ?')" class="suggestion-chip bg-red-100 hover:bg-red-200 rounded-full px-4 py-2 text-xs font-medium whitespace-nowrap transition shadow-sm">🚨 Urgences</button>
-                    <button onclick="sendSuggestion('Quelles précautions prendre pour éviter les allergies ?')" class="suggestion-chip bg-purple-100 hover:bg-purple-200 rounded-full px-4 py-2 text-xs font-medium whitespace-nowrap transition shadow-sm">🛡️ Prévention</button>
-                </div>
-            </div>
-            
-            <!-- Input -->
-            <div class="bg-white border-t border-gray-200 p-4">
-                <form id="chatForm" class="flex gap-2">
-                    <input type="text" id="userInput" placeholder="Écrivez votre question sur les allergies..." class="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition" autocomplete="off">
-                    <button type="submit" class="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-3 rounded-lg hover:shadow-lg transition-all font-semibold hover:scale-105">
-                        <svg class="w-5 h-5 inline-block" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path></svg>
-                        Envoyer
-                    </button>
-                </form>
-                <p class="text-xs text-gray-400 mt-2 text-center">🤖 AllergieBot utilise l'IA Gemini pour répondre à vos questions</p>
-            </div>
+        
+        <div class="chat-input">
+            <input type="text" id="messageInput" placeholder="Posez votre question..." onkeypress="if(event.key==='Enter') sendMessage()">
+            <button onclick="sendMessage()">Envoyer</button>
         </div>
     </div>
 
     <script>
-        const messagesArea = document.getElementById('messagesArea');
-        const chatForm = document.getElementById('chatForm');
-        const userInput = document.getElementById('userInput');
-        let isWaiting = false;
-        const allergiesContext = <?= json_encode($allergiesContext) ?>;
-        const API_URL = 'gemini_api.php';
+        const chatMessages = document.getElementById('chatMessages');
+        const messageInput = document.getElementById('messageInput');
         
-        function addMessage(role, content, isMarkdown = false) {
+        function addMessage(text, isUser = false) {
             const messageDiv = document.createElement('div');
-            messageDiv.className = `message mb-4 flex ${role === 'user' ? 'justify-end' : 'justify-start'}`;
-            
-            if (role === 'user') {
-                messageDiv.innerHTML = `<div class="bg-blue-600 text-white rounded-2xl rounded-tr-none px-5 py-3 max-w-[85%] shadow-md"><div class="flex items-center gap-2 mb-1"><span class="text-sm">👤</span><span class="font-semibold text-xs">Vous</span></div><p class="text-sm">${escapeHtml(content)}</p></div>`;
-            } else {
-                let formattedContent = content;
-                if (isMarkdown && typeof marked !== 'undefined') {
-                    formattedContent = marked.parse(content);
-                } else {
-                    formattedContent = `<p>${escapeHtml(content)}</p>`;
-                }
-                messageDiv.innerHTML = `<div class="bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-2xl rounded-tl-none px-5 py-3 max-w-[85%] shadow-md"><div class="flex items-center gap-2 mb-2"><span class="text-sm">🤖</span><span class="font-semibold text-xs">AllergieBot</span></div><div class="message-content text-sm">${formattedContent}</div></div>`;
-            }
-            messagesArea.appendChild(messageDiv);
-            scrollToBottom();
+            messageDiv.className = `message ${isUser ? 'user' : 'bot'}`;
+            messageDiv.innerHTML = `<div class="message-content" style="white-space: pre-line;">${escapeHtml(text)}</div>`;
+            chatMessages.appendChild(messageDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
         }
         
-        function showTypingIndicator() {
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+        
+        function addTypingIndicator() {
             const typingDiv = document.createElement('div');
+            typingDiv.className = 'message bot';
             typingDiv.id = 'typingIndicator';
-            typingDiv.className = 'message mb-4 flex justify-start';
-            typingDiv.innerHTML = `<div class="bg-gray-200 text-gray-700 rounded-2xl rounded-tl-none px-5 py-3 shadow-md"><div class="typing-indicator"><span></span><span></span><span></span><span class="ml-2 text-xs text-gray-500">AllergieBot réfléchit...</span></div></div>`;
-            messagesArea.appendChild(typingDiv);
-            scrollToBottom();
+            typingDiv.innerHTML = `<div class="message-content"><div class="typing-indicator"><span></span><span></span><span></span></div></div>`;
+            chatMessages.appendChild(typingDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
         }
         
-        function hideTypingIndicator() { const indicator = document.getElementById('typingIndicator'); if (indicator) indicator.remove(); }
-        function scrollToBottom() { messagesArea.scrollTop = messagesArea.scrollHeight; }
-        function escapeHtml(text) { const div = document.createElement('div'); div.textContent = text; return div.innerHTML; }
-        
-        function clearChat() {
-            if (confirm('Voulez-vous vraiment effacer la conversation ?')) {
-                const welcomeMessage = messagesArea.querySelector('.message');
-                messagesArea.innerHTML = '';
-                if (welcomeMessage) messagesArea.appendChild(welcomeMessage);
-                else location.reload();
-                scrollToBottom();
-            }
+        function removeTypingIndicator() {
+            const typing = document.getElementById('typingIndicator');
+            if (typing) typing.remove();
         }
         
-        async function sendMessage(question) {
-            if (isWaiting || !question.trim()) return;
-            addMessage('user', question);
-            userInput.value = '';
-            isWaiting = true;
-            userInput.disabled = true;
-            showTypingIndicator();
+        async function sendMessage(question = null) {
+            const message = question || messageInput.value.trim();
+            if (!message) return;
+            
+            addMessage(message, true);
+            messageInput.value = '';
+            addTypingIndicator();
             
             try {
-                const response = await fetch(API_URL, {
+                const response = await fetch('groq_api.php', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ question: question, context: allergiesContext })
+                    body: JSON.stringify({ question: message })
                 });
                 
-                if (!response.ok) throw new Error('Erreur serveur');
                 const data = await response.json();
-                hideTypingIndicator();
+                removeTypingIndicator();
                 
-                if (data.success) addMessage('assistant', data.response, true);
-                else addMessage('assistant', "❌ " + (data.error || 'Erreur inconnue'), false);
+                if (data.success) {
+                    addMessage(data.response);
+                } else {
+                    addMessage('❌ Désolé, une erreur est survenue. Veuillez réessayer.');
+                }
             } catch (error) {
-                hideTypingIndicator();
-                addMessage('assistant', "❌ Erreur: " + error.message, false);
-            } finally {
-                isWaiting = false;
-                userInput.disabled = false;
-                userInput.focus();
+                removeTypingIndicator();
+                addMessage('❌ Erreur de connexion. Vérifiez que le serveur fonctionne.');
             }
         }
         
-        function sendSuggestion(question) { if (!isWaiting) sendMessage(question); }
-        chatForm.addEventListener('submit', (e) => { e.preventDefault(); sendMessage(userInput.value); });
-        userInput.addEventListener('keypress', (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(userInput.value); } });
-        setTimeout(scrollToBottom, 100);
-        userInput.focus();
+        // Exposer sendMessage globalement
+        window.sendMessage = sendMessage;
     </script>
 </body>
 </html>
