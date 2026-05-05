@@ -33,8 +33,13 @@ const DB_CHARSET = 'utf8mb4'; // Jeu de caractères recommandé pour le françai
 // Chemins fichiers (pour require) — ne pas mettre de slash final.
 // -------------------------------------------------------------------------
 define('ROOT_PATH', dirname(__DIR__)); // Racine du projet (parent de /config)
-define('APP_PATH', ROOT_PATH . '/app'); // Dossier MVC
-define('VIEW_PATH', APP_PATH . '/Views'); // Vues PHP
+define('APP_PATH', ROOT_PATH . '/app'); // Noyau technique (Core, Services, bootstrap)
+define('CONTROLLER_PATH', ROOT_PATH . '/Controllers'); // Contrôleurs MVC
+define('MODEL_PATH', ROOT_PATH . '/Models'); // Modèles MVC
+define('VIEW_PATH', ROOT_PATH . '/Views'); // Vues MVC
+
+require_once APP_PATH . '/Core/EnvLoader.php';
+EnvLoader::load(ROOT_PATH . DIRECTORY_SEPARATOR . '.env');
 
 // -------------------------------------------------------------------------
 // URLs publiques — À MODIFIER quand vous copiez le projet sur un autre PC.
@@ -66,6 +71,28 @@ define(
 // Types d’exercices / programmes (énumération métier, alignée sur la base).
 // -------------------------------------------------------------------------
 const TYPES_ENTRAINEMENT = ['musculation', 'cardio', 'perte_de_poids'];
+
+// -------------------------------------------------------------------------
+// config.local.php (optionnel) : surcharges PHP hors .env.
+// -------------------------------------------------------------------------
+$configLocal = __DIR__ . '/config.local.php';
+if (is_file($configLocal)) {
+    require_once $configLocal;
+}
+
+// -------------------------------------------------------------------------
+// Ollama (IA locale) — voir .env.example (OLLAMA_MODEL, OLLAMA_BASE_URL).
+// -------------------------------------------------------------------------
+if (!defined('OLLAMA_BASE_URL')) {
+    $ob = $_ENV['OLLAMA_BASE_URL'] ?? getenv('OLLAMA_BASE_URL');
+    $ob = trim(is_string($ob) ? $ob : '');
+    define('OLLAMA_BASE_URL', $ob !== '' ? $ob : 'http://127.0.0.1:11434');
+}
+if (!defined('OLLAMA_MODEL')) {
+    $om = $_ENV['OLLAMA_MODEL'] ?? getenv('OLLAMA_MODEL');
+    $om = trim(is_string($om) ? $om : '');
+    define('OLLAMA_MODEL', $om !== '' ? $om : 'llama3.2');
+}
 
 // -------------------------------------------------------------------------
 // Muscles wger (API alternatives) — clé = id API, valeur = libellé français.

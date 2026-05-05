@@ -1,6 +1,6 @@
 <?php
 /**
- * Chargement automatique des classes (Models, Controllers) sans Composer.
+ * Chargement automatique des classes (MVC + services/core) sans Composer.
  * Quand PHP voit "new ExerciseModel()", il cherche le fichier correspondant.
  */
 
@@ -11,13 +11,11 @@ spl_autoload_register(
      * @param string $className Nom de la classe demandée (ex: ExerciseModel)
      */
     static function (string $className): void {
-        $base = APP_PATH; // Dossier racine des classes
-
         $candidates = [
-            $base . '/Models/' . $className . '.php', // Modèles PDO
-            $base . '/Controllers/' . $className . '.php', // Contrôleurs front
-            $base . '/Controllers/Admin/' . $className . '.php', // Contrôleurs admin
-            $base . '/Core/' . $className . '.php', // Utilitaires (View, etc.)
+            MODEL_PATH . '/' . $className . '.php', // Modèles MVC
+            CONTROLLER_PATH . '/' . $className . '.php', // Contrôleurs MVC
+            APP_PATH . '/Core/' . $className . '.php', // Utilitaires (View, EnvLoader, etc.)
+            APP_PATH . '/Services/' . $className . '.php', // Clients externes (Ollama, etc.)
         ];
 
         foreach ($candidates as $file) {

@@ -64,6 +64,25 @@ CREATE TABLE programme_exercice (
         ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+-- ---------------------------------------------------------------------
+-- Profils IA Ollama (admin CRUD) — modèle + consignes système additionnelles
+-- ---------------------------------------------------------------------
+DROP TABLE IF EXISTS ollama_ia_profils;
+CREATE TABLE ollama_ia_profils (
+    id INT UNSIGNED NOT NULL AUTO_INCREMENT,
+    nom VARCHAR(150) NOT NULL,
+    modele VARCHAR(120) NOT NULL DEFAULT '' COMMENT 'Tag modèle Ollama ; vide = OLLAMA_MODEL (.env)',
+    instructions_supplementaires TEXT NOT NULL,
+    actif TINYINT(1) NOT NULL DEFAULT 0 COMMENT '1 = utilisé sur la page suggestion (un seul à la fois)',
+    date_creation TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    date_modification TIMESTAMP NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (id),
+    KEY idx_ollama_ia_actif (actif)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+INSERT INTO ollama_ia_profils (nom, modele, instructions_supplementaires, actif) VALUES
+('Défaut', '', '', 1);
+
 SET FOREIGN_KEY_CHECKS = 1;
 
 -- ---------------------------------------------------------------------

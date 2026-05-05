@@ -61,6 +61,9 @@ $fm = rtrim(URL_FOODMART, '/');
                   <a class="nav-link" href="<?= e(BASE_URL) ?>/index.php?action=home">Programmes</a>
                 </li>
                 <li class="nav-item">
+                  <a class="nav-link" href="<?= e(BASE_URL) ?>/index.php?action=recommend_ai">Suggestion IA</a>
+                </li>
+                <li class="nav-item">
                   <a class="nav-link" href="<?= e(ADMIN_URL) ?>/index.php?action=dashboard">Admin</a>
                 </li>
               </ul>
@@ -76,6 +79,9 @@ $fm = rtrim(URL_FOODMART, '/');
                   <ul class="navbar-nav gap-2">
                     <li class="nav-item">
                       <a class="nav-link" href="<?= e(BASE_URL) ?>/index.php?action=home">Programmes</a>
+                    </li>
+                    <li class="nav-item">
+                      <a class="nav-link" href="<?= e(BASE_URL) ?>/index.php?action=recommend_ai">Suggestion IA</a>
                     </li>
                     <li class="nav-item">
                       <a class="nav-link" href="<?= e(ADMIN_URL) ?>/index.php?action=dashboard">Admin</a>

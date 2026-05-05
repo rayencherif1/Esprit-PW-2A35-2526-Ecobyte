@@ -59,6 +59,13 @@ ob_start();
         </div>
         <div class="card nf-card mb-3">
             <div class="card-body">
+                <h2 class="h6">Suggestion IA</h2>
+                <p class="small text-muted">Ollama sur votre PC — modèle dans <code>.env</code> (<code>OLLAMA_MODEL</code>).</p>
+                <a href="<?= e(BASE_URL) ?>/index.php?action=recommend_ai" class="btn btn-outline-primary btn-sm">Ouvrir</a>
+            </div>
+        </div>
+        <div class="card nf-card mb-3">
+            <div class="card-body">
                 <h2 class="h6">IMC (API)</h2>
                 <p class="small text-muted">Taille en cm, poids en kg — calcul via API distante.</p>
                 <div class="mb-2">

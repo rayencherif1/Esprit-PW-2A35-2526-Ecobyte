@@ -14,6 +14,7 @@ Application web simple : catalogue de **programmes** et **exercices**, espace **
    - `DB_USER` / `DB_PASS` (souvent `root` + mot de passe vide).
    - `BASE_URL` et `ADMIN_URL` (doivent correspondre à votre URL locale).
    - `URL_FOODMART` et `URL_ARGON_ASSETS` (chemins vers les dossiers de thème).
+   - **Ollama (IA locale)** : installez [Ollama](https://ollama.com), puis `ollama pull llama3.2`. Copiez **`.env.example`** vers **`.env`** et vérifiez `OLLAMA_MODEL` / `OLLAMA_BASE_URL`.
 6. Logo du bandeau : **`public/images/mylogo.png`** (c’est l’emplacement utilisé par le layout).
 7. Ouvrez dans le navigateur :
    - **Site public :** `{BASE_URL}/index.php?action=home`  
@@ -30,10 +31,13 @@ Application web simple : catalogue de **programmes** et **exercices**, espace **
 | **`public/`** | Point d’entrée web : `index.php` (site) et `admin/index.php` (back-office). Les URLs pointent ici. |
 | **`public/js/training-api.js`** | JavaScript : IMC, conseil du jour, alternatives wger (muscle + vidéos / YouTube). |
 | **`public/images/mylogo.png`** | Logo affiché en haut du site (à fournir). |
-| **`app/`** | Code PHP : contrôleurs, modèles, vues. |
-| **`app/Controllers/`** | Logique des pages (`FrontController`, contrôleurs admin). |
-| **`app/Models/`** | Accès base de données (PDO). |
-| **`app/Views/`** | Gabarits HTML PHP (front + admin). |
+| **`Controllers/`** | Contrôleurs MVC (front + admin). |
+| **`Models/`** | Modèles PDO (accès base). |
+| **`Views/`** | Vues PHP (front + admin). |
+| **`app/`** | Noyau technique (bootstrap, services, classes utilitaires). |
+| **`app/Services/OllamaRecommendClient.php`** | Appel HTTP Ollama (`/api/chat`, JSON). |
+| **`app/Core/EnvLoader.php`** | Chargement du fichier **`.env`** (sans Composer). |
+| **`database/seed_showcase_ai.sql`** | Données de démonstration enrichies (programmes + exercices) pour la démo IA. |
 | **`config/config.php`** | Réglages globaux (BDD, URLs, constantes métier). |
 | **`database/schema.sql`** | Structure MySQL à importer. |
 | **`FoodMart-1.0.0/`** | Thème **front** (CSS/JS/images) — requis par `URL_FOODMART`. |
@@ -46,6 +50,7 @@ Les gros dossiers de thème ne sont pas du “code métier”, mais le site les 
 ## Fonctionnalités principales
 
 - **Accueil** : liste des programmes, filtres, widgets IMC + conseil.
+- **Suggestion IA** : formulaire profil → **Ollama** sur la machine (`OLLAMA_MODEL` dans `.env`) ; si Ollama ne répond pas, **suggestion locale**. Admin **IA Ollama (CRUD)** : surcharge du nom de modèle et consignes système additionnelles.
 - **Séance** : détail d’un programme avec exercices ; boutons YouTube et alternatives (wger) si un muscle wger est renseigné sur l’exercice.
 - **Admin** : CRUD exercices et programmes, liaison programme ↔ exercices.
 
