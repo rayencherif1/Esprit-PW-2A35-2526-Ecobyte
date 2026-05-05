@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . '/../controller/RecetteController.php';
 require_once __DIR__ . '/../controller/InstructionController.php';
+require_once __DIR__ . '/../lib/IngredientPriceService.php';
 
 function normalizeTypeForBadge(string $type): string
 {
@@ -27,6 +28,136 @@ function typeBadgeEmoji(string $type): string
         return '🌙';
     }
     return '🍽';
+}
+
+/**
+ * Calcul d'empreinte carbone très simplifié à partir du texte des ingrédients.
+ * On retourne une chaîne du type "≈ 2.3 kg CO₂e" ou "Non calculé" si impossible.
+ */
+function computeCarboneFromIngredients(?string $ingredientsText): string
+{
+    if ($ingredientsText === null) {
+        return 'Non calculé';
+    }
+    $txt = trim($ingredientsText);
+    if ($txt === '' || isInstructionPlaceholderText($txt)) {
+        return 'Non calculé';
+    }
+
+    $lower = mb_strtolower($txt, 'UTF-8');
+    $map = [
+        'boeuf' => 27.0,
+        'steak' => 25.0,
+        'agneau' => 24.0,
+        'veau' => 22.0,
+        'porc' => 12.0,
+        'poulet' => 6.0,
+        'dinde' => 6.0,
+        'poisson' => 5.0,
+        'saumon' => 8.0,
+        'thon' => 8.0,
+        'fromage' => 13.0,
+        'lait' => 3.0,
+        'oeuf' => 4.5,
+        'oeufs' => 4.5,
+        'riz' => 4.0,
+        'pates' => 2.5,
+        'pâtes' => 2.5,
+        'pain' => 1.0,
+        'tomate' => 1.4,
+        'tomates' => 1.4,
+        'pomme de terre' => 0.5,
+        'pommes de terre' => 0.5,
+        'legume' => 0.8,
+        'legumes' => 0.8,
+        'légume' => 0.8,
+        'légumes' => 0.8,
+        'fruit' => 0.8,
+        'fruits' => 0.8,
+        'huile' => 3.0,
+    ];
+
+    $totalKg = 0.0;
+    foreach ($map as $needle => $kgCo2e) {
+        if (mb_strpos($lower, $needle, 0, 'UTF-8') !== false) {
+            $totalKg += $kgCo2e;
+        }
+    }
+
+    if ($totalKg <= 0.0) {
+        return 'Non calculé';
+    }
+
+    $rounded = round($totalKg, 1);
+    return '≈ ' . number_format($rounded, 1, ',', ' ') . ' kg CO₂e';
+}
+
+/**
+ * Appel HTTP JSON simple (API externe) avec timeout court.
+ *
+ * @return array<string, mixed>|null
+ */
+function fetchJsonFromUrl(string $url): ?array
+{
+    $context = stream_context_create([
+        'http' => [
+            'method' => 'GET',
+            'timeout' => 2,
+            'header' => "User-Agent: recette-app/1.0\r\nAccept: application/json\r\n",
+        ],
+    ]);
+    $raw = @file_get_contents($url, false, $context);
+    if ($raw === false || trim($raw) === '') {
+        return null;
+    }
+    $decoded = json_decode($raw, true);
+    return is_array($decoded) ? $decoded : null;
+}
+
+/**
+ * Trial API: estimation via OpenFoodFacts (ecoscore).
+ * Si l'API ne renvoie rien, la fonction retourne null.
+ */
+function fetchCarboneFromOpenFoodFacts(string $ingredientsText): ?string
+{
+    if (!function_exists('mb_strtolower')) {
+        return null;
+    }
+    $tokens = preg_split('/[\s,;|•·\r\n]+/u', mb_strtolower($ingredientsText, 'UTF-8')) ?: [];
+    $tokens = array_values(array_filter(array_map(
+        static fn (string $t): string => trim(preg_replace('/[^a-z0-9àâäéèêëïîôùûüç-]/ui', '', $t) ?? ''),
+        $tokens
+    ), static fn (string $t): bool => mb_strlen($t, 'UTF-8') >= 3));
+    $tokens = array_slice(array_unique($tokens), 0, 4);
+    if (count($tokens) === 0) {
+        return null;
+    }
+
+    $gradeToKg = ['a' => 0.8, 'b' => 1.6, 'c' => 3.0, 'd' => 5.0, 'e' => 8.0];
+    $sum = 0.0;
+    $hits = 0;
+    foreach ($tokens as $token) {
+        $url = 'https://world.openfoodfacts.org/cgi/search.pl?search_terms=' . rawurlencode($token) . '&search_simple=1&json=1&page_size=1';
+        $data = fetchJsonFromUrl($url);
+        if ($data === null || !isset($data['products'][0]) || !is_array($data['products'][0])) {
+            continue;
+        }
+        $product = $data['products'][0];
+        $grade = '';
+        if (isset($product['ecoscore_grade']) && is_string($product['ecoscore_grade'])) {
+            $grade = strtolower(trim($product['ecoscore_grade']));
+        }
+        if ($grade !== '' && isset($gradeToKg[$grade])) {
+            $sum += $gradeToKg[$grade];
+            $hits++;
+        }
+    }
+
+    if ($hits === 0) {
+        return null;
+    }
+    $avg = $sum / $hits;
+    return '≈ ' . number_format($avg, 1, ',', ' ') . ' kg CO₂e';
 }
 
 /**
@@ -131,7 +262,8 @@ if ($recette === null) {
     $calories = htmlspecialchars((string) ($recette['calories'] ?? '0'), ENT_QUOTES, 'UTF-8');
     $temps = htmlspecialchars((string) ($recette['tempsPreparation'] ?? '0'), ENT_QUOTES, 'UTF-8');
     $difficulte = htmlspecialchars($recette['difficulte'] ?? '', ENT_QUOTES, 'UTF-8');
-    $impact = htmlspecialchars($recette['impactCarbone'] ?? '', ENT_QUOTES, 'UTF-8');
+    $impactCarboneCalc = 'Non calculé';
+    $vegetablesPriceApi = 'Non trouvé API';
 
     $ingredientsBody = '';
     $preparationBody = '';
@@ -155,6 +287,14 @@ if ($recette === null) {
 
         $ne = (int) ($instruction['nombreEtapes'] ?? 0);
         $tm = (int) ($instruction['temps'] ?? 0);
+        $impactCarboneCalc = computeCarboneFromIngredients($rawIngredients);
+        $impactFromApi = fetchCarboneFromOpenFoodFacts($rawIngredients);
+        if ($impactFromApi !== null) {
+            $impactCarboneCalc = $impactFromApi;
+        }
+        $vegetablesPriceApi = IngredientPriceService::formatApiOnlyPrice(
+            IngredientPriceService::estimateVegetablesPriceApiOnly($rawIngredients)
+        );
         if ($ne > 0 || $tm > 0) {
             $metaLine = $ne . ' étapes • ' . $tm . ' min (fiche)';
             $metaUpper = function_exists('mb_strtoupper') ? mb_strtoupper($metaLine, 'UTF-8') : strtoupper($metaLine);
@@ -212,10 +352,18 @@ if ($recette === null) {
           </div>
           <div class="ri-stat-divider" aria-hidden="true"></div>
           <div class="ri-stat">
-            <span class="ri-stat-ico" aria-hidden="true">🍃</span>
+            <span class="ri-stat-ico" aria-hidden="true">🌍</span>
             <div class="ri-stat-text">
-              <span class="ri-stat-label">Impact carbone</span>
-              <strong class="ri-stat-strong">' . $impact . '</strong>
+              <span class="ri-stat-label">Empreinte estimée</span>
+              <strong class="ri-stat-strong">' . htmlspecialchars($impactCarboneCalc, ENT_QUOTES, 'UTF-8') . '</strong>
+            </div>
+          </div>
+          <div class="ri-stat-divider" aria-hidden="true"></div>
+          <div class="ri-stat">
+            <span class="ri-stat-ico" aria-hidden="true">💰</span>
+            <div class="ri-stat-text">
+              <span class="ri-stat-label">Prix légumes API</span>
+              <strong class="ri-stat-strong">' . htmlspecialchars($vegetablesPriceApi, ENT_QUOTES, 'UTF-8') . '</strong>
             </div>
           </div>
         </div>
@@ -234,7 +382,7 @@ if ($recette === null) {
                 <p class="ri-card-meta">' . $cardMetaLine . '</p>
                 <p class="ri-card-kcal">' . $calories . ' Kcal</p>
                 <div class="ri-card-foot d-flex align-items-center justify-content-between">
-                  <small>Impact carbone: ' . $impact . '</small>
+                  <small>Empreinte: ' . htmlspecialchars($impactCarboneCalc, ENT_QUOTES, 'UTF-8') . ' | Prix légumes API: ' . htmlspecialchars($vegetablesPriceApi, ENT_QUOTES, 'UTF-8') . '</small>
                   <span class="ri-fiche-pill"><span aria-hidden="true">📄</span> Fiche</span>
                 </div>
               </div>

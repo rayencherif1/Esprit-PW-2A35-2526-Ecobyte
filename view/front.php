@@ -1,12 +1,14 @@
 <?php
 require_once __DIR__ . '/../controller/RecetteController.php';
 require_once __DIR__ . '/../model/Instruction.php';
+require_once __DIR__ . '/../lib/IngredientPriceService.php';
 
 $controller = new RecetteController();
 $recettes = $controller->afficherRecettes();
 
 $instructionRepository = new InstructionRepository();
 $iaChatRecipes = [];
+$vegApiPriceByRecetteId = [];
 foreach ($recettes as $recette) {
     $rid = (int) ($recette['id'] ?? 0);
     if ($rid < 1) {
@@ -24,6 +26,9 @@ foreach ($recettes as $recette) {
         'ingredients' => $ing,
         'url' => '/recette/view/recette-instructions.php?id=' . $rid,
     ];
+    $vegApiPriceByRecetteId[$rid] = IngredientPriceService::formatApiOnlyPrice(
+        IngredientPriceService::estimateVegetablesPriceApiOnly($ing)
+    );
 }
 $iaChatJson = json_encode($iaChatRecipes, JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS);
 $templatePath = __DIR__ . '/../assets/FoodMart-1.0.0/index.html';
@@ -62,7 +67,7 @@ function recetteCategoryBucket(array $recette): string
     return 'food';
 }
 
-function renderCards(array $items, string $label, string $badgeClass): string
+function renderCards(array $items, string $label, string $badgeClass, array $vegApiPriceByRecetteId): string
 {
     if (count($items) === 0) {
         return '
@@ -97,6 +102,7 @@ function renderCards(array $items, string $label, string $badgeClass): string
         $image = htmlspecialchars($recette['image'] ?? '/recette/public/image/salade.jpg');
         $recetteId = (int) ($recette['id'] ?? 0);
         $instructionsUrl = '/recette/view/recette-instructions.php?id=' . $recetteId;
+        $vegApiPriceText = htmlspecialchars((string) ($vegApiPriceByRecetteId[$recetteId] ?? 'Non trouvé API'), ENT_QUOTES, 'UTF-8');
 
         $cards .= '
         <div class="col-md-6 col-lg-4 recette-card-col" data-recette-category="' . htmlspecialchars($bucket, ENT_QUOTES, 'UTF-8') . '" data-search-nom="' . htmlspecialchars($searchNom, ENT_QUOTES, 'UTF-8') . '">
@@ -112,7 +118,7 @@ function renderCards(array $items, string $label, string $badgeClass): string
           <span class="qty">Temps: ' . $temps . ' min | Difficulte: ' . $difficulte . '</span>
           <span class="price">' . $calories . ' kcal</span>
           <div class="d-flex align-items-center justify-content-between">
-            <small>Impact carbone: ' . $impact . '</small>
+            <small>Impact: ' . $impact . ' | Légumes API: ' . $vegApiPriceText . '</small>
             <a href="' . htmlspecialchars($instructionsUrl) . '" class="nav-link text-decoration-none fw-semibold" title="Voir les instructions" aria-label="Voir les instructions">→</a>
           </div>
         </div>
@@ -142,10 +148,10 @@ foreach ($recettes as $recette) {
     }
 }
 
-$petitDejeunerCards = renderCards($grouped['Petit dejeuner'], 'Petit dejeuner', 'bg-warning');
-$dejeunerCards = renderCards($grouped['Dejeuner'], 'Dejeuner', 'bg-success');
-$dinerCards = renderCards($grouped['Diner'], 'Diner', 'bg-primary');
-$autresCards = renderCards($grouped['Autres'], 'Autres', 'bg-secondary');
+$petitDejeunerCards = renderCards($grouped['Petit dejeuner'], 'Petit dejeuner', 'bg-warning', $vegApiPriceByRecetteId);
+$dejeunerCards = renderCards($grouped['Dejeuner'], 'Dejeuner', 'bg-success', $vegApiPriceByRecetteId);
+$dinerCards = renderCards($grouped['Diner'], 'Diner', 'bg-primary', $vegApiPriceByRecetteId);
+$autresCards = renderCards($grouped['Autres'], 'Autres', 'bg-secondary', $vegApiPriceByRecetteId);
 $autresSectionHtml = '';
 if (count($grouped['Autres']) > 0) {
     $autresSectionHtml = '
@@ -427,8 +433,8 @@ $iaWidget .= '<script>
   const messagesEl = document.getElementById("ia-chat-messages");
   const form = document.getElementById("ia-chat-form");
   const input = document.getElementById("ia-chat-input");
-  const WELCOME = "Dis-moi quels ingrédients tu as et je te trouve une recette qui colle";
-  const REPLY_BONJOUR = "Bonjour,Dis-moi quels ingrédients tu as et je te trouve une recette qui colle";
+  const WELCOME = "Dis-moi quels ingrédients tu as et je te dis quelles recettes existent avec ces ingrédients.";
+  const REPLY_BONJOUR = "Bonjour, dis-moi quels ingrédients tu as et je te dis quelles recettes existent avec ces ingrédients.";
   const REPLY_MERCI = "Avec plaisir ! N’hésite pas si tu veux une autre suggestion de recette.";
 
   function stripAccents(s) {
@@ -465,21 +471,45 @@ $iaWidget .= '<script>
     });
     return score;
   }
-  function pickRecipe(userText) {
+  function escapeHtml(value) {
+    return String(value || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  }
+  function findRecipes(userText) {
     const userTok = tokensFromText(userText);
-    if (RECIPES.length === 0) {
-      return { recipe: null, score: 0 };
+    if (!userTok.length) {
+      return [];
     }
-    let best = RECIPES[0];
-    let bestScore = userTok.length ? scoreRecipe(userTok, best) : 0;
-    for (let i = 1; i < RECIPES.length; i++) {
-      const sc = userTok.length ? scoreRecipe(userTok, RECIPES[i]) : 0;
-      if (sc > bestScore) {
-        bestScore = sc;
-        best = RECIPES[i];
-      }
+    const matches = RECIPES.map(function (recipe) {
+      return {
+        recipe: recipe,
+        score: scoreRecipe(userTok, recipe)
+      };
+    }).filter(function (item) {
+      return item.score > 0;
+    }).sort(function (a, b) {
+      if (b.score !== a.score) return b.score - a.score;
+      return String(a.recipe.nom || "").localeCompare(String(b.recipe.nom || ""));
+    });
+    return matches.map(function (item) { return item.recipe; });
+  }
+  function buildRecipesReply(matches) {
+    if (matches.length === 0) {
+      return "Il n’y a pas de recette avec cet ingrédient pour le moment.";
     }
-    return { recipe: best, score: bestScore };
+    if (matches.length === 1) {
+      const recipe = matches[0];
+      const nomEsc = escapeHtml(recipe.nom);
+      const typeEsc = escapeHtml(recipe.type || "");
+      return "Il y a une recette avec ces ingrédients : <strong>" + nomEsc + "</strong> (" + typeEsc + "). <a href=\"" + recipe.url + "\">Voir la recette</a>.";
+    }
+    const items = matches.slice(0, 5).map(function (recipe) {
+      return "<li><a href=\"" + recipe.url + "\">" + escapeHtml(recipe.nom) + "</a></li>";
+    }).join("");
+    let reply = "Avec ces ingrédients, voici les recettes trouvées :<ul>" + items + "</ul>";
+    if (matches.length > 5) {
+      reply += "<div>Et " + (matches.length - 5) + " autre(s) recette(s) en plus.</div>";
+    }
+    return reply;
   }
   function smallTalkReply(raw) {
     const simple = stripAccents(String(raw).toLowerCase())
@@ -542,20 +572,8 @@ $iaWidget .= '<script>
       appendMsg("Je n’ai pas reconnu d’ingrédient. Essaie avec un ou plusieurs mots, par exemple : tomates, riz, poulet.", false);
       return;
     }
-    const { recipe, score } = pickRecipe(text);
-    if (!recipe) {
-      appendMsg("Aucune recette n’est disponible dans la base pour le moment.", false);
-      return;
-    }
-    if (score === 0) {
-      appendMsg("Il n’y a pas de recette disponible pour cet ingrédient.", false);
-      return;
-    }
-    const nomEsc = recipe.nom.replace(/</g, "&lt;").replace(/>/g, "&gt;");
-    const typeEsc = (recipe.type || "").replace(/</g, "&lt;");
-    let reply = "D’après ce que tu as indiqué, je te propose : <strong>" + nomEsc + "</strong> (" + typeEsc + "). ";
-    reply += "<a href=\"" + recipe.url + "\">Voir la recette et les instructions</a>. Tu peux aussi envoyer d’autres ingrédients pour une nouvelle suggestion.";
-    appendMsg(reply, false);
+    const matches = findRecipes(text);
+    appendMsg(buildRecipesReply(matches), false);
   });
 })();
 </script>';

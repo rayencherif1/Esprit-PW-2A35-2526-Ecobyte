@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . '/../../../../../controller/RecetteController.php';
 require_once __DIR__ . '/../../../../../controller/InstructionController.php';
+require_once __DIR__ . '/../../../../../lib/IngredientPriceService.php';
 $controller = new RecetteController();
 $recettes = $controller->afficherRecettes();
 $instructionController = new InstructionController();
@@ -232,6 +233,7 @@ if ($message === 'ajoute') {
                         <th class="px-6 py-3 font-bold text-center uppercase align-middle bg-transparent border-b text-xxs whitespace-nowrap text-slate-400 opacity-70">Temps <span class="sort-hint">↕</span></th>
                         <th class="px-6 py-3 font-bold text-center uppercase align-middle bg-transparent border-b text-xxs whitespace-nowrap text-slate-400 opacity-70">Difficulte</th>
                         <th class="px-6 py-3 font-bold text-center uppercase align-middle bg-transparent border-b text-xxs whitespace-nowrap text-slate-400 opacity-70">Impact</th>
+                        <th class="px-6 py-3 font-bold text-center uppercase align-middle bg-transparent border-b text-xxs whitespace-nowrap text-slate-400 opacity-70">Prix legumes API</th>
                         <th class="px-6 py-3 font-bold text-center uppercase align-middle bg-transparent border-b text-xxs whitespace-nowrap text-slate-400 opacity-70">Instruction</th>
                         <th class="px-6 py-3 font-semibold capitalize align-middle bg-transparent border-b whitespace-nowrap text-slate-400 opacity-70">Actions</th>
                         <th class="px-6 py-3 font-semibold capitalize align-middle bg-transparent border-b whitespace-nowrap text-slate-400 opacity-70">QR Code</th>
@@ -268,6 +270,14 @@ if ($message === 'ajoute') {
                           </td>
                           <td class="p-2 text-center align-middle bg-transparent border-b whitespace-nowrap">
                             <span class="pill pill-impact">🍃 <?= htmlspecialchars($recette['impactCarbone']) ?></span>
+                          </td>
+                          <td class="p-2 text-center align-middle bg-transparent border-b whitespace-nowrap">
+                            <?php
+                              $linkedInstruction = $instructionsByRecetteId[(int) $recette['id']] ?? null;
+                              $ingredientsForPrice = $linkedInstruction !== null ? (string) ($linkedInstruction['ingredients'] ?? '') : (string) ($recette['nom'] ?? '');
+                              $priceValue = IngredientPriceService::estimateVegetablesPriceApiOnly($ingredientsForPrice);
+                            ?>
+                            <span class="text-sm font-semibold">💰 <?= htmlspecialchars(IngredientPriceService::formatApiOnlyPrice($priceValue)) ?></span>
                           </td>
                           <td class="p-2 text-center align-middle bg-transparent border-b whitespace-nowrap">
                             <?php

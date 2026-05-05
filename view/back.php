@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . "/../controller/RecetteController.php";
 require_once __DIR__ . "/../controller/InstructionController.php";
+require_once __DIR__ . "/../lib/IngredientPriceService.php";
 
 $controller = new RecetteController();
 $recettes = $controller->afficherRecettes();
@@ -126,6 +127,7 @@ $instructionFormBase = '../assets/argon-dashboard-tailwind-1.0.1/argon-dashboard
                             <th class="px-4 py-3 text-left font-semibold uppercase tracking-wider text-slate-600">Temps</th>
                             <th class="px-4 py-3 text-left font-semibold uppercase tracking-wider text-slate-600">Difficulté</th>
                             <th class="px-4 py-3 text-left font-semibold uppercase tracking-wider text-slate-600">Impact</th>
+                            <th class="px-4 py-3 text-left font-semibold uppercase tracking-wider text-slate-600">Prix ingrédients</th>
                             <th class="px-4 py-3 text-left font-semibold uppercase tracking-wider text-slate-600">Instruction</th>
                             <th class="px-4 py-3 text-left font-semibold uppercase tracking-wider text-slate-600">Actions</th>
                         </tr>
@@ -142,6 +144,14 @@ $instructionFormBase = '../assets/argon-dashboard-tailwind-1.0.1/argon-dashboard
                                 <td class="px-4 py-4 align-top text-slate-700"><?php echo htmlspecialchars($r['tempsPreparation']); ?> min</td>
                                 <td class="px-4 py-4 align-top text-slate-700"><?php echo htmlspecialchars($r['difficulte']); ?></td>
                                 <td class="px-4 py-4 align-top text-slate-700"><?php echo htmlspecialchars($r['impactCarbone']); ?></td>
+                                <td class="px-4 py-4 align-top text-slate-700">
+                                    <?php
+                                        $linkedInstruction = $instructionsByRecetteId[(int) $r['id']] ?? null;
+                                        $ingredientsForPrice = $linkedInstruction !== null ? (string) ($linkedInstruction['ingredients'] ?? '') : (string) ($r['nom'] ?? '');
+                                        $priceValue = IngredientPriceService::estimateVegetablesPriceApiOnly($ingredientsForPrice);
+                                        echo htmlspecialchars(IngredientPriceService::formatApiOnlyPrice($priceValue));
+                                    ?>
+                                </td>
                                 <td class="px-4 py-4 align-top">
                                     <?php
                                         $linkedInstruction = $instructionsByRecetteId[(int) $r['id']] ?? null;
