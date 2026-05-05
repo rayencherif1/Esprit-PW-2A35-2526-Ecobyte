@@ -50,7 +50,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 </div>
                 <div class="col-sm-8 col-lg-9 d-flex justify-content-end gap-3 align-items-center mt-4 mt-sm-0">
                     <a href="?section=front" class="btn btn-sm btn-outline-secondary">Retour au magasin</a>
-                    <a href="?section=front&action=logout" class="btn btn-sm btn-danger">Déconnexion</a>
+                    <form action="?section=front&action=logout" method="POST" class="m-0 p-0 d-inline">
+                        <button type="submit" class="btn btn-sm btn-danger">Déconnexion</button>
+                    </form>
                 </div>
             </div>
         </div>

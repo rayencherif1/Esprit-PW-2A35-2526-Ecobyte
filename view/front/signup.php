@@ -12,7 +12,9 @@ $success = '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (isset($_POST['google_credential'])) {
         $user = $userController->googleLogin($_POST['google_credential'], true);
-        if ($user) {
+        if ($user === 'activation_required') {
+            $success = $userController->getSuccess();
+        } elseif ($user) {
             header('Location: ?section=front&action=home');
             exit;
         } else {
@@ -27,7 +29,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $_POST['facebook_photo'] ?? '',
             true
         );
-        if ($user) {
+        if ($user === 'activation_required') {
+            $success = $userController->getSuccess();
+        } elseif ($user) {
             header('Location: ?section=front&action=home');
             exit;
         } else {

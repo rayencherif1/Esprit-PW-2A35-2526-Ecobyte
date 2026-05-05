@@ -342,9 +342,8 @@ $errors = $errors ?? [];
         loginVideo.addEventListener('play', () => {
             loginCameraStatus.innerText = "Regardez la caméra pour vous connecter.";
             
-            // On rend la reconnaissance beaucoup plus stricte (0.45 au lieu de 0.6)
-            // Plus le chiffre est petit, plus c'est strict (acceptera moins de visages)
-            const faceMatcher = new faceapi.FaceMatcher(registeredFaces, 0.45); 
+            // On rend la reconnaissance plus tolérante (0.6 par défaut) pour éviter l'erreur "visage inconnu"
+            const faceMatcher = new faceapi.FaceMatcher(registeredFaces, 0.6); 
             
             const scanInterval = setInterval(async () => {
                 loginScanOverlay.classList.remove('d-none');
@@ -371,7 +370,7 @@ $errors = $errors ?? [];
 
                         const result = await response.json();
                         if (result.success) {
-                            window.location.href = '?section=front&action=home';
+                            window.location.href = result.redirect || '?section=front&action=home';
                         } else {
                             alert("Erreur de connexion : " + result.message);
                         }

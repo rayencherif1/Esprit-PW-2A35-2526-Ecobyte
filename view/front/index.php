@@ -50,7 +50,8 @@ if (isset($_SESSION['logged_in']) && $_SESSION['logged_in'] === true) {
             <li><h6 class="dropdown-header">Bonjour, ' . htmlspecialchars($_SESSION['user_prenom']) . '</h6></li>
             <li><hr class="dropdown-divider"></li>
             <li><a class="dropdown-item" href="' . $baseUrl . 'index.php?section=front&action=profile">Mon Profil</a></li>
-            <li><a class="dropdown-item text-danger" href="' . $baseUrl . 'index.php?section=front&action=logout">Déconnexion</a></li>
+            <li><a class="dropdown-item text-danger" href="#" onclick="event.preventDefault(); document.getElementById(\'logout-form\').submit();">Déconnexion</a></li>
+            <form id="logout-form" action="' . $baseUrl . 'index.php?section=front&action=logout" method="POST" style="display: none;"></form>
         </ul>
     </div>';
 } else {

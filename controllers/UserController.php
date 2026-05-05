@@ -17,6 +17,16 @@ class UserController {
         $this->db = Database::getInstance()->getConnection();
     }
 
+    public function updateLastActivity($userId) {
+        try {
+            $query = "UPDATE users SET last_activity = :now WHERE id = :id";
+            $stmt = $this->db->prepare($query);
+            $stmt->execute([':now' => date('Y-m-d H:i:s'), ':id' => $userId]);
+        } catch (Exception $e) {
+            // Silently ignore errors for background activity update
+        }
+    }
+
     // ========== MÉTHODES DE LOGIQUE DB (DÉPLACÉES DEPUIS LE MODÈLE) ==========
 
     // ========== MÉTHODES DU CONTRÔLEUR (LOGIQUE DB INTÉGRÉE) ==========
@@ -78,8 +88,9 @@ class UserController {
     }
 
     private function db_createUser($data) {
-        $query = "INSERT INTO users (nom, prenom, email, password, telephone, photo, poids, taille, date_creation) 
-                 VALUES (:nom, :prenom, :email, :password, :telephone, :photo, :poids, :taille, NOW())";
+        $token = bin2hex(random_bytes(16));
+        $query = "INSERT INTO users (nom, prenom, email, password, telephone, photo, poids, taille, is_active, activation_token, date_creation) 
+                 VALUES (:nom, :prenom, :email, :password, :telephone, :photo, :poids, :taille, 0, :token, NOW())";
         $stmt = $this->db->prepare($query);
         $stmt->execute([
             ':nom' => $data['nom'],
@@ -89,8 +100,10 @@ class UserController {
             ':telephone' => $data['telephone'] ?? null,
             ':photo' => $data['photo'] ?? null,
             ':poids' => $data['poids'] ?? null,
-            ':taille' => $data['taille'] ?? null
+            ':taille' => $data['taille'] ?? null,
+            ':token' => $token
         ]);
+        $this->sendActivationEmail($data['email'], $data['prenom'], $token);
         return $this->db->lastInsertId();
     }
 
@@ -226,14 +239,28 @@ class UserController {
                         return false;
                     }
                 }
+                if ($user['is_active'] == 0) {
+                    $this->errors[] = "Veuillez activer votre compte en cliquant sur le lien envoyé par email.";
+                    return false;
+                }
                 if (session_status() === PHP_SESSION_NONE) session_start();
-                $_SESSION['user_id'] = $user['id'];
-                $_SESSION['user_nom'] = $user['nom'];
-                $_SESSION['user_prenom'] = $user['prenom'];
-                $_SESSION['user_email'] = $user['email'];
-                $_SESSION['user_photo'] = $user['photo'];
-                $_SESSION['user_role'] = $user['role'] ?? 'user';
-                $_SESSION['logged_in'] = true;
+                if (isset($user['role']) && $user['role'] === 'admin') {
+                    $_SESSION['admin_id'] = $user['id'];
+                    $_SESSION['admin_nom'] = $user['nom'];
+                    $_SESSION['admin_prenom'] = $user['prenom'];
+                    $_SESSION['admin_email'] = $user['email'];
+                    $_SESSION['admin_photo'] = $user['photo'];
+                    $_SESSION['admin_role'] = 'admin';
+                    $_SESSION['admin_logged_in'] = true;
+                } else {
+                    $_SESSION['user_id'] = $user['id'];
+                    $_SESSION['user_nom'] = $user['nom'];
+                    $_SESSION['user_prenom'] = $user['prenom'];
+                    $_SESSION['user_email'] = $user['email'];
+                    $_SESSION['user_photo'] = $user['photo'];
+                    $_SESSION['user_role'] = $user['role'] ?? 'user';
+                    $_SESSION['logged_in'] = true;
+                }
                 
                 // Vérifier la connexion et envoyer l'alerte (Géolocalisation IP-API)
                 $this->checkAndNotifyLogin($user);
@@ -287,15 +314,30 @@ class UserController {
                     return false;
                 }
                 
+                if ($user['is_active'] == 0) {
+                    $this->errors[] = "Veuillez activer votre compte en cliquant sur le lien envoyé par email.";
+                    return false;
+                }
+                
                 // Créer la session
                 if (session_status() === PHP_SESSION_NONE) session_start();
-                $_SESSION['user_id'] = $user['id'];
-                $_SESSION['user_nom'] = $user['nom'];
-                $_SESSION['user_prenom'] = $user['prenom'];
-                $_SESSION['user_email'] = $user['email'];
-                $_SESSION['user_photo'] = $user['photo'];
-                $_SESSION['user_role'] = $user['role'] ?? 'user';
-                $_SESSION['logged_in'] = true;
+                if (isset($user['role']) && $user['role'] === 'admin') {
+                    $_SESSION['admin_id'] = $user['id'];
+                    $_SESSION['admin_nom'] = $user['nom'];
+                    $_SESSION['admin_prenom'] = $user['prenom'];
+                    $_SESSION['admin_email'] = $user['email'];
+                    $_SESSION['admin_photo'] = $user['photo'];
+                    $_SESSION['admin_role'] = 'admin';
+                    $_SESSION['admin_logged_in'] = true;
+                } else {
+                    $_SESSION['user_id'] = $user['id'];
+                    $_SESSION['user_nom'] = $user['nom'];
+                    $_SESSION['user_prenom'] = $user['prenom'];
+                    $_SESSION['user_email'] = $user['email'];
+                    $_SESSION['user_photo'] = $user['photo'];
+                    $_SESSION['user_role'] = $user['role'] ?? 'user';
+                    $_SESSION['logged_in'] = true;
+                }
                 
                 $this->checkAndNotifyLogin($user);
                 return $user;
@@ -306,31 +348,22 @@ class UserController {
                 }
                 
                 // 3. Créer un nouveau compte Google
-                $query = "INSERT INTO users (nom, prenom, email, google_id, photo, date_creation) 
-                          VALUES (:nom, :prenom, :email, :google_id, :photo, NOW())";
+                $token_db = bin2hex(random_bytes(16));
+                $query = "INSERT INTO users (nom, prenom, email, google_id, photo, is_active, activation_token, date_creation) 
+                          VALUES (:nom, :prenom, :email, :google_id, :photo, 0, :token, NOW())";
                 $stmt = $this->db->prepare($query);
                 $stmt->execute([
                     ':nom' => $nom,
                     ':prenom' => $prenom,
                     ':email' => $email,
                     ':google_id' => $google_id,
-                    ':photo' => $photo
+                    ':photo' => $photo,
+                    ':token' => $token_db
                 ]);
                 
-                $newUserId = $this->db->lastInsertId();
-                $newUser = $this->db_getUserById($newUserId);
-                
-                if (session_status() === PHP_SESSION_NONE) session_start();
-                $_SESSION['user_id'] = $newUser['id'];
-                $_SESSION['user_nom'] = $newUser['nom'];
-                $_SESSION['user_prenom'] = $newUser['prenom'];
-                $_SESSION['user_email'] = $newUser['email'];
-                $_SESSION['user_photo'] = $newUser['photo'];
-                $_SESSION['user_role'] = 'user';
-                $_SESSION['logged_in'] = true;
-                
-                $this->checkAndNotifyLogin($newUser);
-                return $newUser;
+                $this->sendActivationEmail($email, $prenom, $token_db);
+                $this->success = "Votre compte a été créé avec succès. Veuillez vérifier votre email pour l'activer.";
+                return 'activation_required';
             }
         } catch (Exception $e) {
             $this->errors[] = $e->getMessage();
@@ -370,15 +403,30 @@ class UserController {
                     return false;
                 }
                 
+                if ($user['is_active'] == 0) {
+                    $this->errors[] = "Veuillez activer votre compte en cliquant sur le lien envoyé par email.";
+                    return false;
+                }
+                
                 // Créer la session
                 if (session_status() === PHP_SESSION_NONE) session_start();
-                $_SESSION['user_id'] = $user['id'];
-                $_SESSION['user_nom'] = $user['nom'];
-                $_SESSION['user_prenom'] = $user['prenom'];
-                $_SESSION['user_email'] = $user['email'];
-                $_SESSION['user_photo'] = $user['photo'];
-                $_SESSION['user_role'] = $user['role'] ?? 'user';
-                $_SESSION['logged_in'] = true;
+                if (isset($user['role']) && $user['role'] === 'admin') {
+                    $_SESSION['admin_id'] = $user['id'];
+                    $_SESSION['admin_nom'] = $user['nom'];
+                    $_SESSION['admin_prenom'] = $user['prenom'];
+                    $_SESSION['admin_email'] = $user['email'];
+                    $_SESSION['admin_photo'] = $user['photo'];
+                    $_SESSION['admin_role'] = 'admin';
+                    $_SESSION['admin_logged_in'] = true;
+                } else {
+                    $_SESSION['user_id'] = $user['id'];
+                    $_SESSION['user_nom'] = $user['nom'];
+                    $_SESSION['user_prenom'] = $user['prenom'];
+                    $_SESSION['user_email'] = $user['email'];
+                    $_SESSION['user_photo'] = $user['photo'];
+                    $_SESSION['user_role'] = $user['role'] ?? 'user';
+                    $_SESSION['logged_in'] = true;
+                }
                 
                 $this->checkAndNotifyLogin($user);
                 return $user;
@@ -389,32 +437,71 @@ class UserController {
                 }
                 
                 // Créer un nouveau compte Facebook
-                $query = "INSERT INTO users (nom, prenom, email, facebook_id, photo, date_creation) 
-                          VALUES (:nom, :prenom, :email, :facebook_id, :photo, NOW())";
+                $is_fake_email = strpos($email, '@facebook.com') !== false;
+                $initial_active = $is_fake_email ? 1 : 0;
+                $token_db = bin2hex(random_bytes(16));
+                $query = "INSERT INTO users (nom, prenom, email, facebook_id, photo, is_active, activation_token, date_creation) 
+                          VALUES (:nom, :prenom, :email, :facebook_id, :photo, :is_active, :token, NOW())";
                 $stmt = $this->db->prepare($query);
                 $stmt->execute([
                     ':nom' => $nom,
                     ':prenom' => $prenom,
                     ':email' => $email,
                     ':facebook_id' => $facebook_id,
-                    ':photo' => $photo
+                    ':photo' => $photo,
+                    ':is_active' => $initial_active,
+                    ':token' => $token_db
                 ]);
                 
-                $newUserId = $this->db->lastInsertId();
-                $newUser = $this->db_getUserById($newUserId);
-                
-                if (session_status() === PHP_SESSION_NONE) session_start();
-                $_SESSION['user_id'] = $newUser['id'];
-                $_SESSION['user_nom'] = $newUser['nom'];
-                $_SESSION['user_prenom'] = $newUser['prenom'];
-                $_SESSION['user_email'] = $newUser['email'];
-                $_SESSION['user_photo'] = $newUser['photo'];
-                $_SESSION['user_role'] = 'user';
-                $_SESSION['logged_in'] = true;
-                
-                $this->checkAndNotifyLogin($newUser);
-                return $newUser;
+                if (!$is_fake_email) {
+                    $this->sendActivationEmail($email, $prenom, $token_db);
+                    $this->success = "Votre compte a été créé avec succès. Veuillez vérifier votre email pour l'activer.";
+                } else {
+                    $this->success = "Votre compte Facebook a été lié avec succès. Vous pouvez maintenant vous connecter.";
+                }
+                return 'activation_required';
             }
+        } catch (Exception $e) {
+            $this->errors[] = $e->getMessage();
+            return false;
+        }
+    }
+
+    private function sendActivationEmail($email, $prenom, $token) {
+        $subject = "Activation de votre compte - Ecobyte";
+        $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
+        $protocol = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https' : 'http';
+        $activationLink = $protocol . "://" . $host . "/rayench/index.php?section=front&action=activate&email=" . urlencode($email) . "&token=" . urlencode($token);
+        
+        $message = "Bonjour " . htmlspecialchars($prenom) . ",\n\n";
+        $message .= "Merci de vous être inscrit sur Ecobyte.\n\n";
+        $message .= "Veuillez cliquer sur le lien ci-dessous pour activer votre compte :\n";
+        $message .= "<a href=\"$activationLink\">$activationLink</a>\n\n";
+        $message .= "Si vous n'êtes pas à l'origine de cette inscription, ignorez cet email.";
+        
+        return $this->sendMail($email, $subject, $message);
+    }
+
+    public function activateAccount($email, $token) {
+        try {
+            $query = "SELECT id, is_active FROM users WHERE email = :email AND activation_token = :token";
+            $stmt = $this->db->prepare($query);
+            $stmt->execute([':email' => $email, ':token' => $token]);
+            $user = $stmt->fetch();
+
+            if ($user) {
+                if ($user['is_active'] == 1) {
+                    $this->success = "Votre compte est déjà activé. Vous pouvez vous connecter.";
+                    return true;
+                }
+                $updateQuery = "UPDATE users SET is_active = 1, activation_token = NULL WHERE id = :id";
+                $updateStmt = $this->db->prepare($updateQuery);
+                $updateStmt->execute([':id' => $user['id']]);
+                $this->success = "Votre compte a été activé avec succès ! Vous pouvez maintenant vous connecter.";
+                return true;
+            }
+            $this->errors[] = "Lien d'activation invalide ou expiré.";
+            return false;
         } catch (Exception $e) {
             $this->errors[] = $e->getMessage();
             return false;
@@ -454,10 +541,32 @@ class UserController {
         $this->sendMail($user['email'], $subject, $message);
     }
 
-    public function logout() {
+    public function logout($isAdmin = false) {
         if (session_status() === PHP_SESSION_NONE) session_start();
-        session_unset();
-        session_destroy();
+        
+        if ($isAdmin) {
+            unset($_SESSION['admin_id']);
+            unset($_SESSION['admin_nom']);
+            unset($_SESSION['admin_prenom']);
+            unset($_SESSION['admin_email']);
+            unset($_SESSION['admin_photo']);
+            unset($_SESSION['admin_role']);
+            unset($_SESSION['admin_logged_in']);
+        } else {
+            unset($_SESSION['user_id']);
+            unset($_SESSION['user_nom']);
+            unset($_SESSION['user_prenom']);
+            unset($_SESSION['user_email']);
+            unset($_SESSION['user_photo']);
+            unset($_SESSION['user_role']);
+            unset($_SESSION['logged_in']);
+        }
+        
+        // Si les deux sessions sont vides, on peut détruire complètement la session
+        if (!isset($_SESSION['admin_logged_in']) && !isset($_SESSION['logged_in'])) {
+            session_unset();
+            session_destroy();
+        }
     }
 
     public function createUser($data) {
@@ -714,14 +823,29 @@ class UserController {
                     return false;
                 }
 
+                if ($user['is_active'] == 0) {
+                    $this->errors[] = "Veuillez activer votre compte en cliquant sur le lien envoyé par email.";
+                    return false;
+                }
+
                 if (session_status() === PHP_SESSION_NONE) session_start();
-                $_SESSION['user_id'] = $user['id'];
-                $_SESSION['user_nom'] = $user['nom'];
-                $_SESSION['user_prenom'] = $user['prenom'];
-                $_SESSION['user_email'] = $user['email'];
-                $_SESSION['user_photo'] = $user['photo'];
-                $_SESSION['user_role'] = $user['role'] ?? 'user';
-                $_SESSION['logged_in'] = true;
+                if (isset($user['role']) && $user['role'] === 'admin') {
+                    $_SESSION['admin_id'] = $user['id'];
+                    $_SESSION['admin_nom'] = $user['nom'];
+                    $_SESSION['admin_prenom'] = $user['prenom'];
+                    $_SESSION['admin_email'] = $user['email'];
+                    $_SESSION['admin_photo'] = $user['photo'];
+                    $_SESSION['admin_role'] = 'admin';
+                    $_SESSION['admin_logged_in'] = true;
+                } else {
+                    $_SESSION['user_id'] = $user['id'];
+                    $_SESSION['user_nom'] = $user['nom'];
+                    $_SESSION['user_prenom'] = $user['prenom'];
+                    $_SESSION['user_email'] = $user['email'];
+                    $_SESSION['user_photo'] = $user['photo'];
+                    $_SESSION['user_role'] = $user['role'] ?? 'user';
+                    $_SESSION['logged_in'] = true;
+                }
                 
                 $this->checkAndNotifyLogin($user);
                 return $user;

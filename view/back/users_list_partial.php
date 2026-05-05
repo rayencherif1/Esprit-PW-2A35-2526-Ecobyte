@@ -4,11 +4,25 @@
     </tr>
 <?php else: ?>
     <?php foreach ($users as $u): ?>
+    <?php
+    $isOnline = false;
+    if (!empty($u['last_activity'])) {
+        $lastActivityTime = strtotime($u['last_activity']);
+        if (time() - $lastActivityTime <= 300) { // 5 minutes
+            $isOnline = true;
+        }
+    }
+    ?>
     <tr>
         <td class="p-2 align-middle bg-transparent border-b dark:border-white/40 whitespace-nowrap shadow-transparent">
             <div class="flex px-2 py-1">
-                <div>
-                    <img src="<?php echo !empty($u['photo']) ? $u['photo'] : 'view/front/images/user-icon.png'; ?>" class="inline-flex items-center justify-center mr-4 text-sm text-white transition-all duration-200 ease-in-out h-9 w-9 rounded-xl" alt="user" />
+                <div class="relative inline-block mr-4">
+                    <img src="<?php echo !empty($u['photo']) ? $u['photo'] : 'view/front/images/user-icon.png'; ?>" class="inline-flex items-center justify-center text-sm text-white transition-all duration-200 ease-in-out h-9 w-9 rounded-xl" alt="user" />
+                    <?php if ($isOnline): ?>
+                        <span class="absolute -bottom-1 -right-1 w-3.5 h-3.5 bg-green-500 border-2 border-white rounded-full" title="En ligne" style="z-index: 10;"></span>
+                    <?php else: ?>
+                        <span class="absolute -bottom-1 -right-1 w-3.5 h-3.5 bg-gray-400 border-2 border-white rounded-full" title="Hors ligne" style="z-index: 10;"></span>
+                    <?php endif; ?>
                 </div>
                 <div class="flex flex-col justify-center">
                     <h6 class="mb-0 text-sm leading-normal dark:text-white"><?php echo htmlspecialchars($u['nom'] . ' ' . $u['prenom']); ?></h6>

@@ -36,12 +36,14 @@
 
       <?php if (isset($_SESSION['admin_logged_in'])): ?>
       <li class="mt-0.5 w-full">
-        <a class="py-2.7 text-sm ease-nav-brand my-0 mx-2 flex items-center whitespace-nowrap px-4 transition-colors text-red-600" href="?section=back&action=logout">
-          <div class="mr-2 flex h-8 w-8 items-center justify-center rounded-lg bg-center stroke-0 text-center xl:p-2.5">
-            <i class="relative top-0 text-sm leading-normal ni ni-user-run"></i>
-          </div>
-          <span class="ml-1 duration-300 opacity-100 pointer-events-none ease">Logout</span>
-        </a>
+        <form action="?section=back&action=logout" method="POST" class="m-0 p-0">
+          <button type="submit" class="w-full text-left py-2.7 text-sm ease-nav-brand my-0 mx-2 flex items-center whitespace-nowrap px-4 transition-colors text-red-600 bg-transparent border-0 cursor-pointer">
+            <div class="mr-2 flex h-8 w-8 items-center justify-center rounded-lg bg-center stroke-0 text-center xl:p-2.5">
+              <i class="relative top-0 text-sm leading-normal ni ni-user-run"></i>
+            </div>
+            <span class="ml-1 duration-300 opacity-100 pointer-events-none ease">Logout</span>
+          </button>
+        </form>
       </li>
       <?php endif; ?>
 

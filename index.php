@@ -9,10 +9,24 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
+// DEBUG: Log the request and session state
+$logData = date('Y-m-d H:i:s') . " - URI: " . $_SERVER['REQUEST_URI'] . " - ROLE: " . ($_SESSION['user_role'] ?? 'NONE') . " - LOGGED_IN: " . (isset($_SESSION['logged_in']) ? 'YES' : 'NO') . "\n";
+file_put_contents(__DIR__ . '/session_debug.log', $logData, FILE_APPEND);
+
+
 require_once __DIR__ . '/config.php';
 require_once __DIR__ . '/controllers/UserController.php';
 require_once __DIR__ . '/controllers/ProfilController.php';
 require_once __DIR__ . '/controllers/AdminProfileController.php';
+
+// Mettre à jour la date de dernière activité si l'utilisateur est connecté (Front ou Back)
+$activityController = new UserController();
+if (isset($_SESSION['user_id'])) {
+    $activityController->updateLastActivity($_SESSION['user_id']);
+}
+if (isset($_SESSION['admin_id'])) {
+    $activityController->updateLastActivity($_SESSION['admin_id']);
+}
 
 // Récupérer la section (front ou back)
 $section = isset($_GET['section']) ? $_GET['section'] : 'back';  // Par défaut: back office (admin)
@@ -36,8 +50,7 @@ try {
         
         switch ($action) {
             case 'users':
-                // Vérifier si l'admin est connecté via son rôle
-                if (!isset($_SESSION['logged_in']) || $_SESSION['user_role'] !== 'admin') {
+                if (!isset($_SESSION['admin_logged_in'])) {
                     header('Location: ?section=front&action=sign-in');
                     exit;
                 }
@@ -57,7 +70,7 @@ try {
                 break;
 
             case 'exportPDF':
-                if (!isset($_SESSION['logged_in']) || $_SESSION['user_role'] !== 'admin') {
+                if (!isset($_SESSION['admin_logged_in'])) {
                     header('Location: ?section=front&action=sign-in');
                     exit;
                 }
@@ -72,7 +85,7 @@ try {
 
             case 'addUser':
             case 'editUser':
-                if (!isset($_SESSION['logged_in']) || $_SESSION['user_role'] !== 'admin') {
+                if (!isset($_SESSION['admin_logged_in'])) {
                     header('Location: ?section=front&action=sign-in');
                     exit;
                 }
@@ -101,7 +114,7 @@ try {
                 break;
 
             case 'deleteUser':
-                if (!isset($_SESSION['logged_in']) || $_SESSION['user_role'] !== 'admin') {
+                if (!isset($_SESSION['admin_logged_in'])) {
                     header('Location: ?section=front&action=sign-in');
                     exit;
                 }
@@ -111,7 +124,7 @@ try {
                 exit;
 
             case 'banUser':
-                if (!isset($_SESSION['logged_in']) || $_SESSION['user_role'] !== 'admin') {
+                if (!isset($_SESSION['admin_logged_in'])) {
                     header('Location: ?section=front&action=sign-in');
                     exit;
                 }
@@ -120,10 +133,18 @@ try {
                 header('Location: ?section=back&action=users');
                 exit;
 
+            case 'logout':
+                if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+                    $userController = new UserController();
+                    $userController->logout(true); // admin
+                }
+                header('Location: ?section=front&action=sign-in');
+                exit;
+
             case 'sign-in':
             case 'home':
             default:
-                if (!isset($_SESSION['logged_in']) || $_SESSION['user_role'] !== 'admin') {
+                if (!isset($_SESSION['admin_logged_in'])) {
                     header('Location: ?section=front&action=sign-in');
                     exit;
                 }
@@ -142,6 +163,11 @@ try {
             case 'signup':
                 // Page d'inscription client
                 require __DIR__ . '/view/front/signup.php';
+                break;
+
+            case 'activate':
+                // Page d'activation
+                require __DIR__ . '/view/front/activate.php';
                 break;
 
             case 'forgot-password':
@@ -186,7 +212,10 @@ try {
                     if ($userId) {
                         $userController = new UserController();
                         if ($userController->loginWithFaceId($userId)) {
-                            echo json_encode(['success' => true]);
+                            // On vérifie les deux sessions puisqu'elles sont séparées
+                            $isAdmin = isset($_SESSION['admin_logged_in']) && $_SESSION['admin_logged_in'] === true;
+                            $redirect = $isAdmin ? '?section=back&action=users' : '?section=front&action=home';
+                            echo json_encode(['success' => true, 'redirect' => $redirect]);
                             exit;
                         } else {
                             echo json_encode(['success' => false, 'message' => $userController->getErrors()[0] ?? 'Erreur']);
@@ -219,9 +248,11 @@ try {
                 exit;
 
             case 'logout':
-                // Déconnexion
-                $userController = new UserController();
-                $userController->logout();
+                // Déconnexion Front Office (uniquement via POST pour éviter le prefetch)
+                if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+                    $userController = new UserController();
+                    $userController->logout(false); // false = user
+                }
                 header('Location: ?section=front&action=home');
                 exit;
 
