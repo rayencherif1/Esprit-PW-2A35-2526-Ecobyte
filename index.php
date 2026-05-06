@@ -211,10 +211,10 @@ try {
                     
                     if ($userId) {
                         $userController = new UserController();
-                        if ($userController->loginWithFaceId($userId)) {
-                            // On vérifie les deux sessions puisqu'elles sont séparées
-                            $isAdmin = isset($_SESSION['admin_logged_in']) && $_SESSION['admin_logged_in'] === true;
-                            $redirect = $isAdmin ? '?section=back&action=users' : '?section=front&action=home';
+                        $user = $userController->loginWithFaceId($userId);
+                        if ($user) {
+                            // Redirection basée sur le rôle de l'utilisateur connecté (jamais admin via Face ID)
+                            $redirect = '?section=front&action=home';
                             echo json_encode(['success' => true, 'redirect' => $redirect]);
                             exit;
                         } else {

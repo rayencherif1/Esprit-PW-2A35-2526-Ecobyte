@@ -828,6 +828,12 @@ class UserController {
                     return false;
                 }
 
+                // Le Face ID est réservé aux comptes utilisateurs uniquement (pas les admins)
+                if (isset($user['role']) && $user['role'] === 'admin') {
+                    $this->errors[] = "Le Face ID n'est pas disponible pour les comptes administrateurs.";
+                    return false;
+                }
+
                 if (session_status() === PHP_SESSION_NONE) session_start();
                 if (isset($user['role']) && $user['role'] === 'admin') {
                     $_SESSION['admin_id'] = $user['id'];
