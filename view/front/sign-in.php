@@ -109,9 +109,9 @@ $errors = $errors ?? [];
 
                             <form method="POST" id="loginForm" novalidate>
                                 <div class="mb-3">
-                                    <label for="email" class="form-label">Email</label>
-                                    <input type="email" class="form-control" id="email" name="email" 
-                                           placeholder="Entrez votre email">
+                                    <label for="email" class="form-label">Email / Identifiant</label>
+                                    <input type="text" class="form-control" id="email" name="email" 
+                                           placeholder="Entrez votre email ou identifiant">
                                 </div>
 
                                 <div class="mb-3">
