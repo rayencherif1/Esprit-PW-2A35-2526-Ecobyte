@@ -9,9 +9,7 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
-// DEBUG: Log the request and session state
-$logData = date('Y-m-d H:i:s') . " - URI: " . $_SERVER['REQUEST_URI'] . " - ROLE: " . ($_SESSION['user_role'] ?? 'NONE') . " - LOGGED_IN: " . (isset($_SESSION['logged_in']) ? 'YES' : 'NO') . "\n";
-file_put_contents(__DIR__ . '/session_debug.log', $logData, FILE_APPEND);
+
 
 
 require_once __DIR__ . '/config.php';

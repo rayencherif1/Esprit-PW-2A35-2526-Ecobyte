@@ -16,16 +16,30 @@ class UserController {
     public function __construct() {
         $this->db = Database::getInstance()->getConnection();
     }
-
-    public function updateLastActivity($userId) {
-        try {
-            $query = "UPDATE users SET last_activity = :now WHERE id = :id";
-            $stmt = $this->db->prepare($query);
-            $stmt->execute([':now' => date('Y-m-d H:i:s'), ':id' => $userId]);
-        } catch (Exception $e) {
-            // Silently ignore errors for background activity update
+    
+    /**
+     * Mappe un tableau de données vers un objet User
+     * C'est ici que se trouve désormais le "développement" (logique de remplissage)
+     */
+    private function mapToModel($data) {
+        $user = new User();
+        if (!empty($data)) {
+            $user->setId($data['id'] ?? null);
+            $user->setNom($data['nom'] ?? null);
+            $user->setPrenom($data['prenom'] ?? null);
+            $user->setEmail($data['email'] ?? null);
+            $user->setPassword($data['password'] ?? null);
+            $user->setTelephone($data['telephone'] ?? null);
+            $user->setPhoto($data['photo'] ?? null);
+            $user->setPoids($data['poids'] ?? null);
+            $user->setTaille($data['taille'] ?? null);
+            $user->setDateCreation($data['date_creation'] ?? null);
+            $user->setBanUntil($data['ban_until'] ?? null);
         }
+        return $user;
     }
+
+
 
     // ========== MÉTHODES DE LOGIQUE DB (DÉPLACÉES DEPUIS LE MODÈLE) ==========
 
@@ -74,10 +88,20 @@ class UserController {
     }
 
     private function db_getUserById($id) {
-        $query = "SELECT id, nom, prenom, email, telephone, photo, poids, taille, date_creation, ban_until, role, is_active FROM users WHERE id = :id";
+        $query = "SELECT id, nom, prenom, email, telephone, photo, poids, taille, date_creation, ban_until, role, is_active, last_activity FROM users WHERE id = :id";
         $stmt = $this->db->prepare($query);
         $stmt->execute([':id' => $id]);
         return $stmt->fetch();
+    }
+
+    public function updateLastActivity($userId) {
+        try {
+            $query = "UPDATE users SET last_activity = NOW() WHERE id = :id";
+            $stmt = $this->db->prepare($query);
+            return $stmt->execute([':id' => $userId]);
+        } catch (Exception $e) {
+            return false;
+        }
     }
 
     private function db_getUserByEmail($email) {
@@ -853,7 +877,8 @@ class UserController {
                     $_SESSION['logged_in'] = true;
                 }
                 
-                $this->checkAndNotifyLogin($user);
+                // Email de notification (non bloquant : si l'envoi échoue, la connexion réussit quand même)
+                try { $this->checkAndNotifyLogin($user); } catch (Exception $e) { /* Ignorer les erreurs d'email */ }
                 return $user;
             }
             $this->errors[] = "Utilisateur introuvable.";

@@ -8,7 +8,7 @@
     $isOnline = false;
     if (!empty($u['last_activity'])) {
         $lastActivityTime = strtotime($u['last_activity']);
-        if (time() - $lastActivityTime <= 300) { // 5 minutes
+        if ($lastActivityTime && (time() - $lastActivityTime <= 120)) { // 2 minutes de marge
             $isOnline = true;
         }
     }
@@ -29,6 +29,17 @@
                     <p class="mb-0 text-xs leading-tight dark:text-white dark:opacity-80 text-slate-400"><?php echo htmlspecialchars($u['email']); ?></p>
                 </div>
             </div>
+        </td>
+        <td class="p-2 align-middle bg-transparent border-b dark:border-white/40 whitespace-nowrap shadow-transparent">
+            <?php if ($isOnline): ?>
+                <span class="bg-green-100 text-green-800 text-xs font-medium mr-2 px-2.5 py-0.5 rounded-full dark:bg-green-900 dark:text-green-300">
+                    <i class="fas fa-circle text-xxs mr-1" style="font-size: 8px;"></i> En ligne
+                </span>
+            <?php else: ?>
+                <span class="bg-gray-100 text-gray-800 text-xs font-medium mr-2 px-2.5 py-0.5 rounded-full dark:bg-gray-700 dark:text-gray-300">
+                    <i class="fas fa-circle text-xxs mr-1" style="font-size: 8px;"></i> Hors ligne
+                </span>
+            <?php endif; ?>
         </td>
         <td class="p-2 align-middle bg-transparent border-b dark:border-white/40 whitespace-nowrap shadow-transparent">
             <p class="mb-0 text-xs font-semibold leading-tight dark:text-white dark:opacity-80"><?php echo htmlspecialchars($u['telephone'] ?? '-'); ?></p>

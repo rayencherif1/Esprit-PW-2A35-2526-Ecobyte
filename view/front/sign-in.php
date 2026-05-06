@@ -343,47 +343,76 @@ $errors = $errors ?? [];
         loginVideo.addEventListener('play', () => {
             loginCameraStatus.innerText = "Regardez la caméra pour vous connecter.";
             
-            // On rend la reconnaissance plus tolérante (0.6 par défaut) pour éviter l'erreur "visage inconnu"
-            const faceMatcher = new faceapi.FaceMatcher(registeredFaces, 0.6); 
+            // Seuil strict à 0.4 + 2 matches consécutifs requis
+            const faceMatcher = new faceapi.FaceMatcher(registeredFaces, 0.4); 
+            let frameCount = 0;
+            let consecutiveMatches = 0;
+            let lastMatchedLabel = null;
             
             const scanInterval = setInterval(async () => {
+                frameCount++;
                 loginScanOverlay.classList.remove('d-none');
+                loginScanOverlay.style.background = 'rgba(0,0,0,0.6)';
+                loginScanOverlay.classList.remove('text-success', 'text-danger');
+                loginScanOverlay.classList.add('text-white');
                 
                 const detection = await faceapi.detectSingleFace(loginVideo).withFaceLandmarks().withFaceDescriptor();
                 
                 if (detection) {
-                    const bestMatch = faceMatcher.findBestMatch(detection.descriptor);
+                    // Normaliser le descripteur avant comparaison
+                    const rawDesc = Array.from(detection.descriptor);
+                    const norm = Math.sqrt(rawDesc.reduce((s, v) => s + v * v, 0));
+                    const normalizedDesc = new Float32Array(rawDesc.map(v => v / norm));
+
+                    const bestMatch = faceMatcher.findBestMatch(normalizedDesc);
+                    const distance = bestMatch.distance.toFixed(3);
                     
                     if (bestMatch.label !== 'unknown') {
-                        clearInterval(scanInterval);
-                        loginScanOverlay.innerText = "Visage reconnu avec succès !";
-                        loginScanOverlay.classList.replace('text-white', 'text-success');
-                        
-                        // Éteindre la caméra
-                        loginVideo.srcObject.getTracks().forEach(t => t.stop());
-                        
-                        // Envoyer l'ID trouvé au serveur pour forcer la connexion
-                        const response = await fetch('?section=front&action=webauthn-login', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ userId: bestMatch.label })
-                        });
-
-                        const result = await response.json();
-                        if (result.success) {
-                            window.location.href = result.redirect || '?section=front&action=home';
+                        if (bestMatch.label === lastMatchedLabel) {
+                            consecutiveMatches++;
                         } else {
-                            alert("Erreur de connexion : " + result.message);
+                            consecutiveMatches = 1;
+                            lastMatchedLabel = bestMatch.label;
+                        }
+
+                        loginScanOverlay.classList.replace('text-white', 'text-success');
+                        loginScanOverlay.innerText = `✅ Reconnu ! (${consecutiveMatches}/2)`;
+                        loginCameraStatus.innerText = `Match confirmé ${consecutiveMatches}/2 - dist: ${distance}`;
+
+                        if (consecutiveMatches >= 2) {
+                            clearInterval(scanInterval);
+                            loginCameraStatus.innerText = "Connexion en cours...";
+                            loginVideo.srcObject.getTracks().forEach(t => t.stop());
+                            
+                            const response = await fetch('?section=front&action=webauthn-login', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ userId: bestMatch.label })
+                            });
+
+                            const result = await response.json();
+                            if (result.success) {
+                                window.location.href = result.redirect || '?section=front&action=home';
+                            } else {
+                                loginCameraStatus.innerText = "❌ Erreur : " + result.message;
+                                alert("Erreur de connexion : " + result.message);
+                            }
                         }
                     } else {
-                        loginScanOverlay.innerText = "Visage inconnu (accès refusé)";
+                        consecutiveMatches = 0;
+                        lastMatchedLabel = null;
                         loginScanOverlay.classList.replace('text-white', 'text-danger');
+                        loginScanOverlay.innerText = "❌ Non reconnu (dist: " + distance + ")";
+                        loginCameraStatus.innerText = "Non reconnu. Distance: " + distance + " (seuil: 0.4). Restez bien face à la caméra.";
                     }
                 } else {
+                    consecutiveMatches = 0;
                     loginScanOverlay.classList.add('d-none');
+                    loginCameraStatus.innerText = "🔍 Scan #" + frameCount + " - Aucun visage. Regardez directement la caméra.";
                 }
             }, 1000);
         });
+
     </script>
 </body>
 </html>

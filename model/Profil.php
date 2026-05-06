@@ -32,26 +32,7 @@ class Profil {
 
 
     public function __construct($data = []) {
-        if (!empty($data)) {
-            $this->id = $data['id'] ?? null;
-            $this->user_id = $data['user_id'] ?? null;
-            $this->bio = $data['bio'] ?? null;
-            $this->adresse = $data['adresse'] ?? null;
-            $this->ville = $data['ville'] ?? null;
-            $this->code_postal = $data['code_postal'] ?? null;
-            $this->date_creation = $data['date_creation'] ?? null;
-
-            // Admin fields
-            $this->full_name = $data['full_name'] ?? null;
-            $this->email = $data['email'] ?? null;
-            $this->role = $data['role'] ?? null;
-            $this->phone = $data['phone'] ?? null;
-            $this->address = $data['address'] ?? null;
-            $this->city = $data['city'] ?? null;
-            $this->zip_code = $data['zip_code'] ?? null;
-            $this->created_at = $data['created_at'] ?? null;
-            $this->updated_at = $data['updated_at'] ?? null;
-        }
+        // Le développement est désormais dans le contrôleur
     }
 
     // Getters & Setters

@@ -200,48 +200,60 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         });
 
         video.addEventListener('play', () => {
-            cameraStatus.innerText = "Regardez la caméra bien en face.";
+            cameraStatus.innerText = "Restez face à la caméra - collecte en cours (0/5)...";
             
-            // On scanne régulièrement jusqu'à trouver un visage
+            const samples = [];
+            const REQUIRED_SAMPLES = 5;
+
             const scanInterval = setInterval(async () => {
                 scanOverlay.classList.remove('d-none');
                 
                 const detection = await faceapi.detectSingleFace(video).withFaceLandmarks().withFaceDescriptor();
                 
                 if (detection) {
-                    clearInterval(scanInterval);
-                    scanOverlay.innerText = "Visage détecté ! Enregistrement...";
-                    
-                    // Convertir en tableau classique
-                    const descriptorArray = Array.from(detection.descriptor);
-                    
-                    // Envoyer au serveur
-                    const response = await fetch('?section=front&action=webauthn-register', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ descriptor: descriptorArray })
-                    });
+                    samples.push(Array.from(detection.descriptor));
+                    scanOverlay.innerText = `Échantillon ${samples.length}/${REQUIRED_SAMPLES}`;
+                    cameraStatus.innerText = `Collecte : ${samples.length}/${REQUIRED_SAMPLES} - Restez immobile !`;
 
-                    const result = await response.json();
-                    
-                    // Éteindre la caméra
-                    const stream = video.srcObject;
-                    const tracks = stream.getTracks();
-                    tracks.forEach(track => track.stop());
-                    
-                    cameraContainer.classList.add('d-none');
-                    btnFaceId.classList.remove('d-none');
-                    
-                    if (result.success) {
-                        document.getElementById('face-id-status').classList.remove('d-none');
-                        cameraStatus.innerText = "Visage enregistré avec succès !";
-                    } else {
-                        alert("Erreur lors de l'enregistrement : " + result.message);
+                    if (samples.length >= REQUIRED_SAMPLES) {
+                        clearInterval(scanInterval);
+                        scanOverlay.innerText = "Calcul du descripteur...";
+
+                        // Moyenner les 5 descripteurs pour un meilleur profil
+                        const avgDescriptor = samples[0].map((_, i) =>
+                            samples.reduce((sum, d) => sum + d[i], 0) / samples.length
+                        );
+
+                        // Normaliser le vecteur (norme = 1.0)
+                        const norm = Math.sqrt(avgDescriptor.reduce((s, v) => s + v * v, 0));
+                        const normalizedDescriptor = avgDescriptor.map(v => v / norm);
+
+                        // Envoyer au serveur
+                        const response = await fetch('?section=front&action=webauthn-register', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ descriptor: normalizedDescriptor })
+                        });
+
+                        const result = await response.json();
+                        
+                        // Éteindre la caméra
+                        video.srcObject.getTracks().forEach(t => t.stop());
+                        cameraContainer.classList.add('d-none');
+                        btnFaceId.classList.remove('d-none');
+                        
+                        if (result.success) {
+                            document.getElementById('face-id-status').classList.remove('d-none');
+                            cameraStatus.innerText = "Visage enregistré avec succès !";
+                        } else {
+                            alert("Erreur lors de l'enregistrement : " + result.message);
+                        }
                     }
                 } else {
                     scanOverlay.classList.add('d-none');
+                    cameraStatus.innerText = "Aucun visage détecté. Regardez bien la caméra.";
                 }
-            }, 1000);
+            }, 800);
         });
     </script>
 </body>

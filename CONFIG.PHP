@@ -3,6 +3,7 @@
  * Configuration de l'application
  * Connexion PDO à la base de données
  */
+date_default_timezone_set('Africa/Tunis');
 
 define('DB_HOST', 'localhost');
 define('DB_NAME', 'rayench_db');

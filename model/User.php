@@ -29,19 +29,7 @@ class User {
     
 
     public function __construct($data = []) {
-        if (!empty($data)) {
-            $this->id = $data['id'] ?? null;
-            $this->nom = $data['nom'] ?? null;
-            $this->prenom = $data['prenom'] ?? null;
-            $this->email = $data['email'] ?? null;
-            $this->password = $data['password'] ?? null;
-            $this->telephone = $data['telephone'] ?? null;
-            $this->photo = $data['photo'] ?? null;
-            $this->poids = $data['poids'] ?? null;
-            $this->taille = $data['taille'] ?? null;
-            $this->date_creation = $data['date_creation'] ?? null;
-            $this->ban_until = $data['ban_until'] ?? null;
-        }
+        // Le développement est désormais dans le contrôleur
     }
 
     // Getters

@@ -17,6 +17,35 @@ class ProfilController {
         $this->db = Database::getInstance()->getConnection();
     }
 
+    /**
+     * Mappe un tableau de données vers un objet Profil
+     * C'est ici que se trouve désormais le "développement" (logique de remplissage)
+     */
+    private function mapToModel($data) {
+        $profil = new Profil();
+        if (!empty($data)) {
+            $profil->setId($data['id'] ?? null);
+            $profil->setUserId($data['user_id'] ?? null);
+            $profil->setBio($data['bio'] ?? null);
+            $profil->setAdresse($data['adresse'] ?? null);
+            $profil->setVille($data['ville'] ?? null);
+            $profil->setCodePostal($data['code_postal'] ?? null);
+            $profil->setDateCreation($data['date_creation'] ?? null);
+
+            // Admin fields
+            $profil->setFullName($data['full_name'] ?? null);
+            $profil->setEmail($data['email'] ?? null);
+            $profil->setRole($data['role'] ?? null);
+            $profil->setPhone($data['phone'] ?? null);
+            $profil->setAddress($data['address'] ?? null);
+            $profil->setCity($data['city'] ?? null);
+            $profil->setZipCode($data['zip_code'] ?? null);
+            $profil->setCreatedAt($data['created_at'] ?? null);
+            $profil->setUpdatedAt($data['updated_at'] ?? null);
+        }
+        return $profil;
+    }
+
     // ========== MÉTHODES DB (DÉPLACÉES DU MODÈLE) ==========
 
     private function db_getAllProfils() {
