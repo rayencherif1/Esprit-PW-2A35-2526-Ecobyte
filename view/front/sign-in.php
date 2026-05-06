@@ -38,12 +38,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $user = $userController->login($email, $password);
         
         if ($user) {
-        if (isset($_SESSION['user_role']) && $_SESSION['user_role'] === 'admin') {
-            header('Location: ?section=back&action=users');
-        } else {
-            header('Location: ?section=front&action=home');
-        }
-        exit;
+            // Bloquer les admins sur la page front-office
+            if (isset($_SESSION['admin_logged_in']) && $_SESSION['admin_logged_in'] === true) {
+                $userController->logout(true); // Déconnecter la session admin créée
+                $errors[] = "Cette page est réservée aux clients. Les administrateurs utilisent la page d'administration.";
+            } else {
+                header('Location: ?section=front&action=home');
+                exit;
+            }
         } else {
             $errors = $userController->getErrors();
         }

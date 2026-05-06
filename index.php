@@ -142,10 +142,34 @@ try {
                 exit;
 
             case 'sign-in':
+                // Traitement connexion admin
+                $errors = [];
+                if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+                    $userController = new UserController();
+                    $email = trim($_POST['email'] ?? '');
+                    $password = trim($_POST['password'] ?? '');
+                    $user = $userController->login($email, $password);
+                    if ($user && isset($_SESSION['admin_logged_in']) && $_SESSION['admin_logged_in'] === true) {
+                        header('Location: ?section=back&action=users');
+                        exit;
+                    } else {
+                        // Détruire toute session admin créée par erreur
+                        if (isset($_SESSION['admin_logged_in'])) {
+                            $userController->logout(true);
+                        }
+                        $errors = $userController->getErrors();
+                        if (empty($errors)) {
+                            $errors[] = "Accès refusé : identifiants invalides ou compte non administrateur.";
+                        }
+                    }
+                }
+                require __DIR__ . '/view/back/sign-in.php';
+                exit;
+
             case 'home':
             default:
                 if (!isset($_SESSION['admin_logged_in'])) {
-                    header('Location: ?section=front&action=sign-in');
+                    header('Location: ?section=back&action=sign-in');
                     exit;
                 }
                 header('Location: ?section=back&action=users');
