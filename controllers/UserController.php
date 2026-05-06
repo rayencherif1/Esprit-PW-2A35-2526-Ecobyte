@@ -74,7 +74,7 @@ class UserController {
     }
 
     private function db_getUserById($id) {
-        $query = "SELECT id, nom, prenom, email, telephone, photo, poids, taille, date_creation, ban_until FROM users WHERE id = :id";
+        $query = "SELECT id, nom, prenom, email, telephone, photo, poids, taille, date_creation, ban_until, role, is_active FROM users WHERE id = :id";
         $stmt = $this->db->prepare($query);
         $stmt->execute([':id' => $id]);
         return $stmt->fetch();

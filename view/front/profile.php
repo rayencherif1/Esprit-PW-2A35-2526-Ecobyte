@@ -234,7 +234,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     
                     if (result.success) {
                         document.getElementById('face-id-status').classList.remove('d-none');
-                        alert("Votre visage a été enregistré avec succès ! Vous pouvez maintenant vous connecter avec la caméra.");
+                        cameraStatus.innerText = "Visage enregistré avec succès !";
                     } else {
                         alert("Erreur lors de l'enregistrement : " + result.message);
                     }
