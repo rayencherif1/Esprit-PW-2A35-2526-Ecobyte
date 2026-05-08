@@ -98,8 +98,13 @@ try {
         echo "ℹ️ La colonne 'is_ai_generated' existe déjà<br>";
     }
     
-    echo "<br>🎉 Mise à jour terminée avec succès !";
-    
-} catch (PDOException $e) {
-    echo "❌ Erreur : " . $e->getMessage();
+    // Vérifier si la colonne summary existe déjà dans post
+    $stmt = $db->query("SHOW COLUMNS FROM post LIKE 'summary'");
+    if ($stmt->rowCount() === 0) {
+        $db->exec("ALTER TABLE `post` ADD COLUMN `summary` TEXT NULL AFTER `nutrition`");
+        echo "✅ Colonne 'summary' ajoutée à la table 'post'<br>";
+    } else {
+        echo "ℹ️ La colonne 'summary' existe déjà<br>";
+    }
+
 }

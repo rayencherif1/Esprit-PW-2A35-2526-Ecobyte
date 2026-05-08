@@ -9,8 +9,9 @@ class Post
     private ?string $categorie = null;
     private ?string $image = null;
     private ?string $nutrition = null;
+    private ?string $summary = null;
 
-    public function __construct($id = null, $t, $c, $d, $cat, $i, $n = null)
+    public function __construct($id = null, $t, $c, $d, $cat, $i, $n = null, $s = null)
     {
         $this->id = $id;
         $this->titre = $t;
@@ -19,6 +20,7 @@ class Post
         $this->categorie = $cat;
         $this->image = $i;
         $this->nutrition = $n;
+        $this->summary = $s;
     }
 
     public function getId()
@@ -89,6 +91,17 @@ class Post
     public function setNutrition($nutrition)
     {
         $this->nutrition = $nutrition;
+        return $this;
+    }
+
+    public function getSummary()
+    {
+        return $this->summary;
+    }
+
+    public function setSummary($summary)
+    {
+        $this->summary = $summary;
         return $this;
     }
 }

@@ -22,8 +22,8 @@ class PostC
      */
     function addPost($post)
     {
-        $sql = "INSERT INTO post (titre, contenu, datePublication, categorie, image, nutrition)
-        VALUES (:titre, :contenu, :datePublication, :categorie, :image, :nutrition)";
+        $sql = "INSERT INTO post (titre, contenu, datePublication, categorie, image, nutrition, summary)
+        VALUES (:titre, :contenu, :datePublication, :categorie, :image, :nutrition, :summary)";
         
         $db = config::getConnexion();
         
@@ -36,6 +36,7 @@ class PostC
                 'categorie'       => $post->getCategorie(),
                 'image'           => $post->getImage(),
                 'nutrition'       => $post->getNutrition(),
+                'summary'         => $post->getSummary(),
             ]);
         } catch (Exception $e) {
             throw $e;
@@ -80,7 +81,8 @@ class PostC
                     datePublication = :datePublication,
                     categorie = :categorie,
                     image = :image,
-                    nutrition = :nutrition
+                    nutrition = :nutrition,
+                    summary = :summary
                 WHERE id = :id'
             );
 
@@ -92,6 +94,7 @@ class PostC
                 'categorie'       => $post->getCategorie(),
                 'image'           => $post->getImage(),
                 'nutrition'       => $post->getNutrition(),
+                'summary'         => $post->getSummary(),
             ]);
         } catch (PDOException $e) {
             throw $e;
@@ -113,7 +116,8 @@ class PostC
                     datePublication = :datePublication,
                     categorie = :categorie,
                     image = :image,
-                    nutrition = :nutrition
+                    nutrition = :nutrition,
+                    summary = :summary
                 WHERE id = :id'
             );
 
@@ -125,6 +129,7 @@ class PostC
                 'categorie'       => $post->getCategorie(),
                 'image'           => $post->getImage(),
                 'nutrition'       => $post->getNutrition(),
+                'summary'         => $post->getSummary(),
             ]);
         } catch (PDOException $e) {
             throw $e;
@@ -222,6 +227,25 @@ class PostC
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
         } catch (Exception $e) {
             die('Erreur: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Met à jour le résumé IA d'un post
+     */
+    function updatePostSummary(int $postId, string $summary)
+    {
+        $sql = "UPDATE post SET summary = :summary WHERE id = :id";
+        $db = config::getConnexion();
+        
+        try {
+            $stmt = $db->prepare($sql);
+            $stmt->execute([
+                'summary' => $summary,
+                'id' => $postId
+            ]);
+        } catch (Exception $e) {
+            throw $e;
         }
     }
 }

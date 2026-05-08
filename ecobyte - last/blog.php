@@ -205,6 +205,7 @@ try {
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Blog</title>
+    <link rel="stylesheet" href="view/Front office/FoodMart-1.0.0/FoodMart-1.0.0/css/ai-summary.css">
     <style>
       :root { color-scheme: light; }
       * { box-sizing: border-box; }
@@ -485,6 +486,12 @@ try {
                   <?= nl2br(htmlspecialchars($contenu, ENT_QUOTES, 'UTF-8')) ?>
                 </div>
               <?php } ?>
+              <!-- Résumé IA -->
+              <?php 
+                $existingSummary = $row['summary'] ?? null;
+                $summaryAttr = !empty($existingSummary) ? ' data-existing-summary="' . htmlspecialchars($existingSummary, ENT_QUOTES, 'UTF-8') . '"' : '';
+              ?>
+              <div class="ai-summary-container" data-post-summary-id="<?= $id ?>"<?= $summaryAttr ?>></div>
               <?php if ($nutritionData !== null) { ?>
                 <div class="nutrition-box">
                   <strong>🍎 Analyse nutritionnelle :</strong><br>
@@ -895,5 +902,6 @@ try {
         }
       });
     </script>
+    <script src="view/Front office/FoodMart-1.0.0/FoodMart-1.0.0/js/ai-summary.js"></script>
   </body>
 </html>
