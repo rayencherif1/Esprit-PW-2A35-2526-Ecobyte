@@ -18,7 +18,7 @@ ob_start();
                 <p class="text-red-500 text-sm mb-2"><?= e($err) ?></p>
             <?php endforeach; ?>
 
-            <form method="post" action="<?= e(ADMIN_URL) ?>/index.php?action=program_save" class="space-y-4">
+            <form method="post" action="<?= e(ADMIN_URL) ?>/index.php?action=program_save" class="space-y-4" novalidate>
                 <?php if ($isEdit) : ?>
                     <input type="hidden" name="id" value="<?= (int) $program['id'] ?>" />
                 <?php endif; ?>

@@ -64,6 +64,12 @@ $fm = rtrim(URL_FOODMART, '/');
                   <a class="nav-link" href="<?= e(BASE_URL) ?>/index.php?action=recommend_ai">Suggestion IA</a>
                 </li>
                 <li class="nav-item">
+                  <a class="nav-link" href="<?= e(BASE_URL) ?>/index.php?action=front_program_new">Ajouter programme</a>
+                </li>
+                <li class="nav-item">
+                  <a class="nav-link" href="<?= e(BASE_URL) ?>/index.php?action=user_program_list">Mes programmes</a>
+                </li>
+                <li class="nav-item">
                   <a class="nav-link" href="<?= e(ADMIN_URL) ?>/index.php?action=dashboard">Admin</a>
                 </li>
               </ul>
@@ -82,6 +88,12 @@ $fm = rtrim(URL_FOODMART, '/');
                     </li>
                     <li class="nav-item">
                       <a class="nav-link" href="<?= e(BASE_URL) ?>/index.php?action=recommend_ai">Suggestion IA</a>
+                    </li>
+                    <li class="nav-item">
+                      <a class="nav-link" href="<?= e(BASE_URL) ?>/index.php?action=front_program_new">Ajouter programme</a>
+                    </li>
+                    <li class="nav-item">
+                      <a class="nav-link" href="<?= e(BASE_URL) ?>/index.php?action=user_program_list">Mes programmes</a>
                     </li>
                     <li class="nav-item">
                       <a class="nav-link" href="<?= e(ADMIN_URL) ?>/index.php?action=dashboard">Admin</a>

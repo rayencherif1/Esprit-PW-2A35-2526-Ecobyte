@@ -38,6 +38,101 @@ final class ProgramModel
     }
 
     /**
+     * Catalogue public + programmes du visiteur (même session).
+     *
+     * @return list<array<string,mixed>>
+     */
+    public function findAllVisible(?string $typeFilter, ?string $searchName, string $userToken): array
+    {
+        $pdo = Database::getPdo();
+
+        $sql = 'SELECT * FROM programmes WHERE (utilisateur_token IS NULL OR utilisateur_token = :utok)';
+        $params = ['utok' => $userToken];
+
+        if ($typeFilter !== null && $typeFilter !== '') {
+            $sql .= ' AND type_programme = :type';
+            $params['type'] = $typeFilter;
+        }
+
+        if ($searchName !== null && $searchName !== '') {
+            $sql .= ' AND nom LIKE :nom';
+            $params['nom'] = '%' . $searchName . '%';
+        }
+
+        $sql .= ' ORDER BY nom ASC';
+
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute($params);
+
+        return $stmt->fetchAll();
+    }
+
+    /**
+     * Programmes créés par l’utilisateur (front).
+     *
+     * @return list<array<string,mixed>>
+     */
+    public function findAllOwnedByUser(string $userToken, ?string $typeFilter = null, ?string $searchName = null): array
+    {
+        $pdo = Database::getPdo();
+
+        $sql = 'SELECT * FROM programmes WHERE utilisateur_token = :utok';
+        $params = ['utok' => $userToken];
+
+        if ($typeFilter !== null && $typeFilter !== '') {
+            $sql .= ' AND type_programme = :type';
+            $params['type'] = $typeFilter;
+        }
+
+        if ($searchName !== null && $searchName !== '') {
+            $sql .= ' AND nom LIKE :nom';
+            $params['nom'] = '%' . $searchName . '%';
+        }
+
+        $sql .= ' ORDER BY nom ASC';
+
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute($params);
+
+        return $stmt->fetchAll();
+    }
+
+    /**
+     * @param array<string,mixed> $programRow
+     */
+    public function isCatalogProgram(array $programRow): bool
+    {
+        $ut = $programRow['utilisateur_token'] ?? null;
+
+        return $ut === null || $ut === '';
+    }
+
+    /**
+     * @param array<string,mixed> $programRow
+     */
+    public function canVisitorOpenProgram(array $programRow, string $userToken): bool
+    {
+        if ($this->isCatalogProgram($programRow)) {
+            return true;
+        }
+
+        return (string) ($programRow['utilisateur_token'] ?? '') === $userToken;
+    }
+
+    public function isOwnedByUser(int $programId, string $userToken): bool
+    {
+        $p = $this->findById($programId);
+        if ($p === null) {
+            return false;
+        }
+        if ($this->isCatalogProgram($p)) {
+            return false;
+        }
+
+        return (string) ($p['utilisateur_token'] ?? '') === $userToken;
+    }
+
+    /**
      * Détail programme + liste ordonnée des exercices liés.
      *
      * @return array{program: array<string,mixed>|null, exercises: list<array<string,mixed>>}
@@ -95,16 +190,27 @@ final class ProgramModel
      * @param list<int> $exerciseIds ordre = ordre du tableau
      * @param list<int|null> $repsPerExercise même taille que $exerciseIds (null = défaut BDD exercice)
      */
-    public function insert(string $nom, int $dureeSemaines, string $type, array $exerciseIds, array $repsPerExercise): int
-    {
+    public function insert(
+        string $nom,
+        int $dureeSemaines,
+        string $type,
+        array $exerciseIds,
+        array $repsPerExercise,
+        ?string $utilisateurToken = null
+    ): int {
         $pdo = Database::getPdo();
         $pdo->beginTransaction();
 
         try {
             $stmt = $pdo->prepare(
-                'INSERT INTO programmes (nom, duree_semaines, type_programme) VALUES (:nom, :duree, :type)'
+                'INSERT INTO programmes (nom, duree_semaines, type_programme, utilisateur_token) VALUES (:nom, :duree, :type, :utok)'
             );
-            $stmt->execute(['nom' => $nom, 'duree' => $dureeSemaines, 'type' => $type]);
+            $stmt->execute([
+                'nom' => $nom,
+                'duree' => $dureeSemaines,
+                'type' => $type,
+                'utok' => $utilisateurToken,
+            ]);
             $pid = (int) $pdo->lastInsertId();
 
             $this->syncExercises($pdo, $pid, $exerciseIds, $repsPerExercise);

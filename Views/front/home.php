@@ -3,12 +3,28 @@
 /** @var string $filterType */
 /** @var string $searchQ */
 /** @var list<string> $types */
+/** @var string $userProgramToken */
 ob_start();
 ?>
 <div class="row g-4">
     <div class="col-lg-8">
         <h1 class="h3 mb-3">Programmes d’entraînement</h1>
-        <p class="text-muted">Recherchez par nom ou par type, puis lancez une séance. Les fiches d’exercices viennent de votre catalogue.</p>
+        <p class="text-muted">Recherchez par nom ou par type, puis lancez une séance. Le catalogue inclut les programmes publics et les vôtres (badge « Perso »).</p>
+        <?php
+        $msg = isset($_GET['msg']) ? (string) $_GET['msg'] : '';
+        $err = isset($_GET['err']) ? (string) $_GET['err'] : '';
+        ?>
+        <?php if ($msg !== '') : ?>
+            <p class="text-success small mb-2"><?= e($msg) ?></p>
+        <?php endif; ?>
+        <?php if ($err !== '') : ?>
+            <p class="text-danger small mb-2"><?= e($err) ?></p>
+        <?php endif; ?>
+
+        <p class="mb-3">
+            <a class="btn btn-nf btn-sm" href="<?= e(BASE_URL) ?>/index.php?action=front_program_new">Ajouter un programme</a>
+            <a class="btn btn-outline-secondary btn-sm ms-2" href="<?= e(BASE_URL) ?>/index.php?action=user_program_list">Mes programmes</a>
+        </p>
 
         <form method="get" action="<?= e(BASE_URL) ?>/index.php" class="row g-2 align-items-end mb-4">
             <input type="hidden" name="action" value="home" />
@@ -32,10 +48,18 @@ ob_start();
 
         <div class="row g-3">
             <?php foreach ($programs as $p) : ?>
+                <?php
+                $isMine = isset($p['utilisateur_token'])
+                    && (string) $p['utilisateur_token'] !== ''
+                    && (string) $p['utilisateur_token'] === (string) $userProgramToken;
+                ?>
                 <div class="col-md-6">
                     <div class="card nf-card h-100">
                         <div class="card-body">
                             <span class="badge text-bg-light border mb-2"><?= e($p['type_programme']) ?></span>
+                            <?php if ($isMine) : ?>
+                                <span class="badge text-bg-secondary mb-2 ms-1">Perso</span>
+                            <?php endif; ?>
                             <h2 class="h5 card-title"><?= e($p['nom']) ?></h2>
                             <p class="card-text small text-muted"><?= (int) $p['duree_semaines'] ?> semaine(s)</p>
                             <a class="btn btn-nf btn-sm" href="<?= e(BASE_URL) ?>/index.php?action=program_start&amp;id=<?= (int) $p['id'] ?>">Démarrer</a>
@@ -44,7 +68,7 @@ ob_start();
                 </div>
             <?php endforeach; ?>
             <?php if (count($programs) === 0) : ?>
-                <p class="text-warning">Aucun programme ne correspond — ajoutez-en dans l’admin ou élargissez la recherche.</p>
+                <p class="text-warning">Aucun programme ne correspond — créez-en dans « Mes programmes », ajoutez-en dans l’admin ou élargissez la recherche.</p>
             <?php endif; ?>
         </div>
     </div>

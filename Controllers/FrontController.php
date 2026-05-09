@@ -43,13 +43,15 @@ final class FrontController
         $q = isset($_GET['q']) ? trim((string) $_GET['q']) : '';
         $typeFilter = in_array($type, TYPES_ENTRAINEMENT, true) ? $type : null;
 
-        $programs = $this->programModel->findAll($typeFilter, $q !== '' ? $q : null);
+        $token = AppSession::userProgramOwnerToken();
+        $programs = $this->programModel->findAllVisible($typeFilter, $q !== '' ? $q : null, $token);
 
         View::render('front/home', [
             'programs' => $programs,
             'filterType' => $type,
             'searchQ' => $q,
             'types' => TYPES_ENTRAINEMENT,
+            'userProgramToken' => $token,
         ]);
     }
 
@@ -60,8 +62,12 @@ final class FrontController
     {
         $id = isset($_GET['id']) ? (int) $_GET['id'] : 0;
         $bundle = $this->programModel->findWithExercises($id);
+        $token = AppSession::userProgramOwnerToken();
 
-        if ($bundle['program'] === null) {
+        if (
+            $bundle['program'] === null
+            || !$this->programModel->canVisitorOpenProgram($bundle['program'], $token)
+        ) {
             View::render('front/program_not_found', []);
             return;
         }
@@ -77,7 +83,8 @@ final class FrontController
      */
     private function recommendAiAction(): void
     {
-        $programs = $this->programModel->findAll(null, null);
+        $token = AppSession::userProgramOwnerToken();
+        $programs = $this->programModel->findAllVisible(null, null, $token);
         $errors = [];
         $post = [];
         $suggestions = [];

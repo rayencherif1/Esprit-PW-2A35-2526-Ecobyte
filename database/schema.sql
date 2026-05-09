@@ -42,10 +42,12 @@ CREATE TABLE programmes (
     nom VARCHAR(150) NOT NULL,
     duree_semaines INT UNSIGNED NOT NULL COMMENT 'Durée prévue du programme en semaines',
     type_programme ENUM('musculation', 'cardio', 'perte_de_poids') NOT NULL,
+    utilisateur_token VARCHAR(64) NULL DEFAULT NULL COMMENT 'Jeton session front ; NULL = catalogue public',
     date_creation TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (id),
     KEY idx_programmes_type (type_programme),
-    KEY idx_programmes_nom (nom)
+    KEY idx_programmes_nom (nom),
+    KEY idx_programmes_user_token (utilisateur_token)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ---------------------------------------------------------------------

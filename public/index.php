@@ -11,5 +11,10 @@ require dirname(__DIR__) . '/app/bootstrap.php'; // Autoload + helpers
 
 $action = isset($_GET['action']) ? (string) $_GET['action'] : 'home'; // Action demandée
 
-$controller = new FrontController(); // Contrôleur dédié au site public
-$controller->dispatch($action); // Délègue à home, program_start, recommend_ai, etc.
+if (str_starts_with($action, 'user_program_')) {
+    (new UserProgramController())->dispatch($action);
+} elseif (str_starts_with($action, 'front_program_')) {
+    (new FrontProgramManageController())->dispatch($action);
+} else {
+    (new FrontController())->dispatch($action);
+}

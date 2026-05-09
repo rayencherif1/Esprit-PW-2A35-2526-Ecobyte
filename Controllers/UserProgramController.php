@@ -1,17 +1,19 @@
 <?php
 /**
- * Contrôleur admin — CRUD programmes + liaison N:N avec exercices.
+ * Espace utilisateur (front) — CRUD sur les programmes personnels uniquement.
+ * Validation serveur uniquement (pas d’attributs HTML5).
  */
 
 declare(strict_types=1);
 
-final class AdminProgramController
+final class UserProgramController
 {
     private ProgramModel $programModel;
     private ExerciseModel $exerciseModel;
 
     public function __construct()
     {
+        AppSession::userProgramOwnerToken();
         $this->programModel = new ProgramModel();
         $this->exerciseModel = new ExerciseModel();
     }
@@ -19,20 +21,20 @@ final class AdminProgramController
     public function dispatch(string $action): void
     {
         switch ($action) {
-            case 'program_list':
+            case 'user_program_list':
                 $this->listAction();
                 break;
-            case 'program_new':
+            case 'user_program_new':
                 $this->formAction(null);
                 break;
-            case 'program_edit':
+            case 'user_program_edit':
                 $id = isset($_GET['id']) ? (int) $_GET['id'] : 0;
                 $this->formAction($id > 0 ? $id : null);
                 break;
-            case 'program_save':
+            case 'user_program_save':
                 $this->saveAction();
                 break;
-            case 'program_delete':
+            case 'user_program_delete':
                 $this->deleteAction();
                 break;
             default:
@@ -40,35 +42,46 @@ final class AdminProgramController
         }
     }
 
+    private function ownerToken(): string
+    {
+        return AppSession::userProgramOwnerToken();
+    }
+
     private function listAction(): void
     {
+        $token = $this->ownerToken();
         $type = isset($_GET['type']) ? (string) $_GET['type'] : '';
         $q = isset($_GET['q']) ? trim((string) $_GET['q']) : '';
         $typeFilter = in_array($type, TYPES_ENTRAINEMENT, true) ? $type : null;
 
-        $rows = $this->programModel->findAll($typeFilter, $q !== '' ? $q : null);
+        $rows = $this->programModel->findAllOwnedByUser($token, $typeFilter, $q !== '' ? $q : null);
 
         $message = isset($_GET['msg']) ? (string) $_GET['msg'] : '';
         $error = isset($_GET['err']) ? (string) $_GET['err'] : '';
 
-        View::render('admin/program_list', [
+        View::render('front/user_program_list', [
             'programs' => $rows,
             'filterType' => $type,
             'searchQ' => $q,
             'message' => $message,
             'error' => $error,
+            'types' => TYPES_ENTRAINEMENT,
         ]);
     }
 
     private function formAction(?int $id): void
     {
+        $token = $this->ownerToken();
         $program = null;
         $linked = [];
         $errors = [];
 
-        $allExercises = $this->exerciseModel->findAll(); // Pour les cases à cocher / sélection
+        $allExercises = $this->exerciseModel->findAll();
 
         if ($id !== null) {
+            if (!$this->programModel->isOwnedByUser($id, $token)) {
+                redirect(BASE_URL . '/index.php?action=user_program_list&err=' . rawurlencode('Ce programme ne fait pas partie de vos créations.'));
+            }
             $bundle = $this->programModel->findWithExercises($id);
             $program = $bundle['program'];
             $linked = $bundle['exercises'];
@@ -77,7 +90,7 @@ final class AdminProgramController
             }
         }
 
-        View::render('admin/program_form', [
+        View::render('front/user_program_form', [
             'program' => $program,
             'linkedExercises' => $linked,
             'allExercises' => $allExercises,
@@ -89,8 +102,10 @@ final class AdminProgramController
     private function saveAction(): void
     {
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            redirect(ADMIN_URL . '/index.php?action=program_list&err=' . rawurlencode('Méthode invalide.'));
+            redirect(BASE_URL . '/index.php?action=user_program_list&err=' . rawurlencode('Méthode invalide.'));
         }
+
+        $token = $this->ownerToken();
 
         $id = isset($_POST['id']) ? (int) $_POST['id'] : 0;
         $nom = isset($_POST['nom']) ? trim((string) $_POST['nom']) : '';
@@ -121,12 +136,12 @@ final class AdminProgramController
             $repsClean
         );
 
-        if ($id > 0 && $this->programModel->findById($id) === null) {
-            $errors[] = 'Programme inexistant.';
+        if ($id > 0 && !$this->programModel->isOwnedByUser($id, $token)) {
+            $errors[] = 'Vous ne pouvez pas modifier ce programme.';
         }
 
         if ($errors !== []) {
-            View::render('admin/program_form', [
+            View::render('front/user_program_form', [
                 'program' => [
                     'id' => $id,
                     'nom' => $nom,
@@ -138,6 +153,7 @@ final class AdminProgramController
                 'errors' => $errors,
                 'types' => TYPES_ENTRAINEMENT,
             ]);
+
             return;
         }
 
@@ -146,10 +162,10 @@ final class AdminProgramController
         if ($id > 0) {
             $this->programModel->update($id, $nom, $duree, $type, $exerciseIds, $repsClean);
         } else {
-            $this->programModel->insert($nom, $duree, $type, $exerciseIds, $repsClean);
+            $this->programModel->insert($nom, $duree, $type, $exerciseIds, $repsClean, $token);
         }
 
-        redirect(ADMIN_URL . '/index.php?action=program_list&msg=' . rawurlencode('Programme enregistré.'));
+        redirect(BASE_URL . '/index.php?action=user_program_list&msg=' . rawurlencode('Programme enregistré.'));
     }
 
     /**
@@ -169,23 +185,25 @@ final class AdminProgramController
             $row['repetitions_programme'] = $repsClean[$i] ?? null;
             $out[] = $row;
         }
+
         return $out;
     }
 
     private function deleteAction(): void
     {
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            redirect(ADMIN_URL . '/index.php?action=program_list&err=' . rawurlencode('Suppression refusée.'));
+            redirect(BASE_URL . '/index.php?action=user_program_list&err=' . rawurlencode('Suppression refusée.'));
         }
 
+        $token = $this->ownerToken();
         $id = isset($_POST['id']) ? (int) $_POST['id'] : 0;
 
-        if ($id <= 0 || $this->programModel->findById($id) === null) {
-            redirect(ADMIN_URL . '/index.php?action=program_list&err=' . rawurlencode('Programme introuvable.'));
+        if ($id <= 0 || !$this->programModel->isOwnedByUser($id, $token)) {
+            redirect(BASE_URL . '/index.php?action=user_program_list&err=' . rawurlencode('Programme introuvable ou non autorisé.'));
         }
 
         $this->programModel->delete($id);
 
-        redirect(ADMIN_URL . '/index.php?action=program_list&msg=' . rawurlencode('Programme supprimé.'));
+        redirect(BASE_URL . '/index.php?action=user_program_list&msg=' . rawurlencode('Programme supprimé.'));
     }
 }
