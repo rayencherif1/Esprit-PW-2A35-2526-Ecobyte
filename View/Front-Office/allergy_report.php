@@ -1,4 +1,6 @@
 <?php
+session_start(); // AJOUTÉ pour les messages
+
 require_once __DIR__ . '/../../config.php';
 require_once __DIR__ . '/../../Model/allergie.php';
 require_once __DIR__ . '/../../Controller/allergie.Controller.php';
@@ -52,9 +54,106 @@ if ($selected_id) {
         .back-button { transition: all 0.3s ease; }
         .back-button:hover { transform: translateX(-5px); }
 
-        /* ══════════════════════════════════════════
-           LIEN AI — HEADER (coin droit)
-        ══════════════════════════════════════════ */
+        /* MODALE DE PARTAGE */
+        .share-modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.6);
+            z-index: 10000;
+            justify-content: center;
+            align-items: center;
+        }
+        .share-modal-overlay.active {
+            display: flex;
+        }
+        .share-modal-content {
+            background: white;
+            border-radius: 20px;
+            max-width: 500px;
+            width: 90%;
+            animation: fadeIn 0.3s;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .share-modal-header {
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white;
+            padding: 20px;
+            border-radius: 20px 20px 0 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .share-modal-body {
+            padding: 25px;
+        }
+        .share-modal-body input,
+        .share-modal-body textarea {
+            width: 100%;
+            padding: 12px;
+            margin: 10px 0;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+        }
+        .share-modal-body input:focus,
+        .share-modal-body textarea:focus {
+            outline: none;
+            border-color: #10b981;
+        }
+        .btn-send {
+            background: #10b981;
+            color: white;
+            padding: 12px;
+            border: none;
+            border-radius: 10px;
+            width: 100%;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .btn-send:hover {
+            background: #059669;
+        }
+        .btn-cancel-share {
+            background: #e5e7eb;
+            color: #374151;
+            padding: 12px;
+            border: none;
+            border-radius: 10px;
+            width: 100%;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        .toast-message {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 12px 24px;
+            border-radius: 10px;
+            color: white;
+            z-index: 10001;
+            animation: slideIn 0.3s;
+        }
+        .toast-success { background: #10b981; }
+        .toast-error { background: #ef4444; }
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        .share-btn-card {
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .share-btn-card:hover {
+            transform: scale(1.02);
+        }
+
         .ai-btn-header {
             position: relative;
             display: inline-flex;
@@ -90,7 +189,6 @@ if ($selected_id) {
             box-shadow: 0 0 28px rgba(124,92,252,0.55), 0 0 8px rgba(42,250,223,0.3);
             border-color: rgba(124,92,252,0.7);
         }
-        /* Particules orbitales */
         .ai-btn-header .orbit {
             position: absolute;
             width: 6px; height: 6px;
@@ -122,7 +220,6 @@ if ($selected_id) {
             0%   { transform: rotate(0deg)   translateX(34px) rotate(0deg); }
             100% { transform: rotate(360deg) translateX(34px) rotate(-360deg); }
         }
-        /* Icône scan animée */
         .ai-btn-header .scan-icon {
             position: relative;
             width: 22px; height: 22px;
@@ -144,7 +241,6 @@ if ($selected_id) {
             80%  { opacity: 1; }
             100% { top: 18px; opacity: 0; }
         }
-        /* Texte shimmer */
         .ai-btn-header .btn-text {
             background: linear-gradient(90deg, #fff 0%, #63ffd2 40%, #fff 60%, #fc9fff 100%);
             background-size: 200% auto;
@@ -157,13 +253,11 @@ if ($selected_id) {
             0%   { background-position: 200% center; }
             100% { background-position: -200% center; }
         }
-        /* Flèche arrow bounce */
         .ai-btn-header .arrow { animation: arrow-pulse 1.5s ease-in-out infinite; }
         @keyframes arrow-pulse {
             0%, 100% { transform: translateX(0); opacity: 0.7; }
             50%       { transform: translateX(4px); opacity: 1; }
         }
-        /* Badge AI pill */
         .ai-pill {
             display: inline-flex;
             align-items: center;
@@ -186,9 +280,6 @@ if ($selected_id) {
         }
         @keyframes blink { 0%,100%{opacity:1;} 50%{opacity:0.2;} }
 
-        /* ══════════════════════════════════════════
-           BANNIÈRE AI — BAS DE PAGE
-        ══════════════════════════════════════════ */
         .ai-banner {
             position: relative;
             display: block;
@@ -223,7 +314,6 @@ if ($selected_id) {
             gap: 28px;
             overflow: hidden;
         }
-        /* Fond étoilé */
         .ai-banner-inner::before {
             content: '';
             position: absolute;
@@ -232,7 +322,6 @@ if ($selected_id) {
                 radial-gradient(circle at 15% 50%, rgba(124,92,252,0.15) 0%, transparent 55%),
                 radial-gradient(circle at 85% 50%, rgba(42,250,223,0.12) 0%, transparent 55%);
         }
-        /* Grille de points */
         .ai-banner-inner::after {
             content: '';
             position: absolute;
@@ -240,7 +329,6 @@ if ($selected_id) {
             background-image: radial-gradient(rgba(255,255,255,0.06) 1px, transparent 1px);
             background-size: 24px 24px;
         }
-        /* Icône centrale animée */
         .ai-banner-icon {
             position: relative;
             flex-shrink: 0;
@@ -276,7 +364,6 @@ if ($selected_id) {
             0%,100% { box-shadow: 0 0 0 0 rgba(124,92,252,0.4); }
             50%      { box-shadow: 0 0 0 10px rgba(124,92,252,0); }
         }
-        /* Texte bannière */
         .ai-banner-text { flex: 1; z-index: 2; }
         .ai-banner-label {
             display: inline-flex;
@@ -315,7 +402,6 @@ if ($selected_id) {
             color: rgba(255,255,255,0.5);
             line-height: 1.5;
         }
-        /* Flèche bannière */
         .ai-banner-arrow {
             flex-shrink: 0;
             z-index: 2;
@@ -333,7 +419,6 @@ if ($selected_id) {
             background: rgba(124,92,252,0.5);
             transform: translateX(4px);
         }
-        /* Particules flottantes bannière */
         .ai-banner-particle {
             position: absolute;
             border-radius: 50%;
@@ -347,10 +432,6 @@ if ($selected_id) {
             90%  { opacity: 1; }
             100% { transform: translateY(-80px) rotate(360deg); opacity: 0; }
         }
-
-        /* ══════════════════════════════════════════
-           TAGS FEATURES bannière
-        ══════════════════════════════════════════ */
         .ai-feature-tags {
             display: flex;
             flex-wrap: wrap;
@@ -384,6 +465,16 @@ if ($selected_id) {
 
 <body class="bg-gray-50">
 
+    <!-- Messages toast -->
+    <?php if (isset($_SESSION['email_success'])): ?>
+        <div class="toast-message toast-success">✅ <?= $_SESSION['email_success'] ?></div>
+        <?php unset($_SESSION['email_success']); ?>
+    <?php endif; ?>
+    <?php if (isset($_SESSION['email_error'])): ?>
+        <div class="toast-message toast-error">❌ <?= $_SESSION['email_error'] ?></div>
+        <?php unset($_SESSION['email_error']); ?>
+    <?php endif; ?>
+
     <!-- Hero -->
     <div class="hero-section text-white py-16">
         <div class="container mx-auto px-4 text-center relative">
@@ -398,14 +489,12 @@ if ($selected_id) {
                 </a>
             </div>
 
-            <!-- ★ LIEN AI HEADER — FASCINANT ★ -->
+            <!-- LIEN AI HEADER -->
             <div class="absolute top-0 right-0">
                 <a href="food_checker.php" class="ai-btn-header">
-                    <!-- Particules orbitales -->
                     <span class="orbit orbit-1"></span>
                     <span class="orbit orbit-2"></span>
                     <span class="orbit orbit-3"></span>
-                    <!-- Icône scan -->
                     <span class="scan-icon">
                         <svg viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.9)" stroke-width="1.5">
                             <circle cx="11" cy="11" r="7"/>
@@ -414,11 +503,8 @@ if ($selected_id) {
                         </svg>
                         <span class="scan-line"></span>
                     </span>
-                    <!-- Badge AI -->
                     <span class="ai-pill">AI</span>
-                    <!-- Texte -->
                     <span class="btn-text">Analyser mes ingrédients</span>
-                    <!-- Flèche -->
                     <svg class="arrow w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 7l5 5m0 0l-5 5m5-5H6"/>
                     </svg>
@@ -481,7 +567,7 @@ if ($selected_id) {
                 <?php foreach ($allergies as $allergie):
                     $graviteValue = strtolower($allergie['gravite'] ?? 'non définie');
                 ?>
-                    <div class="card-allergy bg-white rounded-xl shadow-lg overflow-hidden border border-gray-100 allergy-card"
+                    <div class="card-allergy bg-white rounded-xl shadow-lg overflow-hidden border border-gray-100 allergy-card flex flex-col"
                          data-name="<?= strtolower(htmlspecialchars($allergie['nom'])) ?>"
                          data-gravite="<?= $graviteValue ?>">
                         <div class="p-4 border-b border-gray-100">
@@ -505,7 +591,7 @@ if ($selected_id) {
                                 </span>
                             </div>
                         </div>
-                        <div class="p-4">
+                        <div class="p-4 flex-grow">
                             <p class="text-gray-600 text-sm">
                                 <?= htmlspecialchars(substr($allergie['description'] ?? '', 0, 100)) ?>
                                 <?= isset($allergie['description']) && strlen($allergie['description']) > 100 ? '...' : '' ?>
@@ -519,43 +605,40 @@ if ($selected_id) {
                             </div>
                         </div>
                         <?php endif; ?>
-                        <div class="p-4 pt-2">
+                        <div class="p-4 pt-2 space-y-2">
                             <a href="?id=<?= $allergie['id_allergie'] ?>"
                                class="block w-full bg-blue-600 text-white py-2 rounded-lg font-semibold text-center hover:bg-blue-700 transition">
                                 📖 Voir détails
                             </a>
+                            <!-- BOUTON PARTAGER AJOUTÉ ICI -->
+                            <button onclick="openShareModal(<?= $allergie['id_allergie'] ?>, '<?= htmlspecialchars($allergie['nom']) ?>')"
+                                    class="share-btn-card w-full bg-green-500 text-white py-2 rounded-lg font-semibold text-center hover:bg-green-600 transition flex items-center justify-center gap-2">
+                                📧 Partager
+                            </button>
                         </div>
                     </div>
                 <?php endforeach; ?>
             </div>
         <?php endif; ?>
 
-
-        <!-- ★ BANNIÈRE AI BAS DE PAGE — FASCINANTE ★ -->
+        <!-- BANNIÈRE AI BAS DE PAGE -->
         <div class="mt-16 px-4">
             <p class="text-center text-gray-400 text-sm mb-5 tracking-wide uppercase" style="letter-spacing:0.1em;">
                 Un doute sur un produit ?
             </p>
-
             <a href="food_checker.php" class="ai-banner">
                 <div class="ai-banner-inner">
-
-                    <!-- Particules flottantes -->
                     <span class="ai-banner-particle" style="width:4px;height:4px;background:#7c5cfc;left:10%;bottom:10%;animation-duration:4s;animation-delay:0s;"></span>
                     <span class="ai-banner-particle" style="width:3px;height:3px;background:#2afadf;left:25%;bottom:5%;animation-duration:5s;animation-delay:-2s;"></span>
                     <span class="ai-banner-particle" style="width:5px;height:5px;background:#fc5c7d;left:60%;bottom:15%;animation-duration:3.5s;animation-delay:-1s;"></span>
                     <span class="ai-banner-particle" style="width:3px;height:3px;background:#fff;left:75%;bottom:8%;animation-duration:6s;animation-delay:-3s;"></span>
                     <span class="ai-banner-particle" style="width:4px;height:4px;background:#2afadf;left:88%;bottom:12%;animation-duration:4.5s;animation-delay:-1.5s;"></span>
-
-                    <!-- Icône pulsante -->
                     <div class="ai-banner-icon">
                         <span class="ring ring-1"></span>
                         <span class="ring ring-2"></span>
                         <span class="ring ring-3"></span>
                         <div class="core">🔬</div>
                     </div>
-
-                    <!-- Texte -->
                     <div class="ai-banner-text">
                         <div class="ai-banner-label">
                             <span class="ai-banner-label-dot"></span>
@@ -574,14 +657,11 @@ if ($selected_id) {
                             <span class="ai-tag ai-tag-purple">📄 Export PDF</span>
                         </div>
                     </div>
-
-                    <!-- Flèche -->
                     <div class="ai-banner-arrow">
                         <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6"/>
                         </svg>
                     </div>
-
                 </div>
             </a>
         </div>
@@ -675,10 +755,67 @@ if ($selected_id) {
     </div>
     <?php endif; ?>
 
+    <!-- MODALE DE PARTAGE (UNE SEULE POUR TOUTES LES ALLERGIES) -->
+    <div id="shareModal" class="share-modal-overlay">
+        <div class="share-modal-content">
+            <div class="share-modal-header">
+                <h3 class="text-xl font-bold">📧 Partager une allergie</h3>
+                <button onclick="closeShareModal()" style="background:none; border:none; color:white; font-size:28px; cursor:pointer;">&times;</button>
+            </div>
+            <div class="share-modal-body">
+                <form method="POST" action="send_allergie_email.php">
+                    <input type="hidden" name="id_allergie" id="allergieId">
+                    
+                    <div style="background:#f0fdf4; padding:12px; border-radius:10px; margin-bottom:15px;">
+                        <strong>🌿 Allergie :</strong> <span id="allergieNom"></span>
+                    </div>
+                    
+                    <input type="text" name="nom_proche" id="nomProche" required 
+                           placeholder="Votre prénom ou nom *">
+                    
+                    <input type="email" name="email_destinataire" id="emailDestinataire" required 
+                           placeholder="Email du destinataire *">
+                    
+                    <textarea name="message_perso" rows="3" 
+                              placeholder="Message personnel (optionnel)"></textarea>
+                    
+                    <button type="submit" class="btn-send">
+                        📤 Envoyer l'email
+                    </button>
+                    <button type="button" class="btn-cancel-share" onclick="closeShareModal()">
+                        Annuler
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
     <script>
-        const graviteSelect  = document.getElementById('graviteFilter');
-        const searchInput    = document.getElementById('searchInput');
-        const allergyCards   = document.querySelectorAll('.allergy-card');
+        function openShareModal(id, nom) {
+            document.getElementById('allergieId').value = id;
+            document.getElementById('allergieNom').innerText = nom;
+            document.getElementById('shareModal').classList.add('active');
+        }
+        
+        function closeShareModal() {
+            document.getElementById('shareModal').classList.remove('active');
+        }
+        
+        window.onclick = function(event) {
+            let modal = document.getElementById('shareModal');
+            if (event.target === modal) {
+                closeShareModal();
+            }
+        }
+        
+        setTimeout(() => {
+            document.querySelectorAll('.toast-message').forEach(t => t.remove());
+        }, 4000);
+
+        // Filtres existants
+        const graviteSelect = document.getElementById('graviteFilter');
+        const searchInput = document.getElementById('searchInput');
+        const allergyCards = document.querySelectorAll('.allergy-card');
         const resultCountSpan = document.getElementById('resultCount');
         let currentSearch = '';
 
@@ -687,7 +824,7 @@ if ($selected_id) {
             let visibleCount = 0;
             allergyCards.forEach(card => {
                 const graviteMatch = selectedGravite === 'all' || card.dataset.gravite === selectedGravite;
-                const searchMatch  = !currentSearch || card.dataset.name.includes(currentSearch);
+                const searchMatch = !currentSearch || card.dataset.name.includes(currentSearch);
                 card.style.display = (graviteMatch && searchMatch) ? '' : 'none';
                 if (graviteMatch && searchMatch) visibleCount++;
             });
@@ -715,8 +852,8 @@ if ($selected_id) {
             filterCards();
         };
 
-        graviteSelect?.addEventListener('change', filterCards);
-        searchInput?.addEventListener('input', function() { currentSearch = this.value.toLowerCase(); filterCards(); });
+        if(graviteSelect) graviteSelect.addEventListener('change', filterCards);
+        if(searchInput) searchInput.addEventListener('input', function() { currentSearch = this.value.toLowerCase(); filterCards(); });
         filterCards();
     </script>
 

@@ -10,7 +10,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 }
 
 // VOTRE CLÉ API GROQ
-$api_key = '';
+$api_key = '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';
 
 $input = json_decode(file_get_contents('php://input'), true);
 $question = trim($input['question'] ?? '');

@@ -47,7 +47,7 @@ try {
 }
 
 function getGroqDynamicAnalysis($allergie, $traitements) {
-    $api_key = '';
+    $api_key = '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';
     
     // Perspectives variées pour des analyses uniques
     $perspectives = [
