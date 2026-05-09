@@ -58,14 +58,14 @@ $instructionFormBase = '../assets/argon-dashboard-tailwind-1.0.1/argon-dashboard
     <link rel="stylesheet" href="../assets/argon-dashboard-tailwind-1.0.1/argon-dashboard-tailwind-1.0.1/build/assets/css/argon-dashboard-tailwind.css">
     <style>
       #search-recette:focus {
-        border-color: #10b981;
-        box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2);
+        border-color: #3b82f6;
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
         outline: none;
       }
     </style>
 </head>
 
-<body class="min-h-screen bg-gradient-to-br from-slate-100 via-emerald-50/40 to-emerald-50 text-slate-900">
+<body class="min-h-screen bg-gradient-to-br from-slate-100 via-blue-50/40 to-blue-50 text-slate-900">
 
 <div class="min-h-screen w-full px-4 py-6 sm:px-6 lg:px-8">
     <div class="mx-auto max-w-7xl">
@@ -75,7 +75,7 @@ $instructionFormBase = '../assets/argon-dashboard-tailwind-1.0.1/argon-dashboard
                 <h1 class="text-3xl font-semibold tracking-tight">Recettes</h1>
                 <p class="mt-1 text-sm text-slate-500">Tableau principal pour ajouter, modifier et suivre les recettes.</p>
             </div>
-            <a href="form.php" class="inline-flex items-center justify-center gap-2 rounded-2xl px-5 py-3 text-sm font-semibold shadow-lg transition" style="background-color: #10b981; color: #ffffff;">
+            <a href="form.php" class="inline-flex items-center justify-center gap-2 rounded-2xl px-5 py-3 text-sm font-semibold shadow-lg transition" style="background-color: #3b82f6; color: #ffffff;">
                 <span style="font-size: 18px; font-weight: 700; line-height: 1;">+</span>
                 <span>Ajouter une recette</span>
             </a>
@@ -84,7 +84,7 @@ $instructionFormBase = '../assets/argon-dashboard-tailwind-1.0.1/argon-dashboard
         <?php if (isset($_GET['message']) || isset($_GET['message_instruction'])) : ?>
             <?php $message = $_GET['message'] ?? null; ?>
             <?php $messageInstruction = $_GET['message_instruction'] ?? null; ?>
-            <div class="mb-6 rounded-[32px] border border-emerald-200 bg-emerald-50 px-6 py-4 text-sm text-emerald-800 shadow-sm">
+            <div class="mb-6 rounded-[32px] border border-blue-200 bg-blue-50 px-6 py-4 text-sm text-blue-900 shadow-sm">
                 <?php if ($message === 'ajoute') : ?>
                     Recette ajoutée avec succès.
                 <?php elseif ($message === 'modifie') : ?>
@@ -106,7 +106,7 @@ $instructionFormBase = '../assets/argon-dashboard-tailwind-1.0.1/argon-dashboard
                 <div class="flex w-full items-center gap-3">
                     <label class="sr-only" for="search-recette">Recherche</label>
                     <input id="search-recette" type="text" placeholder="Rechercher une recette..." class="flex-1 rounded-2xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-700 outline-none transition duration-200" />
-                    <a href="form.php" class="inline-flex items-center justify-center gap-2 rounded-2xl px-4 py-3 text-sm font-semibold shadow-md transition" style="background-color: #10b981; color: #ffffff;">
+                    <a href="form.php" class="inline-flex items-center justify-center gap-2 rounded-2xl px-4 py-3 text-sm font-semibold shadow-md transition" style="background-color: #3b82f6; color: #ffffff;">
                         <span style="font-size: 18px; font-weight: 700; line-height: 1;">+</span>
                         <span>Ajouter</span>
                     </a>
@@ -164,7 +164,7 @@ $instructionFormBase = '../assets/argon-dashboard-tailwind-1.0.1/argon-dashboard
                                         }
                                     ?>
                                     <?php if ($instructionDone) : ?>
-                                        <a href="<?php echo htmlspecialchars($instructionUrl); ?>" class="inline-flex h-8 w-8 items-center justify-center rounded-full text-sm font-bold text-white transition hover:opacity-90" style="background-color: #10b981;" title="Modifier l'instruction" aria-label="Modifier l'instruction">
+                                        <a href="<?php echo htmlspecialchars($instructionUrl); ?>" class="inline-flex h-8 w-8 items-center justify-center rounded-full text-sm font-bold text-white transition hover:opacity-90" style="background-color: #3b82f6;" title="Modifier l'instruction" aria-label="Modifier l'instruction">
                                             <span aria-hidden="true">✓</span>
                                         </a>
                                     <?php else : ?>
@@ -175,7 +175,7 @@ $instructionFormBase = '../assets/argon-dashboard-tailwind-1.0.1/argon-dashboard
                                 </td>
                                 <td class="px-4 py-4 align-top">
                                     <div class="flex flex-wrap gap-2">
-                                        <a href="form.php?id=<?php echo urlencode($r['id']); ?>" class="inline-flex items-center justify-center rounded-2xl px-3 py-2 text-xs font-semibold text-white transition hover:opacity-90" style="background-color: #047857;">
+                                        <a href="form.php?id=<?php echo urlencode($r['id']); ?>" class="inline-flex items-center justify-center rounded-2xl px-3 py-2 text-xs font-semibold text-white transition hover:opacity-90" style="background-color: #1d4ed8;">
                                             <span aria-hidden="true">&#x270F;&#xFE0F;</span>
                                         </a>
                                         <a href="../controller/RecetteController.php?delete=<?php echo urlencode($r['id']); ?>" class="inline-flex items-center justify-center rounded-2xl px-3 py-2 text-xs font-semibold text-white transition hover:opacity-90" style="background-color: #ef4444;">
@@ -193,7 +193,7 @@ $instructionFormBase = '../assets/argon-dashboard-tailwind-1.0.1/argon-dashboard
     </div>
 </div>
 
-<a href="form.php" class="fixed bottom-6 right-6 z-50 inline-flex h-14 w-14 items-center justify-center rounded-full text-3xl font-bold leading-none text-white shadow-2xl transition hover:scale-105 hover:opacity-95" style="background: linear-gradient(135deg, #059669 0%, #10b981 45%, #34d399 100%);" title="Ajouter une recette" aria-label="Ajouter une recette">
+<a href="form.php" class="fixed bottom-6 right-6 z-50 inline-flex h-14 w-14 items-center justify-center rounded-full text-3xl font-bold leading-none text-white shadow-2xl transition hover:scale-105 hover:opacity-95" style="background: linear-gradient(135deg, #2563eb 0%, #3b82f6 45%, #60a5fa 100%);" title="Ajouter une recette" aria-label="Ajouter une recette">
     +
 </a>
 

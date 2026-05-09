@@ -362,7 +362,7 @@ if ($recette === null) {
           <div class="ri-stat">
             <span class="ri-stat-ico" aria-hidden="true">💰</span>
             <div class="ri-stat-text">
-              <span class="ri-stat-label">Prix légumes API</span>
+              <span class="ri-stat-label">Prix légumes</span>
               <strong class="ri-stat-strong">' . htmlspecialchars($vegetablesPriceApi, ENT_QUOTES, 'UTF-8') . '</strong>
             </div>
           </div>
@@ -382,7 +382,7 @@ if ($recette === null) {
                 <p class="ri-card-meta">' . $cardMetaLine . '</p>
                 <p class="ri-card-kcal">' . $calories . ' Kcal</p>
                 <div class="ri-card-foot d-flex align-items-center justify-content-between">
-                  <small>Empreinte: ' . htmlspecialchars($impactCarboneCalc, ENT_QUOTES, 'UTF-8') . ' | Prix légumes API: ' . htmlspecialchars($vegetablesPriceApi, ENT_QUOTES, 'UTF-8') . '</small>
+                  <small>Empreinte: ' . htmlspecialchars($impactCarboneCalc, ENT_QUOTES, 'UTF-8') . ' | Prix légumes: ' . htmlspecialchars($vegetablesPriceApi, ENT_QUOTES, 'UTF-8') . '</small>
                   <span class="ri-fiche-pill"><span aria-hidden="true">📄</span> Fiche</span>
                 </div>
               </div>

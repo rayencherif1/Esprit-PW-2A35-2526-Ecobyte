@@ -25,8 +25,8 @@ $imageValue = $recette['image'] ?? '/recette/public/image/salade.jpg';
       #recette-form input:focus,
       #recette-form select:focus {
         outline: none;
-        border-color: #10b981 !important;
-        box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2);
+        border-color: #3b82f6 !important;
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
       }
       .form-toast {
         position: fixed;
@@ -56,10 +56,10 @@ $imageValue = $recette['image'] ?? '/recette/public/image/salade.jpg';
             <p class="text-sm leading-normal text-slate-500 dark:text-white/70">Remplis les champs pour <?= $editing ? 'modifier' : 'ajouter' ?> ta recette.</p>
           </div>
           <div class="flex items-center gap-3">
-            <a href="tables.php" class="inline-flex items-center rounded-full px-4 py-2 text-sm font-semibold text-white shadow-md transition hover:opacity-90" style="background-color: #047857;">
+            <a href="tables.php" class="inline-flex items-center rounded-full px-4 py-2 text-sm font-semibold text-white shadow-md transition hover:opacity-90" style="background-color: #1d4ed8;">
               Retour au tableau
             </a>
-            <a href="recette-form.php" class="inline-flex items-center rounded-full px-4 py-2 text-sm font-semibold shadow-md transition" style="background-color: #10b981; color: #ffffff;">
+            <a href="recette-form.php" class="inline-flex items-center rounded-full px-4 py-2 text-sm font-semibold shadow-md transition" style="background-color: #3b82f6; color: #ffffff;">
               + Ajouter
             </a>
           </div>
@@ -120,7 +120,7 @@ $imageValue = $recette['image'] ?? '/recette/public/image/salade.jpg';
               <a href="tables.php" class="inline-flex items-center justify-center rounded-2xl border border-slate-300 bg-white px-5 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50">
                 Annuler
               </a>
-              <button type="submit" class="inline-flex items-center justify-center rounded-2xl px-5 py-3 text-sm font-semibold transition" style="background-color: #10b981; color: #ffffff;">
+              <button type="submit" class="inline-flex items-center justify-center rounded-2xl px-5 py-3 text-sm font-semibold transition" style="background-color: #3b82f6; color: #ffffff;">
                 Confirmer
               </button>
             </div>

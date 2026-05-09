@@ -21,8 +21,8 @@ $imageValue = $recette['image'] ?? '/recette/public/image/salade.jpg';
       #recette-form input:focus,
       #recette-form select:focus {
         outline: none;
-        border-color: #10b981 !important;
-        box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2);
+        border-color: #3b82f6 !important;
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
       }
       .form-toast {
         position: fixed;
@@ -42,7 +42,7 @@ $imageValue = $recette['image'] ?? '/recette/public/image/salade.jpg';
       }
     </style>
 </head>
-<body class="min-h-screen bg-gradient-to-br from-slate-100 via-emerald-50/30 to-emerald-50 text-slate-900">
+<body class="min-h-screen bg-gradient-to-br from-slate-100 via-blue-50/30 to-blue-50 text-slate-900">
 <div id="form-toast" class="form-toast" role="alert" aria-live="assertive"></div>
 <div class="min-h-screen w-full px-4 py-6 sm:px-6 lg:px-8">
     <div class="mx-auto max-w-3xl">
@@ -51,7 +51,7 @@ $imageValue = $recette['image'] ?? '/recette/public/image/salade.jpg';
                 <h1 class="text-3xl font-semibold tracking-tight"><?= htmlspecialchars($formTitle) ?></h1>
                 <p class="mt-1 text-sm text-slate-500">Remplis les champs pour ajouter ou modifier une recette.</p>
             </div>
-            <a href="back.php" class="inline-flex items-center justify-center rounded-2xl px-4 py-2 text-sm font-semibold text-white shadow-md transition hover:opacity-90" style="background-color: #047857;">
+            <a href="back.php" class="inline-flex items-center justify-center rounded-2xl px-4 py-2 text-sm font-semibold text-white shadow-md transition hover:opacity-90" style="background-color: #1d4ed8;">
                 Retour au tableau
             </a>
         </div>
@@ -118,7 +118,7 @@ $imageValue = $recette['image'] ?? '/recette/public/image/salade.jpg';
                     <a href="back.php" class="inline-flex items-center justify-center rounded-2xl border border-slate-300 bg-white px-5 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50">
                         Annuler
                     </a>
-                    <button type="submit" class="inline-flex items-center justify-center rounded-2xl px-5 py-3 text-sm font-semibold transition" style="background-color: #10b981; color: #ffffff;">
+                    <button type="submit" class="inline-flex items-center justify-center rounded-2xl px-5 py-3 text-sm font-semibold transition" style="background-color: #3b82f6; color: #ffffff;">
                         Confirmer
                     </button>
                 </div>

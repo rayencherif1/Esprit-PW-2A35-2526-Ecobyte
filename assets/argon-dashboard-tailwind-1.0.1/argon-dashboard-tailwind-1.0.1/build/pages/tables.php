@@ -80,18 +80,18 @@ if ($message === 'ajoute') {
     <style>
       #search-recette:focus {
         outline: none;
-        border-color: #10b981 !important;
-        box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2);
+        border-color: #3b82f6 !important;
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
       }
       #sort-recette:focus {
         outline: none;
-        border-color: #10b981 !important;
-        box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2);
+        border-color: #3b82f6 !important;
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
       }
       .tiny-kcal { display: block; font-size: 10px; color: #94a3b8; line-height: 1.1; }
       .pill { display: inline-flex; align-items: center; gap: 0.25rem; padding: 0.2rem 0.55rem; border-radius: 999px; font-size: 11px; font-weight: 600; }
-      .pill-type { background-color: #e8f8f1; color: #0f766e; }
-      .pill-impact { background-color: #ecfdf5; color: #059669; }
+      .pill-type { background-color: #dbeafe; color: #1e40af; }
+      .pill-impact { background-color: #eff6ff; color: #2563eb; }
       .sort-hint { color: #94a3b8; font-size: 10px; margin-left: 3px; }
       .table-footer { border-top: 1px solid #eef2f7; }
       .toolbar-control {
@@ -130,9 +130,9 @@ if ($message === 'ajoute') {
         z-index: 9999;
         max-width: 360px;
         border-radius: 14px;
-        border: 1px solid #bbf7d0;
-        background: #f0fdf4;
-        color: #166534;
+        border: 1px solid #bfdbfe;
+        background: #eff6ff;
+        color: #1e40af;
         padding: 10px 14px;
         font-size: 13px;
         font-weight: 600;
@@ -143,7 +143,7 @@ if ($message === 'ajoute') {
   </head>
   <body class="m-0 font-sans text-base antialiased font-normal bg-gray-50 text-slate-500">
     <div id="form-toast" class="form-toast" role="status" aria-live="polite"><?= htmlspecialchars($toastMessage) ?></div>
-    <div class="absolute w-full min-h-75" style="background: linear-gradient(90deg, #059669 0%, #10b981 50%, #34d399 100%);"></div>
+    <div class="absolute w-full min-h-75" style="background: linear-gradient(90deg, #2563eb 0%, #3b82f6 50%, #60a5fa 100%);"></div>
     <aside class="fixed inset-y-0 flex-wrap items-center justify-between block w-full p-0 my-4 overflow-y-auto transition-transform duration-200 -translate-x-full bg-white border-0 shadow-xl xl:ml-6 max-w-64 ease-nav-brand z-990 rounded-2xl xl:left-0 xl:translate-x-0" aria-expanded="false">
       <div class="h-19">
         <a class="block px-8 py-6 m-0 text-sm whitespace-nowrap text-slate-700" href="dashboard.html">
@@ -157,13 +157,13 @@ if ($message === 'ajoute') {
           <li class="mt-0.5 w-full">
             <a class="py-2.7 text-sm my-0 mx-2 flex items-center whitespace-nowrap px-4 transition-colors text-slate-700" href="dashboard.html">
               <div class="mr-2 flex h-8 w-8 items-center justify-center rounded-lg">
-                <i class="relative top-0 text-sm leading-normal text-emerald-500 ni ni-tv-2"></i>
+                <i class="relative top-0 text-sm leading-normal text-blue-500 ni ni-tv-2"></i>
               </div>
               <span class="ml-1 duration-300 opacity-100 pointer-events-none ease">Dashboard</span>
             </a>
           </li>
           <li class="mt-0.5 w-full">
-            <a class="py-2.7 bg-emerald-500/30 text-sm my-0 mx-2 flex items-center whitespace-nowrap rounded-lg px-4 font-semibold text-slate-700 transition-colors" href="tables.php">
+            <a class="py-2.7 bg-blue-500/13 text-sm my-0 mx-2 flex items-center whitespace-nowrap rounded-lg px-4 font-semibold text-slate-700 transition-colors" href="tables.php">
               <div class="mr-2 flex h-8 w-8 items-center justify-center rounded-lg">
                 <i class="relative top-0 text-sm leading-normal text-orange-500 ni ni-calendar-grid-58"></i>
               </div>
@@ -185,7 +185,7 @@ if ($message === 'ajoute') {
                     <h6>Gestion des recettes</h6>
                     <p class="mb-0 text-sm leading-normal text-slate-400">Tableau de bord back office pour la gestion des recettes.</p>
                   </div>
-                  <a href="recette-form.php" class="inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold shadow-md transition" style="background-color: #10b981; color: #ffffff;">
+                  <a href="recette-form.php" class="inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold shadow-md transition" style="background-color: #3b82f6; color: #ffffff;">
                     <span style="font-size: 18px; font-weight: 700; line-height: 1;">+</span>
                     <span>Ajouter</span>
                   </a>
@@ -233,7 +233,7 @@ if ($message === 'ajoute') {
                         <th class="px-6 py-3 font-bold text-center uppercase align-middle bg-transparent border-b text-xxs whitespace-nowrap text-slate-400 opacity-70">Temps <span class="sort-hint">↕</span></th>
                         <th class="px-6 py-3 font-bold text-center uppercase align-middle bg-transparent border-b text-xxs whitespace-nowrap text-slate-400 opacity-70">Difficulte</th>
                         <th class="px-6 py-3 font-bold text-center uppercase align-middle bg-transparent border-b text-xxs whitespace-nowrap text-slate-400 opacity-70">Impact</th>
-                        <th class="px-6 py-3 font-bold text-center uppercase align-middle bg-transparent border-b text-xxs whitespace-nowrap text-slate-400 opacity-70">Prix legumes API</th>
+                        <th class="px-6 py-3 font-bold text-center uppercase align-middle bg-transparent border-b text-xxs whitespace-nowrap text-slate-400 opacity-70">Prix legumes</th>
                         <th class="px-6 py-3 font-bold text-center uppercase align-middle bg-transparent border-b text-xxs whitespace-nowrap text-slate-400 opacity-70">Instruction</th>
                         <th class="px-6 py-3 font-semibold capitalize align-middle bg-transparent border-b whitespace-nowrap text-slate-400 opacity-70">Actions</th>
                         <th class="px-6 py-3 font-semibold capitalize align-middle bg-transparent border-b whitespace-nowrap text-slate-400 opacity-70">QR Code</th>
@@ -291,7 +291,7 @@ if ($message === 'ajoute') {
                               }
                             ?>
                             <?php if ($instructionDone) : ?>
-                              <a href="<?= htmlspecialchars($instructionUrl) ?>" class="inline-flex h-8 w-8 items-center justify-center rounded-full text-sm font-bold text-white transition hover:opacity-90" style="background-color: #10b981;" title="Modifier l'instruction" aria-label="Modifier l'instruction">
+                              <a href="<?= htmlspecialchars($instructionUrl) ?>" class="inline-flex h-8 w-8 items-center justify-center rounded-full text-sm font-bold text-white transition hover:opacity-90" style="background-color: #3b82f6;" title="Modifier l'instruction" aria-label="Modifier l'instruction">
                                 <span aria-hidden="true">✓</span>
                               </a>
                             <?php else : ?>
@@ -300,7 +300,7 @@ if ($message === 'ajoute') {
                           </td>
                           <td class="p-2 align-middle bg-transparent border-b whitespace-nowrap">
                             <div class="flex justify-center gap-2">
-                              <a href="recette-form.php?id=<?= urlencode($recette['id']) ?>" class="inline-flex items-center justify-center rounded-full h-8 w-8 text-xs font-semibold transition hover:opacity-90" style="background-color: #10b981; color: #ffffff;"><span aria-hidden="true">&#x270F;&#xFE0F;</span></a>
+                              <a href="recette-form.php?id=<?= urlencode($recette['id']) ?>" class="inline-flex items-center justify-center rounded-full h-8 w-8 text-xs font-semibold transition hover:opacity-90" style="background-color: #3b82f6; color: #ffffff;"><span aria-hidden="true">&#x270F;&#xFE0F;</span></a>
                               <a href="/recette/controller/RecetteController.php?delete=<?= urlencode($recette['id']) ?>" class="inline-flex items-center justify-center rounded-full h-8 w-8 text-xs font-semibold transition hover:opacity-90" style="background-color: #ef4444; color: #ffffff;"><span aria-hidden="true">&#x274C;</span></a>
                             </div>
                           </td>
@@ -322,7 +322,7 @@ if ($message === 'ajoute') {
                   <span class="text-xs text-slate-500">Affichage de 1 à <?= count($recettes) ?> sur <?= count($recettes) ?> recettes</span>
                   <div class="flex items-center gap-2">
                     <button type="button" class="h-7 w-7 rounded-lg border border-slate-200 bg-white text-slate-400">&lt;</button>
-                    <button type="button" class="h-7 w-7 rounded-lg bg-emerald-500 text-white text-xs font-semibold">1</button>
+                    <button type="button" class="h-7 w-7 rounded-lg bg-blue-500 text-white text-xs font-semibold">1</button>
                     <button type="button" class="h-7 w-7 rounded-lg border border-slate-200 bg-white text-slate-400">&gt;</button>
                   </div>
                 </div>

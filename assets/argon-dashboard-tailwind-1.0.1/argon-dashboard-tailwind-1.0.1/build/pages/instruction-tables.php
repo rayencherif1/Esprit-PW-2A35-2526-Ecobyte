@@ -37,13 +37,13 @@ $message = $_GET['message'] ?? null;
     <style>
       #search-instruction:focus {
         outline: none;
-        border-color: #10b981 !important;
-        box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2);
+        border-color: #3b82f6 !important;
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
       }
     </style>
   </head>
   <body class="m-0 font-sans text-base antialiased font-normal bg-gray-50 text-slate-500">
-    <div class="absolute w-full min-h-75" style="background: linear-gradient(90deg, #059669 0%, #10b981 50%, #34d399 100%);"></div>
+    <div class="absolute w-full min-h-75" style="background: linear-gradient(90deg, #2563eb 0%, #3b82f6 50%, #60a5fa 100%);"></div>
     <aside class="fixed inset-y-0 flex-wrap items-center justify-between block w-full p-0 my-4 overflow-y-auto transition-transform duration-200 -translate-x-full bg-white border-0 shadow-xl xl:ml-6 max-w-64 ease-nav-brand z-990 rounded-2xl xl:left-0 xl:translate-x-0" aria-expanded="false">
       <div class="h-19">
         <a class="block px-8 py-6 m-0 text-sm whitespace-nowrap text-slate-700" href="dashboard.html">
@@ -57,7 +57,7 @@ $message = $_GET['message'] ?? null;
           <li class="mt-0.5 w-full">
             <a class="py-2.7 text-sm my-0 mx-2 flex items-center whitespace-nowrap px-4 transition-colors text-slate-700" href="dashboard.html">
               <div class="mr-2 flex h-8 w-8 items-center justify-center rounded-lg">
-                <i class="relative top-0 text-sm leading-normal text-emerald-500 ni ni-tv-2"></i>
+                <i class="relative top-0 text-sm leading-normal text-blue-500 ni ni-tv-2"></i>
               </div>
               <span class="ml-1 duration-300 opacity-100 pointer-events-none ease">Dashboard</span>
             </a>
@@ -71,9 +71,9 @@ $message = $_GET['message'] ?? null;
             </a>
           </li>
           <li class="mt-0.5 w-full">
-            <a class="py-2.7 bg-emerald-500/30 text-sm my-0 mx-2 flex items-center whitespace-nowrap rounded-lg px-4 font-semibold text-slate-700 transition-colors" href="instruction-tables.php">
+            <a class="py-2.7 bg-blue-500/13 text-sm my-0 mx-2 flex items-center whitespace-nowrap rounded-lg px-4 font-semibold text-slate-700 transition-colors" href="instruction-tables.php">
               <div class="mr-2 flex h-8 w-8 items-center justify-center rounded-lg">
-                <i class="fas fa-book-open relative top-0 text-sm leading-normal text-emerald-500"></i>
+                <i class="fas fa-book-open relative top-0 text-sm leading-normal text-blue-500"></i>
               </div>
               <span class="ml-1 duration-300 opacity-100 pointer-events-none ease">Instructions</span>
             </a>
@@ -93,13 +93,13 @@ $message = $_GET['message'] ?? null;
                     <h6>Gestion des instructions</h6>
                     <p class="mb-0 text-sm leading-normal text-slate-400">Image, nom, ingredients, preparation, nombre d'etapes et temps total.</p>
                   </div>
-                  <a href="instruction-form.php" class="inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold shadow-md transition" style="background-color: #10b981; color: #ffffff;">
+                  <a href="instruction-form.php" class="inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold shadow-md transition" style="background-color: #3b82f6; color: #ffffff;">
                     <span style="font-size: 18px; font-weight: 700; line-height: 1;">+</span>
                     <span>Ajouter</span>
                   </a>
                 </div>
                 <?php if ($message) : ?>
-                  <div class="mt-4 rounded-2xl border border-emerald-200 bg-emerald-50 px-6 py-4 text-sm text-emerald-800">
+                  <div class="mt-4 rounded-2xl border border-blue-200 bg-blue-50 px-6 py-4 text-sm text-blue-900">
                     <?php if ($message === 'ajoute') : ?>Fiche instruction ajoutee avec succes.<?php endif; ?>
                     <?php if ($message === 'modifie') : ?>Fiche instruction modifiee avec succes.<?php endif; ?>
                     <?php if ($message === 'supprime') : ?>Fiche instruction supprimee avec succes.<?php endif; ?>
@@ -153,7 +153,7 @@ $message = $_GET['message'] ?? null;
                           </td>
                           <td class="p-2 align-middle bg-transparent border-b whitespace-nowrap">
                             <div class="flex justify-center gap-2">
-                              <a href="instruction-form.php?id=<?= urlencode($r['id']) ?>" class="inline-flex items-center justify-center rounded-full px-3 py-2 text-xs font-semibold transition hover:opacity-90" style="background-color: #047857; color: #ffffff;"><span aria-hidden="true">&#x270F;&#xFE0F;</span></a>
+                              <a href="instruction-form.php?id=<?= urlencode($r['id']) ?>" class="inline-flex items-center justify-center rounded-full px-3 py-2 text-xs font-semibold transition hover:opacity-90" style="background-color: #1d4ed8; color: #ffffff;"><span aria-hidden="true">&#x270F;&#xFE0F;</span></a>
                               <a href="/recette/controller/InstructionController.php?delete_instruction=<?= urlencode($r['id']) ?>" class="inline-flex items-center justify-center rounded-full px-3 py-2 text-xs font-semibold transition hover:opacity-90" style="background-color: #ef4444; color: #ffffff;"><span aria-hidden="true">&#x274C;</span></a>
                             </div>
                           </td>
