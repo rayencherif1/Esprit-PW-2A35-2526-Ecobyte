@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/../../../../../controller/RecetteController.php';
+require_once __DIR__ . '/../../../../../lib/recipe_image_options.php';
 $controller = new RecetteController();
 $id = isset($_GET['id']) ? (int) $_GET['id'] : null;
 $recette = $id ? $controller->getRecetteById($id) : null;
@@ -108,11 +109,9 @@ $imageValue = $recette['image'] ?? '/recette/public/image/salade.jpg';
               <label class="block md:col-span-2">
                 <span class="text-sm font-semibold text-slate-700 dark:text-white">Image</span>
                 <select name="image" class="mt-2 w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition">
-                  <option value="/recette/public/image/citron.jpg" <?= $imageValue === '/recette/public/image/citron.jpg' ? 'selected' : '' ?>>Citron</option>
-                  <option value="/recette/public/image/curry.jpg" <?= $imageValue === '/recette/public/image/curry.jpg' ? 'selected' : '' ?>>Curry</option>
-                  <option value="/recette/public/image/pain.jpg" <?= $imageValue === '/recette/public/image/pain.jpg' ? 'selected' : '' ?>>Pain</option>
-                  <option value="/recette/public/image/salade.jpg" <?= $imageValue === '/recette/public/image/salade.jpg' ? 'selected' : '' ?>>Salade</option>
-                  <option value="/recette/public/image/soupe.jpg" <?= $imageValue === '/recette/public/image/soupe.jpg' ? 'selected' : '' ?>>Soupe</option>
+                  <?php foreach (recipe_image_options_for_select($imageValue) as $img) : ?>
+                    <option value="<?= htmlspecialchars($img['path']) ?>" <?= $imageValue === $img['path'] ? 'selected' : '' ?>><?= htmlspecialchars($img['label']) ?></option>
+                  <?php endforeach; ?>
                 </select>
               </label>
             </div>

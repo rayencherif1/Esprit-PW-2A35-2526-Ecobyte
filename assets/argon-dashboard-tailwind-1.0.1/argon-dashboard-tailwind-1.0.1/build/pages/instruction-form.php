@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . '/../../../../../controller/InstructionController.php';
 require_once __DIR__ . '/../../../../../controller/RecetteController.php';
+require_once __DIR__ . '/../../../../../lib/recipe_image_options.php';
 $controller = new InstructionController();
 $id = isset($_GET['id']) ? (int) $_GET['id'] : null;
 $recetteId = isset($_GET['recette_id']) ? (int) $_GET['recette_id'] : null;
@@ -143,11 +144,9 @@ if (trim($preparationValue) === '') {
                       Visuel
                     </span>
                     <select id="instruction-image-select" name="image" class="mt-2 w-full rounded-2xl border border-slate-200 bg-slate-50/50 px-4 py-3.5 text-sm text-slate-900 outline-none transition focus:border-blue-400 focus:bg-white focus:ring-4 focus:ring-blue-500/10">
-                      <option value="/recette/public/image/citron.jpg" <?= $imageValue === '/recette/public/image/citron.jpg' ? 'selected' : '' ?>>Citron</option>
-                      <option value="/recette/public/image/curry.jpg" <?= $imageValue === '/recette/public/image/curry.jpg' ? 'selected' : '' ?>>Curry</option>
-                      <option value="/recette/public/image/pain.jpg" <?= $imageValue === '/recette/public/image/pain.jpg' ? 'selected' : '' ?>>Pain</option>
-                      <option value="/recette/public/image/salade.jpg" <?= $imageValue === '/recette/public/image/salade.jpg' ? 'selected' : '' ?>>Salade</option>
-                      <option value="/recette/public/image/soupe.jpg" <?= $imageValue === '/recette/public/image/soupe.jpg' ? 'selected' : '' ?>>Soupe</option>
+                      <?php foreach (recipe_image_options_for_select($imageValue) as $img) : ?>
+                        <option value="<?= htmlspecialchars($img['path']) ?>" <?= $imageValue === $img['path'] ? 'selected' : '' ?>><?= htmlspecialchars($img['label']) ?></option>
+                      <?php endforeach; ?>
                     </select>
                   </label>
                   <div class="rounded-2xl border border-dashed border-slate-200 bg-slate-50/80 p-4 text-center">
