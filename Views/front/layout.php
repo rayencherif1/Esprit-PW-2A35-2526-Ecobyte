@@ -1,8 +1,8 @@
 <?php
 /**
- * Layout front-office — template FoodMart (dossier FoodMart-1.0.0/FoodMart-1.0.0).
- * Les feuilles de style et scripts pointent vers URL_FOODMART (voir config/config.php).
- * Variables attendues : $pageTitle, $slot, optionnel $footerScripts
+ * Layout front-office — Fitness & Sport (selem)
+ * Header simplifié : Logo EcoByte + icône user
+ * Navigation en cards/boxes
  */
 $pageTitle = $pageTitle ?? 'Nutrition & Santé';
 $fm = rtrim(URL_FOODMART, '/');
@@ -12,134 +12,279 @@ $fm = rtrim(URL_FOODMART, '/');
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title><?= e($pageTitle) ?></title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@9/swiper-bundle.min.css" />
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-KK94CHFLLe+nY2dmCWGMq91rCGa5gtU4mk92HdvYe+M/SXH301p5ILy+dN9+nJOZ" crossorigin="anonymous" />
+    <title><?= e($pageTitle) ?> — EcoByte</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/css/bootstrap.min.css" rel="stylesheet" />
     <link rel="stylesheet" type="text/css" href="<?= e($fm) ?>/css/vendor.css" />
-    <link rel="stylesheet" type="text/css" href="<?= e($fm) ?>/style.css" />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700&family=Open+Sans:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet" />
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: #f0f4f8;
+            min-height: 100vh;
+            margin: 0;
+        }
+
+        /* ── HEADER ─────────────────────────────────────────────── */
+        .eco-header {
+            background: #fff;
+            padding: 14px 32px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.07);
+            position: sticky;
+            top: 0;
+            z-index: 200;
+        }
+        .eco-logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            text-decoration: none;
+        }
+        .eco-logo-icon { font-size: 1.8rem; }
+        .eco-logo-text {
+            font-size: 1.4rem;
+            font-weight: 800;
+            line-height: 1;
+        }
+        .eco-logo-text .eco  { color: #4caf50; }
+        .eco-logo-text .byte { color: #ff6b35; }
+        .eco-logo-sub {
+            font-size: 0.65rem;
+            color: #9ca3af;
+            font-weight: 500;
+            letter-spacing: .08em;
+            text-transform: uppercase;
+            margin-top: 2px;
+        }
+
+        .header-right { display: flex; align-items: center; gap: 12px; }
+        .hub-link {
+            font-size: 0.8rem;
+            color: #6b7280;
+            text-decoration: none;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            padding: 6px 12px;
+            border-radius: 8px;
+            background: #f3f4f6;
+            transition: background .2s;
+        }
+        .hub-link:hover { background: #e5e7eb; color: #374151; }
+        .user-avatar {
+            width: 38px; height: 38px;
+            background: linear-gradient(135deg, #4caf50, #2196f3);
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            color: white; font-weight: 700; font-size: 0.9rem;
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(76,175,80,0.3);
+        }
+
+        /* ── MODULE BANNER ───────────────────────────────────────── */
+        .module-banner {
+            background: linear-gradient(135deg, #1a1a2e 0%, #0f3460 100%);
+            color: white;
+            padding: 32px 32px 24px;
+            position: relative;
+            overflow: hidden;
+        }
+        .module-banner::before {
+            content: '';
+            position: absolute; inset: 0;
+            background: radial-gradient(circle at 80% 50%, rgba(255,107,53,0.2) 0%, transparent 60%);
+        }
+        .module-banner-content {
+            position: relative; z-index: 1;
+            display: flex; align-items: center; gap: 16px;
+        }
+        .module-badge {
+            background: rgba(255,107,53,0.2);
+            border: 1px solid rgba(255,107,53,0.4);
+            color: #ff8c42;
+            font-size: 0.75rem;
+            font-weight: 700;
+            padding: 4px 12px;
+            border-radius: 999px;
+            text-transform: uppercase;
+            letter-spacing: .06em;
+        }
+        .module-banner h2 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin: 0;
+        }
+        .module-banner p {
+            margin: 0;
+            opacity: 0.7;
+            font-size: 0.875rem;
+        }
+
+        /* ── NAV CARDS ───────────────────────────────────────────── */
+        .nav-cards-bar {
+            background: #fff;
+            border-bottom: 1px solid #e5e7eb;
+            padding: 16px 32px;
+        }
+        .nav-cards {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        .nav-card {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 18px;
+            border-radius: 12px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.85rem;
+            transition: all 0.2s ease;
+            border: 2px solid transparent;
+        }
+        .nav-card-icon {
+            font-size: 1.2rem;
+            width: 32px; height: 32px;
+            display: flex; align-items: center; justify-content: center;
+            border-radius: 8px;
+        }
+        .nav-card.active {
+            background: linear-gradient(135deg, #ff6b35, #ff8c42);
+            color: white;
+            box-shadow: 0 4px 15px rgba(255,107,53,0.3);
+        }
+        .nav-card.active .nav-card-icon { background: rgba(255,255,255,0.2); }
+
+        .nav-card.green  { background:#f0fdf4; color:#16a34a; border-color:#bbf7d0; }
+        .nav-card.green:hover { background:#dcfce7; }
+        .nav-card.green .nav-card-icon { background:#dcfce7; }
+
+        .nav-card.blue   { background:#eff6ff; color:#1d4ed8; border-color:#bfdbfe; }
+        .nav-card.blue:hover { background:#dbeafe; }
+        .nav-card.blue .nav-card-icon { background:#dbeafe; }
+
+        .nav-card.purple { background:#faf5ff; color:#7c3aed; border-color:#ddd6fe; }
+        .nav-card.purple:hover { background:#ede9fe; }
+        .nav-card.purple .nav-card-icon { background:#ede9fe; }
+
+        /* ── MAIN CONTENT ────────────────────────────────────────── */
+        .eco-main {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 32px 24px 60px;
+        }
+
+        /* ── Bootstrap overrides ─────────────────────────────────── */
+        .btn-nf {
+            background: linear-gradient(135deg, #ff6b35, #ff8c42);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: all .2s;
+        }
+        .btn-nf:hover {
+            background: linear-gradient(135deg, #e55a25, #ff7a30);
+            color: white;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(255,107,53,0.35);
+        }
+        .nf-card {
+            border: none;
+            border-radius: 16px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+        }
+        .nf-card:hover {
+            box-shadow: 0 6px 24px rgba(0,0,0,0.1);
+            transform: translateY(-2px);
+            transition: all .25s;
+        }
+
+        /* ── FOOTER ──────────────────────────────────────────────── */
+        .eco-footer {
+            background: #1a1a2e;
+            color: #6b7280;
+            text-align: center;
+            padding: 20px;
+            font-size: 0.8rem;
+        }
+        .eco-footer a { color: #9ca3af; text-decoration: none; }
+        .eco-footer a:hover { color: #fff; }
+    </style>
 </head>
 <body>
 
-    <svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
-      <defs>
-        <symbol xmlns="http://www.w3.org/2000/svg" id="heart" viewBox="0 0 24 24">
-          <path fill="currentColor" d="M20.16 4.61A6.27 6.27 0 0 0 12 4a6.27 6.27 0 0 0-8.16 9.48l7.45 7.45a1 1 0 0 0 1.42 0l7.45-7.45a6.27 6.27 0 0 0 0-8.87Zm-1.41 7.46L12 18.81l-6.75-6.74a4.28 4.28 0 0 1 3-7.3a4.25 4.25 0 0 1 3 1.25a1 1 0 0 0 1.42 0a4.27 4.27 0 0 1 6 6.05Z"/>
-        </symbol>
-        <symbol xmlns="http://www.w3.org/2000/svg" id="cart" viewBox="0 0 24 24">
-          <path fill="currentColor" d="M8.5 19a1.5 1.5 0 1 0 1.5 1.5A1.5 1.5 0 0 0 8.5 19ZM19 16H7a1 1 0 0 1 0-2h8.491a3.013 3.013 0 0 0 2.885-2.176l1.585-5.55A1 1 0 0 0 19 5H6.74a3.007 3.007 0 0 0-2.82-2H3a1 1 0 0 0 0 2h.921a1.005 1.005 0 0 1 .962.725l.155.545v.005l1.641 5.742A3 3 0 0 0 7 18h12a1 1 0 0 0 0-2Zm-1.326-9l-1.22 4.274a1.005 1.005 0 0 1-.963.726H8.754l-.255-.892L7.326 7ZM16.5 19a1.5 1.5 0 1 0 1.5 1.5a1.5 1.5 0 0 0-1.5-1.5Z"/>
-        </symbol>
-        <symbol xmlns="http://www.w3.org/2000/svg" id="search" viewBox="0 0 24 24">
-          <path fill="currentColor" d="M21.71 20.29L18 16.61A9 9 0 1 0 16.61 18l3.68 3.68a1 1 0 0 0 1.42 0a1 1 0 0 0 0-1.39ZM11 18a7 7 0 1 1 7-7a7 7 0 0 1-7 7Z"/>
-        </symbol>
-        <symbol xmlns="http://www.w3.org/2000/svg" id="user" viewBox="0 0 24 24">
-          <path fill="currentColor" d="M15.71 12.71a6 6 0 1 0-7.42 0a10 10 0 0 0-6.22 8.18a1 1 0 0 0 2 .22a8 8 0 0 1 15.9 0a1 1 0 0 0 1 .89h.11a1 1 0 0 0 .88-1.1a10 10 0 0 0-6.25-8.19ZM12 12a4 4 0 1 1 4-4a4 4 0 0 1-4 4Z"/>
-        </symbol>
-      </defs>
-    </svg>
-
-    <div class="preloader-wrapper">
-      <div class="preloader"></div>
-    </div>
-
-    <header>
-      <div class="container-fluid">
-        <div class="row py-3 border-bottom align-items-center">
-          <div class="col-sm-6 col-lg-4 text-center text-sm-start">
-            <div class="main-logo">
-              <a href="<?= e(BASE_URL) ?>/index.php?action=home">
-                <img src="<?= e(BASE_URL) ?>/images/mylogo.png" alt="Logo du site" class="img-fluid" />
-              </a>
+<!-- ── HEADER ────────────────────────────────────────────────────── -->
+<header class="eco-header">
+    <a href="/2int/index.php" class="eco-logo">
+        <span class="eco-logo-icon">🌿</span>
+        <div>
+            <div class="eco-logo-text">
+                <span class="eco">ECO</span><span class="byte">BYTE</span>
             </div>
-          </div>
-          <div class="col-sm-6 col-lg-8">
-            <nav class="navbar navbar-expand-lg justify-content-lg-end">
-              <ul class="navbar-nav flex-row gap-3 ms-auto d-none d-lg-flex">
-                <li class="nav-item">
-                  <a class="nav-link" href="<?= e(BASE_URL) ?>/index.php?action=home">Programmes</a>
-                </li>
-                <li class="nav-item">
-                  <a class="nav-link" href="<?= e(BASE_URL) ?>/index.php?action=recommend_ai">Suggestion IA</a>
-                </li>
-                <li class="nav-item">
-                  <a class="nav-link" href="<?= e(BASE_URL) ?>/index.php?action=front_program_new">Ajouter programme</a>
-                </li>
-                <li class="nav-item">
-                  <a class="nav-link" href="<?= e(BASE_URL) ?>/index.php?action=user_program_list">Mes programmes</a>
-                </li>
-                <li class="nav-item">
-                  <a class="nav-link" href="<?= e(ADMIN_URL) ?>/index.php?action=dashboard">Admin</a>
-                </li>
-              </ul>
-              <button class="navbar-toggler d-lg-none border-0" type="button" data-bs-toggle="offcanvas" data-bs-target="#fmNav" aria-controls="fmNav">
-                <span class="navbar-toggler-icon"></span>
-              </button>
-              <div class="offcanvas offcanvas-end d-lg-none" tabindex="-1" id="fmNav">
-                <div class="offcanvas-header">
-                  <span class="offcanvas-title">Menu</span>
-                  <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Fermer"></button>
-                </div>
-                <div class="offcanvas-body">
-                  <ul class="navbar-nav gap-2">
-                    <li class="nav-item">
-                      <a class="nav-link" href="<?= e(BASE_URL) ?>/index.php?action=home">Programmes</a>
-                    </li>
-                    <li class="nav-item">
-                      <a class="nav-link" href="<?= e(BASE_URL) ?>/index.php?action=recommend_ai">Suggestion IA</a>
-                    </li>
-                    <li class="nav-item">
-                      <a class="nav-link" href="<?= e(BASE_URL) ?>/index.php?action=front_program_new">Ajouter programme</a>
-                    </li>
-                    <li class="nav-item">
-                      <a class="nav-link" href="<?= e(BASE_URL) ?>/index.php?action=user_program_list">Mes programmes</a>
-                    </li>
-                    <li class="nav-item">
-                      <a class="nav-link" href="<?= e(ADMIN_URL) ?>/index.php?action=dashboard">Admin</a>
-                    </li>
-                  </ul>
-                </div>
-              </div>
-            </nav>
-          </div>
+            <div class="eco-logo-sub">Fitness & Sport</div>
         </div>
-      </div>
-    </header>
-
-    <section class="py-4" style="background-image: url('<?= e($fm) ?>/images/background-pattern.jpg');background-repeat:no-repeat;background-size:cover;">
-      <div class="container-fluid">
-        <div class="container">
-          <?= $slot ?? '' ?>
-        </div>
-      </div>
-    </section>
-
-    <footer class="py-5 border-top">
-      <div class="container-fluid">
-        <div class="container">
-          <p class="text-muted small mb-0">Nutrition &amp; entraînement. Outils : calcul IMC, idées d’exercices (wger), conseils du jour.</p>
-        </div>
-      </div>
-    </footer>
-    <div id="footer-bottom">
-      <div class="container-fluid">
-        <div class="row">
-          <div class="col-md-6 copyright">
-            <p class="mb-0 small">Template front : FoodMart (HTML) intégré en PHP.</p>
-          </div>
-          <div class="col-md-6 credit-link text-start text-md-end">
-            <p class="mb-0 small">FoodMart par TemplatesJungle / ThemeWagon</p>
-          </div>
-        </div>
-      </div>
+    </a>
+    <div class="header-right">
+        <a href="/2int/index.php" class="hub-link">
+            🏠 Accueil Hub
+        </a>
+        <div class="user-avatar" title="Utilisateur">U</div>
     </div>
+</header>
 
-    <script src="<?= e($fm) ?>/js/jquery-1.11.0.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/swiper@9/swiper-bundle.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/js/bootstrap.bundle.min.js" integrity="sha384-ENjdO4Dr2bkBIFxQpeoTz1HIcje39Wm4jDKdf19U8gI4ddQ3GYNS7NTKfAdVQSZe" crossorigin="anonymous"></script>
-    <script src="<?= e($fm) ?>/js/plugins.js"></script>
-    <script src="<?= e($fm) ?>/js/script.js"></script>
-    <?= $footerScripts ?? '' ?>
+<!-- ── MODULE BANNER ─────────────────────────────────────────────── -->
+<div class="module-banner">
+    <div class="module-banner-content">
+        <div>
+            <span class="module-badge">🏋️ Module Selem</span>
+            <h2 style="margin-top:8px;">Fitness & Sport</h2>
+            <p>Programmes d'entraînement personnalisés et suivi d'exercices quotidiens.</p>
+        </div>
+    </div>
+</div>
+
+<!-- ── NAV CARDS ─────────────────────────────────────────────────── -->
+<div class="nav-cards-bar">
+    <div class="nav-cards">
+        <a href="<?= e(BASE_URL) ?>/index.php?action=home" class="nav-card active">
+            <span class="nav-card-icon">📋</span>
+            Mes Programmes
+        </a>
+        <a href="<?= e(BASE_URL) ?>/index.php?action=front_program_new" class="nav-card green">
+            <span class="nav-card-icon">➕</span>
+            Créer un Programme
+        </a>
+        <a href="<?= e(BASE_URL) ?>/index.php?action=user_program_list" class="nav-card blue">
+            <span class="nav-card-icon">📅</span>
+            Catalogue Public
+        </a>
+        <a href="<?= e(BASE_URL) ?>/index.php?action=recommend_ai" class="nav-card purple">
+            <span class="nav-card-icon">🤖</span>
+            Suggestion IA
+        </a>
+    </div>
+</div>
+
+<!-- ── MAIN CONTENT ───────────────────────────────────────────────── -->
+<div class="eco-main">
+    <?= $slot ?? '' ?>
+</div>
+
+<!-- ── FOOTER ─────────────────────────────────────────────────────── -->
+<footer class="eco-footer">
+    <p>© <?= date('Y') ?> EcoByte — Esprit School Project • Groupe 2A35 •
+        <a href="/2int/index.php">← Retour au Hub</a>
+    </p>
+</footer>
+
+<script src="<?= e($fm) ?>/js/jquery-1.11.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/js/bootstrap.bundle.min.js"></script>
+<?= $footerScripts ?? '' ?>
 </body>
 </html>

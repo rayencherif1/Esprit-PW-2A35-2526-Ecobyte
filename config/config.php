@@ -23,11 +23,11 @@ if (APP_DEBUG) {
 // Connexion MySQL — PDO uniquement (mysqli interdit selon le cahier des charges).
 // Remplacez utilisateur / mot de passe si votre XAMPP diffère.
 // -------------------------------------------------------------------------
-const DB_HOST = '127.0.0.1'; // Hôte MySQL (localhost)
-const DB_NAME = 'nutrition_sante'; // Nom de la base (créez-la avant import SQL)
-const DB_USER = 'root'; // Utilisateur MySQL par défaut sous XAMPP
-const DB_PASS = ''; // Mot de passe (souvent vide sur XAMPP Windows)
-const DB_CHARSET = 'utf8mb4'; // Jeu de caractères recommandé pour le français
+const DB_HOST    = '127.0.0.1';
+const DB_NAME    = 'ecobyte_unified'; // Base de données unifiée Ecobyte
+const DB_USER    = 'root';
+const DB_PASS    = '';
+const DB_CHARSET = 'utf8mb4';
 
 // -------------------------------------------------------------------------
 // Chemins fichiers (pour require) — ne pas mettre de slash final.
@@ -46,7 +46,7 @@ EnvLoader::load(ROOT_PATH . DIRECTORY_SEPARATOR . '.env');
 // Exemple si le dossier s’appelle "projetselem" dans htdocs et point de terminaison "public" :
 //   http://localhost/projetselem/public/
 // -------------------------------------------------------------------------
-define('BASE_URL', 'http://localhost/projetselem/public'); // Sans slash final
+define('BASE_URL', 'http://localhost/2int/public'); // Sans slash final
 define('ADMIN_URL', BASE_URL . '/admin'); // Espace d’administration
 
 // -------------------------------------------------------------------------
@@ -55,7 +55,7 @@ define('ADMIN_URL', BASE_URL . '/admin'); // Espace d’administration
 // -------------------------------------------------------------------------
 define(
     'URL_FOODMART',
-    'http://localhost/projetselem/FoodMart-1.0.0/FoodMart-1.0.0'
+    'http://localhost/2int/FoodMart-1.0.0/FoodMart-1.0.0'
 );
 
 // -------------------------------------------------------------------------
@@ -64,7 +64,7 @@ define(
 // -------------------------------------------------------------------------
 define(
     'URL_ARGON_ASSETS',
-    'http://localhost/projetselem/argon-dashboard-tailwind-1.0.1/argon-dashboard-tailwind-1.0.1/build/assets'
+    'http://localhost/2int/argon-dashboard-tailwind-1.0.1/argon-dashboard-tailwind-1.0.1/build/assets'
 );
 
 // -------------------------------------------------------------------------
