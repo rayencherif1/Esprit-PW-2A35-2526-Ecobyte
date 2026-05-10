@@ -127,7 +127,39 @@ function getProductImage($nom) {
   </defs>
 </svg>
 
-<!-- Header -->
+<!-- ═══ ECOBYTE UNIFIED HEADER ══════════════════════════════════ -->
+<style>
+.ecobyte-topbar {
+    background: #1a1a2e; padding: 10px 32px;
+    display: flex; align-items: center; justify-content: space-between;
+    position: sticky; top: 0; z-index: 200;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.25);
+    font-family: 'Poppins', 'Nunito', sans-serif;
+}
+.ecobyte-topbar .eco-logo { display: flex; align-items: center; gap: 8px; font-size: 1.2rem; font-weight: 800; text-decoration: none; }
+.ecobyte-topbar .eco-logo .eco  { color: #4caf50; }
+.ecobyte-topbar .eco-logo .byte { color: #ff6b35; }
+.ecobyte-topbar .module-badge { background: rgba(59,130,246,0.2); border: 1px solid rgba(59,130,246,0.4); color: #93c5fd; padding: 4px 14px; border-radius: 999px; font-size: 0.72rem; font-weight: 600; }
+.ecobyte-topbar .hub-link { color: #aaa; text-decoration: none; font-size: 0.8rem; font-weight: 500; transition: color .2s; }
+.ecobyte-topbar .hub-link:hover { color: #fff; }
+.ecobyte-topbar .topbar-right { display: flex; align-items: center; gap: 14px; }
+.ecobyte-topbar .user-avatar { width: 36px; height: 36px; background: linear-gradient(135deg,#4caf50,#2196f3); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; font-size: 0.9rem; text-decoration: none; transition: transform .2s; }
+.ecobyte-topbar .user-avatar:hover { transform: scale(1.1); }
+</style>
+<nav class="ecobyte-topbar" id="ecobyte-topbar">
+    <a href="/2int/index.php" class="eco-logo">
+        <span style="font-size:1.4rem;">🌿</span>
+        <span class="eco">ECO</span><span class="byte">BYTE</span>
+    </a>
+    <span class="module-badge">🛒 Boutique Bio</span>
+    <div class="topbar-right">
+        <a href="/2int/index.php" class="hub-link">← Hub</a>
+        <a href="#" class="user-avatar" id="btn-user" title="Mon compte">U</a>
+    </div>
+</nav>
+<!-- ═══════════════════════════════════════════════════════════════ -->
+
+<!-- Header boutique -->
 <header>
   <div class="container-fluid">
     <div class="row py-3 border-bottom align-items-center">
@@ -152,12 +184,12 @@ function getProductImage($nom) {
         <a href="/2int/boutique.php?controller=commande&action=panier" class="btn btn-outline-success rounded-pill">
           <svg width="20" height="20"><use xlink:href="#cart"></use></svg> Panier
         </a>
-        <a href="/2int/boutique.php?controller=favoris&action=index" class="btn btn-danger rounded-pill" title="Mes favoris">
-          ❤️ Favoris
+        <!-- Favoris — même style que Panier -->
+        <a href="/2int/boutique.php?controller=favoris&action=index" class="btn btn-outline-danger rounded-pill" id="btn-favoris" title="Mes favoris">
+          <svg width="20" height="20"><use xlink:href="#heart"></use></svg> Favoris
         </a>
-        <a href="/2int/view/back/pages/marketplace.php" class="admin-icon" title="Administration">
-          <svg width="20" height="20"><use xlink:href="#lock"></use></svg>
-        </a>
+        <!-- ADMIN ACCESS — connecter via branche user (id="btn-admin-boutique") -->
+        <!-- <a href="/2int/view/back/pages/marketplace.php" id="btn-admin-boutique">Admin</a> -->
       </div>
     </div>
   </div>
@@ -166,7 +198,7 @@ function getProductImage($nom) {
 <div class="container-fluid py-5" style="min-height: 60vh;">
     <div class="d-flex justify-content-between align-items-center mb-5 border-bottom pb-3">
         <h2 class="section-title mb-0">❤️ Mes produits favoris</h2>
-        <a href="/2int/view/front/index2.php" class="btn btn-outline-dark rounded-pill px-4">Continuer mes achats</a>
+        <a href="/2int/view/front/index2.php" class="btn btn-outline-dark rounded-pill px-4" id="btn-continuer-achats">Continuer mes achats</a>
     </div>
 
     <?php if (empty($favoris)): ?>

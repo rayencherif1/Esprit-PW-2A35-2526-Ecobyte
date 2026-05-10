@@ -66,15 +66,15 @@ if ($nutriFilter !== '' && preg_match('/^[A-E]$/', $nutriFilter)) {
 function getCategoryIcon($nom) {
     $nomLower = strtolower(trim($nom));
     if (strpos($nomLower, 'fruit') !== false || strpos($nomLower, 'légume') !== false || strpos($nomLower, 'legume') !== false) {
-        return 'images/icon-vegetables-broccoli.png';
+        return '/2int/view/front/images/icon-vegetables-broccoli.png';
     } elseif (strpos($nomLower, 'boulangerie') !== false || strpos($nomLower, 'pain') !== false || strpos($nomLower, 'viennoiserie') !== false) {
-        return 'images/icon-bread-baguette.png';
+        return '/2int/view/front/images/icon-bread-baguette.png';
     } elseif (strpos($nomLower, 'jus') !== false || strpos($nomLower, 'smoothie') !== false || strpos($nomLower, 'boisson') !== false) {
-        return 'images/icon-soft-drinks-bottle.png';
+        return '/2int/view/front/images/icon-soft-drinks-bottle.png';
     } elseif (strpos($nomLower, 'épicerie') !== false || strpos($nomLower, 'epicerie') !== false || strpos($nomLower, 'fine') !== false) {
-        return 'images/icon-wine-glass-bottle.png';
+        return '/2int/view/front/images/icon-wine-glass-bottle.png';
     } elseif (strpos($nomLower, 'frais') !== false || strpos($nomLower, 'viande') !== false || strpos($nomLower, 'fromage') !== false) {
-        return 'images/icon-animal-products-drumsticks.png';
+        return '/2int/view/front/images/icon-animal-products-drumsticks.png';
     } else {
         return '';
     }
@@ -84,25 +84,25 @@ function getCategoryIcon($nom) {
 function getProductImage($nom) {
     $nomLower = strtolower(trim($nom));
     if (strpos($nomLower, 'créatine') !== false || strpos($nomLower, 'creatine') !== false || strpos($nomLower, 'monohydrate') !== false) {
-        return 'images/thumb-creatine.svg';
+        return '/2int/view/front/images/thumb-creatine.svg';
     } elseif (strpos($nomLower, 'whey') !== false || strpos($nomLower, 'protéine') !== false || strpos($nomLower, 'proteine') !== false || strpos($nomLower, 'protein') !== false) {
-        return 'images/thumb-whey.svg';
+        return '/2int/view/front/images/thumb-whey.svg';
     } elseif (strpos($nomLower, 'collagène') !== false || strpos($nomLower, 'collagene') !== false) {
-        return 'images/thumb-collagene.svg';
+        return '/2int/view/front/images/thumb-collagene.svg';
     } elseif (strpos($nomLower, 'vitamine') !== false || strpos($nomLower, 'vitamines') !== false) {
-        return 'images/thumb-vitamines.svg';
+        return '/2int/view/front/images/thumb-vitamines.svg';
     } elseif (strpos($nomLower, 'poudre') !== false || strpos($nomLower, 'supplément') !== false || strpos($nomLower, 'supplement') !== false || strpos($nomLower, 'glutamine') !== false || strpos($nomLower, 'électrolytes') !== false || strpos($nomLower, 'electrolytes') !== false) {
-        return 'images/thumb-supplement.svg';
+        return '/2int/view/front/images/thumb-supplement.svg';
     } elseif (strpos($nomLower, 'boisson') !== false || strpos($nomLower, 'jus') !== false || strpos($nomLower, 'smoothie') !== false || strpos($nomLower, 'guarana') !== false) {
-        return 'images/product-thumb-1.png';
+        return '/2int/view/front/images/product-thumb-1.png';
     } elseif (strpos($nomLower, 'dattes') !== false || strpos($nomLower, 'pâte') !== false || strpos($nomLower, 'barre') !== false) {
-        return 'images/thumb-biscuits.png';
+        return '/2int/view/front/images/thumb-biscuits.png';
     } elseif (strpos($nomLower, 'banane') !== false) {
-        return 'images/thumb-bananas.png';
+        return '/2int/view/front/images/thumb-bananas.png';
     } elseif (strpos($nomLower, 'tomate') !== false) {
-        return 'images/thumb-tomatoes.png';
+        return '/2int/view/front/images/thumb-tomatoes.png';
     } elseif (strpos($nomLower, 'lait') !== false || strpos($nomLower, 'milk') !== false) {
-        return 'images/thumb-milk.png';
+        return '/2int/view/front/images/thumb-milk.png';
     }
     // Aucune image spécifique trouvée : on enlève l'image pour que seul le nom/prix reste visible.
     return '';
@@ -146,8 +146,8 @@ $displayProduits = $showAll ? $produits : array_slice($produits, 0, 8);
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@9/swiper-bundle.min.css">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="css/vendor.css">
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="/2int/view/front/css/vendor.css">
+    <link rel="stylesheet" href="/2int/view/front/style.css">
     <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700&family=Open+Sans:wght@400;700&display=swap" rel="stylesheet">
     <style>
         .admin-icon {
@@ -422,7 +422,7 @@ $displayProduits = $showAll ? $produits : array_slice($produits, 0, 8);
         </a>
       </div>
       <div class="col-sm-6 offset-sm-2 offset-md-0 col-lg-5 d-none d-lg-block">
-        <form action="index2.php" method="GET" class="search-bar row bg-light p-2 my-2 rounded-4 m-0 w-100 position-relative">
+        <form action="/2int/view/front/index2.php" method="GET" class="search-bar row bg-light p-2 my-2 rounded-4 m-0 w-100 position-relative">
           <div class="col-2 col-md-2 border-end p-0">
             <select name="search_categorie" class="form-select border-0 bg-transparent shadow-none w-100 text-truncate" style="cursor:pointer; font-size: 14px;">
               <option value="">Toutes catégories</option>
@@ -466,16 +466,15 @@ $displayProduits = $showAll ? $produits : array_slice($produits, 0, 8);
         <a href="/2int/boutique.php?controller=favoris&action=index" class="btn btn-outline-danger rounded-pill" title="Mes favoris">
           ❤️ Favoris
         </a>
-        <a href="/2int/view/back/pages/marketplace.php" class="admin-icon" title="Administration">
-          <svg width="20" height="20"><use xlink:href="#lock"></use></svg>
-        </a>
+        <!-- ADMIN ACCESS — connecter via branche user (id="sidebar-back-boutique") -->
+        <!-- <a href="/2int/view/back/pages/marketplace.php" id="btn-admin-boutique">Admin</a> -->
       </div>
     </div>
   </div>
 </header>
 
 <!-- Hero + Offres -->
-<section class="py-3" style="background-image: url('images/background-pattern.jpg'); background-repeat: no-repeat; background-size: cover;">
+<section class="py-3" style="background-image: url('/2int/view/front/images/background-pattern.jpg'); background-repeat: no-repeat; background-size: cover;">
   <div class="container-fluid">
     <div class="banner-blocks">
       <div class="banner-ad large bg-info block-1">
@@ -489,14 +488,14 @@ $displayProduits = $showAll ? $produits : array_slice($produits, 0, 8);
                   <p>Découvrez les produits les plus appréciés et les plus vendus de notre boutique.</p>
                   <a href="?filter=tendances#produits-section" class="btn btn-outline-dark btn-lg text-uppercase fs-6 rounded-1 px-4 py-3 mt-3">Découvrir</a>
                 </div>
-                <div class="img-wrapper col-md-5"><img src="images/product-thumb-1.png" class="img-fluid"></div>
+                <div class="img-wrapper col-md-5"><img src="/2int/view/front/images/product-thumb-1.png" class="img-fluid"></div>
               </div>
             </div>
           </div>
           <div class="swiper-pagination"></div>
         </div>
       </div>
-      <div class="banner-ad bg-success-subtle block-2" style="background:url('images/ad-image-1.png') no-repeat; background-position: right bottom">
+      <div class="banner-ad bg-success-subtle block-2" style="background:url('/2int/view/front/images/ad-image-1.png') no-repeat; background-position: right bottom">
         <div class="row banner-content p-5">
           <div class="content-wrapper col-md-7">
             <div class="categories sale mb-3 pb-3">En Promo</div>
@@ -505,7 +504,7 @@ $displayProduits = $showAll ? $produits : array_slice($produits, 0, 8);
           </div>
         </div>
       </div>
-      <div class="banner-ad bg-danger block-3" style="background:url('images/ad-image-2.png') no-repeat; background-position: right bottom">
+      <div class="banner-ad bg-danger block-3" style="background:url('/2int/view/front/images/ad-image-2.png') no-repeat; background-position: right bottom">
         <div class="row banner-content p-5">
           <div class="content-wrapper col-md-7">
             <div class="categories sale mb-3 pb-3">Saison</div>
@@ -812,9 +811,9 @@ $displayProduits = $showAll ? $produits : array_slice($produits, 0, 8);
       <div class="btn-wrap"><a href="#" class="d-flex align-items-center nav-link">Tous les articles <svg width="24" height="24"><use xlink:href="#arrow-right"></use></svg></a></div>
     </div>
     <div class="row">
-      <div class="col-md-4"><article class="post-item card border-0 shadow-sm p-3"><div class="image-holder zoom-effect"><a href="#"><img src="images/post-thumb-1.jpg" class="card-img-top"></a></div><div class="card-body"><div class="post-meta d-flex text-uppercase gap-3 my-2"><div class="meta-date"><svg width="16" height="16"><use xlink:href="#calendar"></use></svg> 15 Avr 2025</div><div class="meta-categories"><svg width="16" height="16"><use xlink:href="#category"></use></svg> nutrition</div></div><h3 class="post-title"><a href="#" class="text-decoration-none">Les bienfaits des fruits de saison</a></h3><p>Découvrez comment consommer local et de saison pour votre santé.</p></div></article></div>
-      <div class="col-md-4"><article class="post-item card border-0 shadow-sm p-3"><div class="image-holder zoom-effect"><a href="#"><img src="images/post-thumb-2.jpg" class="card-img-top"></a></div><div class="card-body"><div class="post-meta d-flex text-uppercase gap-3 my-2"><div class="meta-date"><svg width="16" height="16"><use xlink:href="#calendar"></use></svg> 10 Avr 2025</div><div class="meta-categories"><svg width="16" height="16"><use xlink:href="#category"></use></svg> recettes</div></div><h3 class="post-title"><a href="#" class="text-decoration-none">3 smoothies detox à essayer</a></h3><p>Des recettes simples et rapides pour un coup de boost.</p></div></article></div>
-      <div class="col-md-4"><article class="post-item card border-0 shadow-sm p-3"><div class="image-holder zoom-effect"><a href="#"><img src="images/post-thumb-3.jpg" class="card-img-top"></a></div><div class="card-body"><div class="post-meta d-flex text-uppercase gap-3 my-2"><div class="meta-date"><svg width="16" height="16"><use xlink:href="#calendar"></use></svg> 5 Avr 2025</div><div class="meta-categories"><svg width="16" height="16"><use xlink:href="#category"></use></svg> astuces</div></div><h3 class="post-title"><a href="#" class="text-decoration-none">Comment bien conserver ses légumes</a></h3><p>Prolongez la fraîcheur de vos aliments avec ces astuces simples.</p></div></article></div>
+      <div class="col-md-4"><article class="post-item card border-0 shadow-sm p-3"><div class="image-holder zoom-effect"><a href="#"><img src="/2int/view/front/images/post-thumb-1.jpg" class="card-img-top"></a></div><div class="card-body"><div class="post-meta d-flex text-uppercase gap-3 my-2"><div class="meta-date"><svg width="16" height="16"><use xlink:href="#calendar"></use></svg> 15 Avr 2025</div><div class="meta-categories"><svg width="16" height="16"><use xlink:href="#category"></use></svg> nutrition</div></div><h3 class="post-title"><a href="#" class="text-decoration-none">Les bienfaits des fruits de saison</a></h3><p>Découvrez comment consommer local et de saison pour votre santé.</p></div></article></div>
+      <div class="col-md-4"><article class="post-item card border-0 shadow-sm p-3"><div class="image-holder zoom-effect"><a href="#"><img src="/2int/view/front/images/post-thumb-2.jpg" class="card-img-top"></a></div><div class="card-body"><div class="post-meta d-flex text-uppercase gap-3 my-2"><div class="meta-date"><svg width="16" height="16"><use xlink:href="#calendar"></use></svg> 10 Avr 2025</div><div class="meta-categories"><svg width="16" height="16"><use xlink:href="#category"></use></svg> recettes</div></div><h3 class="post-title"><a href="#" class="text-decoration-none">3 smoothies detox à essayer</a></h3><p>Des recettes simples et rapides pour un coup de boost.</p></div></article></div>
+      <div class="col-md-4"><article class="post-item card border-0 shadow-sm p-3"><div class="image-holder zoom-effect"><a href="#"><img src="/2int/view/front/images/post-thumb-3.jpg" class="card-img-top"></a></div><div class="card-body"><div class="post-meta d-flex text-uppercase gap-3 my-2"><div class="meta-date"><svg width="16" height="16"><use xlink:href="#calendar"></use></svg> 5 Avr 2025</div><div class="meta-categories"><svg width="16" height="16"><use xlink:href="#category"></use></svg> astuces</div></div><h3 class="post-title"><a href="#" class="text-decoration-none">Comment bien conserver ses légumes</a></h3><p>Prolongez la fraîcheur de vos aliments avec ces astuces simples.</p></div></article></div>
     </div>
   </div>
 </section>
@@ -836,11 +835,11 @@ $displayProduits = $showAll ? $produits : array_slice($produits, 0, 8);
 </footer>
 <div id="footer-bottom"><div class="container-fluid"><div class="row"><div class="col-md-6 copyright"><p>© 2025 EcoBite - Votre marketplace nutrition</p></div></div></div></div>
 
-<script src="js/jquery-1.11.0.min.js"></script>
+<script src="/2int/view/front/js/jquery-1.11.0.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/swiper@9/swiper-bundle.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/js/bootstrap.bundle.min.js"></script>
-<script src="js/plugins.js"></script>
-<script src="js/script.js"></script>
+<script src="/2int/view/front/js/plugins.js"></script>
+<script src="/2int/view/front/js/script.js"></script>
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {

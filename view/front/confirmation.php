@@ -20,14 +20,46 @@
 </head>
 <body>
 
-<header>
+<!-- ═══ ECOBYTE UNIFIED HEADER ══════════════════════════════════ -->
+<style>
+.ecobyte-topbar {
+    background: #1a1a2e; padding: 10px 32px;
+    display: flex; align-items: center; justify-content: space-between;
+    position: sticky; top: 0; z-index: 200;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.25);
+    font-family: 'Poppins', 'Nunito', sans-serif;
+}
+.ecobyte-topbar .eco-logo { display: flex; align-items: center; gap: 8px; font-size: 1.2rem; font-weight: 800; text-decoration: none; }
+.ecobyte-topbar .eco-logo .eco  { color: #4caf50; }
+.ecobyte-topbar .eco-logo .byte { color: #ff6b35; }
+.ecobyte-topbar .module-badge { background: rgba(59,130,246,0.2); border: 1px solid rgba(59,130,246,0.4); color: #93c5fd; padding: 4px 14px; border-radius: 999px; font-size: 0.72rem; font-weight: 600; }
+.ecobyte-topbar .hub-link { color: #aaa; text-decoration: none; font-size: 0.8rem; font-weight: 500; transition: color .2s; }
+.ecobyte-topbar .hub-link:hover { color: #fff; }
+.ecobyte-topbar .topbar-right { display: flex; align-items: center; gap: 14px; }
+.ecobyte-topbar .user-avatar { width: 36px; height: 36px; background: linear-gradient(135deg,#4caf50,#2196f3); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; font-size: 0.9rem; text-decoration: none; transition: transform .2s; }
+.ecobyte-topbar .user-avatar:hover { transform: scale(1.1); }
+</style>
+<nav class="ecobyte-topbar" id="ecobyte-topbar">
+    <a href="/2int/index.php" class="eco-logo">
+        <span style="font-size:1.4rem;">🌿</span>
+        <span class="eco">ECO</span><span class="byte">BYTE</span>
+    </a>
+    <span class="module-badge">🛒 Boutique Bio</span>
+    <div class="topbar-right">
+        <a href="/2int/index.php" class="hub-link">← Hub</a>
+        <a href="#" class="user-avatar" id="btn-user" title="Mon compte">U</a>
+    </div>
+</nav>
+<!-- ═══════════════════════════════════════════════════════════════ -->
+
+<header class="bg-white shadow-sm">
     <div class="container-fluid">
-        <div class="row py-3 border-bottom align-items-center">
+        <div class="row py-3 align-items-center">
             <div class="col-sm-4">
-                <a href="/2int/view/front/index2.php" class="logo-text">🌿 EcoBite</a>
+                <a href="/2int/view/front/index2.php" class="logo-text ms-3">🌿 EcoBite</a>
             </div>
-            <div class="col-sm-8 text-end">
-                <a href="/2int/view/front/index2.php" class="btn btn-outline-secondary rounded-pill">← Continuer mes achats</a>
+            <div class="col-sm-8 text-end pe-4">
+                <a href="/2int/view/front/index2.php" class="btn btn-outline-dark rounded-pill">← Continuer mes achats</a>
             </div>
         </div>
     </div>
