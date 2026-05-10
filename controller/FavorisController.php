@@ -47,7 +47,7 @@ class FavorisController {
                 $this->json(['ok' => false, 'message' => 'Produit introuvable'], 404);
             }
             $_SESSION['error'] = "Produit introuvable";
-            $redirect = $_SERVER['HTTP_REFERER'] ?? '/marketplace/view/front/index2.php';
+            $redirect = $_SERVER['HTTP_REFERER'] ?? '/2int/view/front/index2.php';
             header('Location: ' . $redirect);
             exit();
         }
@@ -83,7 +83,7 @@ class FavorisController {
             $_SESSION['error'] = "Erreur favoris";
         }
 
-        $redirect = $_SERVER['HTTP_REFERER'] ?? '/marketplace/view/front/index2.php';
+        $redirect = $_SERVER['HTTP_REFERER'] ?? '/2int/view/front/index2.php';
         header('Location: ' . $redirect);
         exit();
     }
@@ -104,7 +104,7 @@ class FavorisController {
             }
         }
         
-        header('Location: ' . ($_SERVER['HTTP_REFERER'] ?? '/marketplace/view/front/index2.php'));
+        header('Location: ' . ($_SERVER['HTTP_REFERER'] ?? '/2int/view/front/index2.php'));
         exit();
     }
     
@@ -141,3 +141,4 @@ class FavorisController {
     }
 }
 ?>
+

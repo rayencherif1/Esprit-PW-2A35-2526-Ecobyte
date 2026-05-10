@@ -9,7 +9,7 @@ class Database {
             $servername = "localhost";
             $username = "root";
             $password = "";
-            $dbname = "marketplace";
+            $dbname = "ecobyte_unified";
             
             try {
                 self::$pdo = new PDO(

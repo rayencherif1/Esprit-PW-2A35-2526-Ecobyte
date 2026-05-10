@@ -43,7 +43,7 @@
             <div class="alert alert-danger"><?= $error ?></div>
         <?php endif; ?>
         
-        <form method="POST" action="/marketplace/index.php?controller=auth&action=authenticate">
+        <form method="POST" action="/2int/boutique.php?controller=auth&action=authenticate">
             <div class="mb-3">
                 <label class="form-label">Identifiant</label>
                 <input type="text" name="username" class="form-control rounded-pill" required autofocus>
@@ -56,8 +56,9 @@
         </form>
         
         <div class="text-center mt-3">
-            <a href="/marketplace/view/front/index.php" class="text-decoration-none small">← Retour au site</a>
+            <a href="/2int/view/front/index.php" class="text-decoration-none small">← Retour au site</a>
         </div>
     </div>
 </body>
 </html>
+

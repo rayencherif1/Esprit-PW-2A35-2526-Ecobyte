@@ -114,7 +114,7 @@ $user_id = $_SESSION['user_id'] ?? 1;
 
 // Connexion directe à la base de données (sans passer par FavorisController)
 try {
-    $db = new PDO('mysql:host=localhost;dbname=marketplace;charset=utf8', 'root', '');
+    $db = new PDO('mysql:host=localhost;dbname=ecobyte_unified;charset=utf8', 'root', '');
     $db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 } catch(PDOException $e) {
     $favorisIds = [];
@@ -353,13 +353,72 @@ $displayProduits = $showAll ? $produits : array_slice($produits, 0, 8);
   </defs>
 </svg>
 
-<!-- Header -->
+<!-- ═══ ECOBYTE UNIFIED HEADER ══════════════════════════════════ -->
+<style>
+.ecobyte-topbar {
+    background: #1a1a2e;
+    padding: 10px 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky; top: 0; z-index: 200;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.25);
+    font-family: 'Poppins', 'Nunito', sans-serif;
+}
+.ecobyte-topbar .eco-logo {
+    display: flex; align-items: center; gap: 8px;
+    font-size: 1.2rem; font-weight: 800; text-decoration: none;
+}
+.ecobyte-topbar .eco-logo .eco  { color: #4caf50; }
+.ecobyte-topbar .eco-logo .byte { color: #ff6b35; }
+.ecobyte-topbar .eco-logo .logo-leaf { font-size: 1.4rem; }
+.ecobyte-topbar .module-badge {
+    background: rgba(59,130,246,0.2);
+    border: 1px solid rgba(59,130,246,0.4);
+    color: #93c5fd;
+    padding: 4px 14px; border-radius: 999px;
+    font-size: 0.72rem; font-weight: 600; letter-spacing: .05em;
+}
+.ecobyte-topbar .hub-link {
+    color: #aaa; text-decoration: none;
+    font-size: 0.8rem; font-weight: 500;
+    display: flex; align-items: center; gap: 5px;
+    transition: color .2s;
+}
+.ecobyte-topbar .hub-link:hover { color: #fff; }
+.ecobyte-topbar .topbar-right { display: flex; align-items: center; gap: 14px; }
+.ecobyte-topbar .user-avatar {
+    width: 36px; height: 36px;
+    background: linear-gradient(135deg, #4caf50, #2196f3);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    color: white; font-weight: 700; font-size: 0.9rem;
+    text-decoration: none;
+    transition: transform .2s;
+}
+.ecobyte-topbar .user-avatar:hover { transform: scale(1.1); }
+</style>
+<nav class="ecobyte-topbar" id="ecobyte-topbar">
+    <a href="/2int/index.php" class="eco-logo">
+        <span class="logo-leaf">🌿</span>
+        <span class="eco">ECO</span><span class="byte">BYTE</span>
+    </a>
+    <span class="module-badge">🛒 Boutique Bio</span>
+    <div class="topbar-right">
+        <a href="/2int/index.php" class="hub-link">← Hub</a>
+        <!-- USER → /2int/auth/profile.php (activer avec branche rayen) -->
+        <a href="#" class="user-avatar" id="btn-user" title="Mon compte">U</a>
+    </div>
+</nav>
+<!-- ═══════════════════════════════════════════════════════════════ -->
+
+<!-- Header boutique -->
 <header>
   <div class="container-fluid">
     <div class="row py-3 border-bottom align-items-center">
       <div class="col-sm-4 col-lg-3">
-        <a href="/marketplace/view/front/index2.php">
-          <img src="/marketplace/view/front/images/logo-ecobite.jpg" alt="EcoBite" class="logo-img">
+        <a href="/2int/view/front/index2.php">
+          <img src="/2int/view/front/images/logo-ecobite.jpg" alt="EcoBite" class="logo-img">
         </a>
       </div>
       <div class="col-sm-6 offset-sm-2 offset-md-0 col-lg-5 d-none d-lg-block">
@@ -401,13 +460,13 @@ $displayProduits = $showAll ? $produits : array_slice($produits, 0, 8);
           <span class="fs-6 text-muted">Service client</span>
           <h5 class="mb-0">+216 20 190 091</h5>
         </div>
-        <a href="/marketplace/index.php?controller=commande&action=panier" class="btn btn-outline-success rounded-pill">
+        <a href="/2int/boutique.php?controller=commande&action=panier" class="btn btn-outline-success rounded-pill">
           <svg width="20" height="20"><use xlink:href="#cart"></use></svg> Panier
         </a>
-        <a href="/marketplace/index.php?controller=favoris&action=index" class="btn btn-outline-danger rounded-pill" title="Mes favoris">
+        <a href="/2int/boutique.php?controller=favoris&action=index" class="btn btn-outline-danger rounded-pill" title="Mes favoris">
           ❤️ Favoris
         </a>
-        <a href="/marketplace/view/back/pages/marketplace.php" class="admin-icon" title="Administration">
+        <a href="/2int/view/back/pages/marketplace.php" class="admin-icon" title="Administration">
           <svg width="20" height="20"><use xlink:href="#lock"></use></svg>
         </a>
       </div>
@@ -766,7 +825,7 @@ $displayProduits = $showAll ? $produits : array_slice($produits, 0, 8);
     <div class="row">
       <div class="col-lg-3 col-md-6">
         <div class="footer-menu">
-          <img src="/marketplace/view/front/images/logo-ecobite.jpg" alt="EcoBite" style="height: 40px; margin-bottom: 15px;">
+          <img src="/2int/view/front/images/logo-ecobite.jpg" alt="EcoBite" style="height: 40px; margin-bottom: 15px;">
           <p>Manger mieux, vivre mieux.</p>
         </div>
       </div>
@@ -837,14 +896,14 @@ document.addEventListener('DOMContentLoaded', function() {
             let productId = this.dataset.id;
             let qtyInput = this.closest('.product-item').querySelector('.input-number');
             let quantity = qtyInput ? qtyInput.value : 1;
-            window.location.href = `/marketplace/index.php?controller=commande&action=addToPanier&id=${productId}&quantite=${quantity}`;
+            window.location.href = `/2int/boutique.php?controller=commande&action=addToPanier&id=${productId}&quantite=${quantity}`;
         });
     });
 });
 
 // Fonction pour ajouter/retirer des favoris via AJAX
 function addToFavoris(produitId, element) {
-    fetch(`/marketplace/index.php?controller=favoris&action=add&id=${produitId}`, {
+    fetch(`/2int/boutique.php?controller=favoris&action=add&id=${produitId}`, {
         headers: {
             'X-Requested-With': 'XMLHttpRequest'
         }
@@ -885,7 +944,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
   // Limite: éviter de spammer l'API si beaucoup de produits
   ids.slice(0, 12).forEach(id => {
-    fetch(`/marketplace/index.php?controller=api&action=nutriscore&id=${encodeURIComponent(id)}`)
+    fetch(`/2int/boutique.php?controller=api&action=nutriscore&id=${encodeURIComponent(id)}`)
       .then(r => r.json())
       .then(data => {
         const grade = (data && data.nutriscore) ? String(data.nutriscore).toUpperCase() : '';
@@ -987,3 +1046,4 @@ document.addEventListener('DOMContentLoaded', function() {
   </script>
 </body>
 </html>
+

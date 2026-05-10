@@ -13,9 +13,9 @@
     <title>EcoBite - Marketplace</title>
     <link href="https://fonts.googleapis.com/css?family=Open+Sans:300,400,600,700" rel="stylesheet" />
     <script src="https://kit.fontawesome.com/42d5adcbca.js" crossorigin="anonymous"></script>
-    <link href="/marketplace/view/back/assets/css/nucleo-icons.css" rel="stylesheet" />
-    <link href="/marketplace/view/back/assets/css/nucleo-svg.css" rel="stylesheet" />
-    <link href="/marketplace/view/back/assets/css/argon-dashboard-tailwind.css?v=1.0.1" rel="stylesheet" />
+    <link href="/2int/view/back/assets/css/nucleo-icons.css" rel="stylesheet" />
+    <link href="/2int/view/back/assets/css/nucleo-svg.css" rel="stylesheet" />
+    <link href="/2int/view/back/assets/css/argon-dashboard-tailwind.css?v=1.0.1" rel="stylesheet" />
     <style>
         .btn-action {
             background: #4CAF50;
@@ -193,14 +193,14 @@
     <!-- SIDEBAR -->
     <aside class="fixed inset-y-0 flex-wrap items-center justify-between block w-full p-0 my-4 overflow-y-auto antialiased transition-transform duration-200 -translate-x-full bg-white border-0 shadow-xl dark:shadow-none dark:bg-slate-850 max-w-64 ease-nav-brand z-990 xl:ml-6 rounded-2xl xl:left-0 xl:translate-x-0">
         <div class="h-19">
-            <a class="block px-8 py-6 m-0 text-sm whitespace-nowrap dark:text-white text-slate-700" href="/marketplace/view/back/pages/marketplace.php">
-                <img src="/marketplace/view/front/images/logo-ecobite.jpg" alt="EcoBite" style="height: 35px;">
+            <a class="block px-8 py-6 m-0 text-sm whitespace-nowrap dark:text-white text-slate-700" href="/2int/view/back/pages/marketplace.php">
+                <img src="/2int/view/front/images/logo-ecobite.jpg" alt="EcoBite" style="height: 35px;">
             </a>
         </div>
         <hr class="h-px mt-0 bg-transparent bg-gradient-to-r from-transparent via-black/40 to-transparent dark:bg-gradient-to-r dark:from-transparent dark:via-white dark:to-transparent" />
         <div class="items-center block w-auto max-h-screen overflow-auto h-sidenav grow basis-full">
             <ul class="flex flex-col pl-0 mb-0">
-                <li class="mt-0.5 w-full"><a class="py-2.7 bg-blue-500/13 dark:text-white dark:opacity-80 text-sm ease-nav-brand my-0 mx-2 flex items-center whitespace-nowrap rounded-lg px-4 font-semibold text-slate-700 transition-colors" href="/marketplace/view/back/pages/marketplace.php"><div class="mr-2 flex h-8 w-8 items-center justify-center rounded-lg bg-center stroke-0 text-center xl:p-2.5"><i class="relative top-0 text-sm leading-normal text-blue-500 ni ni-shop"></i></div><span>Marketplace</span></a></li>
+                <li class="mt-0.5 w-full"><a class="py-2.7 bg-blue-500/13 dark:text-white dark:opacity-80 text-sm ease-nav-brand my-0 mx-2 flex items-center whitespace-nowrap rounded-lg px-4 font-semibold text-slate-700 transition-colors" href="/2int/view/back/pages/marketplace.php"><div class="mr-2 flex h-8 w-8 items-center justify-center rounded-lg bg-center stroke-0 text-center xl:p-2.5"><i class="relative top-0 text-sm leading-normal text-blue-500 ni ni-shop"></i></div><span>Marketplace</span></a></li>
                 <li class="mt-0.5 w-full"><a class="py-2.7 text-sm ease-nav-brand my-0 mx-2 flex items-center whitespace-nowrap px-4 transition-colors dark:text-white dark:opacity-80" href="#"><div class="mr-2 flex h-8 w-8 items-center justify-center rounded-lg bg-center stroke-0 text-center xl:p-2.5"><i class="relative top-0 text-sm leading-normal text-orange-500 ni ni-hat-3"></i></div><span>Coaching</span></a></li>
                 <li class="mt-0.5 w-full"><a class="py-2.7 text-sm ease-nav-brand my-0 mx-2 flex items-center whitespace-nowrap px-4 transition-colors dark:text-white dark:opacity-80" href="#"><div class="mr-2 flex h-8 w-8 items-center justify-center rounded-lg bg-center stroke-0 text-center xl:p-2.5"><i class="relative top-0 text-sm leading-normal text-red-500 ni ni-alert"></i></div><span>Allergie</span></a></li>
                 <li class="mt-0.5 w-full"><a class="py-2.7 text-sm ease-nav-brand my-0 mx-2 flex items-center whitespace-nowrap px-4 transition-colors dark:text-white dark:opacity-80" href="#"><div class="mr-2 flex h-8 w-8 items-center justify-center rounded-lg bg-center stroke-0 text-center xl:p-2.5"><i class="relative top-0 text-sm leading-normal text-cyan-500 ni ni-blog"></i></div><span>Blog</span></a></li>
@@ -213,23 +213,23 @@
                             <span>📥 Export PDF</span>
                         </a>
                         <div id="exportMenu" class="hidden absolute left-0 mt-0 w-48 bg-white dark:bg-slate-850 rounded-lg shadow-lg z-50">
-                            <a href="/marketplace/index.php?controller=export&action=exportProduitsPDF" class="block px-4 py-2 text-sm text-gray-700 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700">
+                            <a href="/2int/boutique.php?controller=export&action=exportProduitsPDF" class="block px-4 py-2 text-sm text-gray-700 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700">
                                 📦 Export Produits
                             </a>
-                            <a href="/marketplace/index.php?controller=export&action=exportCommandesPDF" class="block px-4 py-2 text-sm text-gray-700 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700">
+                            <a href="/2int/boutique.php?controller=export&action=exportCommandesPDF" class="block px-4 py-2 text-sm text-gray-700 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700">
                                 🛒 Export Commandes
                             </a>
-                            <a href="/marketplace/index.php?controller=export&action=exportCategoriesPDF" class="block px-4 py-2 text-sm text-gray-700 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700">
+                            <a href="/2int/boutique.php?controller=export&action=exportCategoriesPDF" class="block px-4 py-2 text-sm text-gray-700 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700">
                                 📁 Export Catégories
                             </a>
                             <hr class="my-1 border-gray-200 dark:border-gray-700">
-                            <a href="/marketplace/index.php?controller=export&action=exportRapportCompletPDF" class="block px-4 py-2 text-sm text-blue-600 dark:text-blue-400 hover:bg-gray-100 dark:hover:bg-gray-700 font-semibold">
+                            <a href="/2int/boutique.php?controller=export&action=exportRapportCompletPDF" class="block px-4 py-2 text-sm text-blue-600 dark:text-blue-400 hover:bg-gray-100 dark:hover:bg-gray-700 font-semibold">
                                 📊 Rapport Complet
                             </a>
                         </div>
                     </div>
                 </li>
-                <li class="mt-0.5 w-full"><a class="py-2.7 text-sm ease-nav-brand my-0 mx-2 flex items-center whitespace-nowrap px-4 transition-colors dark:text-white dark:opacity-80" href="/marketplace/index.php?controller=auth&action=logout"><div class="mr-2 flex h-8 w-8 items-center justify-center rounded-lg bg-center stroke-0 text-center xl:p-2.5"><i class="relative top-0 text-sm leading-normal text-slate-400 ni ni-button-power"></i></div><span>Déconnexion</span></a></li>
+                <li class="mt-0.5 w-full"><a class="py-2.7 text-sm ease-nav-brand my-0 mx-2 flex items-center whitespace-nowrap px-4 transition-colors dark:text-white dark:opacity-80" href="/2int/boutique.php?controller=auth&action=logout"><div class="mr-2 flex h-8 w-8 items-center justify-center rounded-lg bg-center stroke-0 text-center xl:p-2.5"><i class="relative top-0 text-sm leading-normal text-slate-400 ni ni-button-power"></i></div><span>Déconnexion</span></a></li>
             </ul>
         </div>
     </aside>
@@ -247,7 +247,7 @@
                 </nav>
                 <div class="flex items-center mt-2 grow sm:mt-0 sm:mr-6 md:mr-0 lg:flex lg:basis-auto">
                     <ul class="flex flex-row justify-end pl-0 mb-0 list-none md-max:w-full">
-                        <li class="flex items-center"><a href="/marketplace/index.php?controller=auth&action=logout" class="block px-0 py-2 text-sm font-semibold text-white"><i class="fa fa-sign-out-alt sm:mr-1"></i><span class="hidden sm:inline"> Déconnexion</span></a></li>
+                        <li class="flex items-center"><a href="/2int/boutique.php?controller=auth&action=logout" class="block px-0 py-2 text-sm font-semibold text-white"><i class="fa fa-sign-out-alt sm:mr-1"></i><span class="hidden sm:inline"> Déconnexion</span></a></li>
                     </ul>
                 </div>
             </div>
@@ -351,7 +351,7 @@
                     <div class="relative flex flex-col min-w-0 break-words bg-white shadow-xl dark:bg-slate-850 dark:shadow-dark-xl rounded-2xl bg-clip-border">
                         <div class="p-6 pb-0 mb-0 border-b-0 border-b-solid rounded-t-2xl border-b-transparent flex justify-between items-center">
                             <h6 class="dark:text-white">📈 Ventes par catégorie (Top)</h6>
-                            <a href="/marketplace/index.php?controller=export&action=exportStatsPDF" class="btn-action info">Exporter Stats PDF</a>
+                            <a href="/2int/boutique.php?controller=export&action=exportStatsPDF" class="btn-action info">Exporter Stats PDF</a>
                         </div>
                         <div class="p-6">
                             <canvas id="chartVentesByCat" height="140"></canvas>
@@ -442,7 +442,7 @@
                                             <td><?= htmlspecialchars($c['description']) ?></td>
                                             <td>
                                                 <button class="btn-action warning" onclick='openEditCategoryModal(<?= (int)$c["id"] ?>, <?= json_encode((string)($c["nom"] ?? ""), JSON_UNESCAPED_UNICODE) ?>, <?= json_encode((string)($c["description"] ?? ""), JSON_UNESCAPED_UNICODE) ?>)'>Modifier</button>
-                                                <a href="/marketplace/index.php?controller=categorie&action=delete&id=<?= $c['id'] ?>" class="btn-action danger" onclick="return confirm('Supprimer cette catégorie ?')">Supprimer</a>
+                                                <a href="/2int/boutique.php?controller=categorie&action=delete&id=<?= $c['id'] ?>" class="btn-action danger" onclick="return confirm('Supprimer cette catégorie ?')">Supprimer</a>
                                             </td>
                                         </tr>
                                         <?php endforeach; ?>
@@ -503,7 +503,7 @@
                                                         <?= json_encode(!empty($p["is_promo"]) ? 1 : 0, JSON_UNESCAPED_UNICODE) ?>,
                                                         <?= json_encode((isset($p["prix_promo"]) && $p["prix_promo"] !== '' && $p["prix_promo"] !== null) ? (float)$p["prix_promo"] : null, JSON_UNESCAPED_UNICODE) ?>
                                                     )'>Modifier</button>
-                                                    <a href="/marketplace/index.php?controller=produit&action=delete&id=<?= $p['id'] ?>" class="btn-action danger" onclick="return confirm('Supprimer ce produit ?')">Supprimer</a>
+                                                    <a href="/2int/boutique.php?controller=produit&action=delete&id=<?= $p['id'] ?>" class="btn-action danger" onclick="return confirm('Supprimer ce produit ?')">Supprimer</a>
                                                 </td>
                                                 <td>
                                                     <button class="btn-action info" onclick="toggleOrders(<?= $p['id'] ?>)">📋 Voir commandes</button>
@@ -564,7 +564,7 @@
             <span class="close-modal" onclick="closeModal('addProductModal')">&times;</span>
             <h3>Ajouter un produit</h3>
             <div id="addProductError" class="error-message"></div>
-            <form id="addProductForm" action="/marketplace/index.php?controller=produit&action=store" method="POST" onsubmit="return validateAddProduct()">
+            <form id="addProductForm" action="/2int/boutique.php?controller=produit&action=store" method="POST" onsubmit="return validateAddProduct()">
                 <div class="form-group">
                     <label>Nom du produit <span class="required-star">*</span></label>
                     <input type="text" name="nom" id="add_nom" placeholder="Nom du produit">
@@ -611,7 +611,7 @@
             <span class="close-modal" onclick="closeModal('editProductModal')">&times;</span>
             <h3>Modifier le produit</h3>
             <div id="editProductError" class="error-message"></div>
-            <form id="editProductForm" action="/marketplace/index.php?controller=produit&action=update" method="POST" onsubmit="return validateEditProduct()">
+            <form id="editProductForm" action="/2int/boutique.php?controller=produit&action=update" method="POST" onsubmit="return validateEditProduct()">
                 <input type="hidden" name="id" id="edit_product_id">
                 <div class="form-group">
                     <label>Nom du produit <span class="required-star">*</span></label>
@@ -659,7 +659,7 @@
             <span class="close-modal" onclick="closeModal('addCategoryModal')">&times;</span>
             <h3>Ajouter une catégorie</h3>
             <div id="addCategoryError" class="error-message"></div>
-            <form id="addCategoryForm" action="/marketplace/index.php?controller=categorie&action=store" method="POST" onsubmit="return validateAddCategory()">
+            <form id="addCategoryForm" action="/2int/boutique.php?controller=categorie&action=store" method="POST" onsubmit="return validateAddCategory()">
                 <div class="form-group">
                     <label>Nom de la catégorie <span class="required-star">*</span></label>
                     <input type="text" name="nom" id="add_cat_nom" placeholder="Nom de la catégorie">
@@ -679,7 +679,7 @@
             <span class="close-modal" onclick="closeModal('editCategoryModal')">&times;</span>
             <h3>Modifier la catégorie</h3>
             <div id="editCategoryError" class="error-message"></div>
-            <form id="editCategoryForm" action="/marketplace/index.php?controller=categorie&action=update" method="POST" onsubmit="return validateEditCategory()">
+            <form id="editCategoryForm" action="/2int/boutique.php?controller=categorie&action=update" method="POST" onsubmit="return validateEditCategory()">
                 <input type="hidden" name="id" id="edit_category_id">
                 <div class="form-group">
                     <label>Nom <span class="required-star">*</span></label>
@@ -927,3 +927,4 @@
     </script>
 </body>
 </html>
+

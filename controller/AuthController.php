@@ -23,7 +23,7 @@ class AuthController {
         session_destroy();
         
         // Rediriger vers l'accueil
-        header('Location: /marketplace/view/front/index2.php');
+        header('Location: /2int/view/front/index2.php');
         exit();
     }
     
@@ -46,7 +46,7 @@ class AuthController {
                 $_SESSION['logged_in'] = true;
                 $_SESSION['admin_user'] = $username;
                 
-                header('Location: /marketplace/view/back/pages/marketplace.php');
+                header('Location: /2int/view/back/pages/marketplace.php');
                 exit();
             } else {
                 $error = 'Identifiants incorrects';
@@ -54,8 +54,9 @@ class AuthController {
                 exit();
             }
         }
-        header('Location: /marketplace/index.php?controller=auth&action=login');
+        header('Location: /2int/boutique.php?controller=auth&action=login');
         exit();
     }
 }
 ?>
+

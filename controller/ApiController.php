@@ -5,7 +5,7 @@ require_once __DIR__ . '/../model/Produit.php';
 class ApiController {
     private $db;
     private string $openFoodFactsBase = 'https://world.openfoodfacts.org';
-    private string $simulatedNutriScoreServiceUrl = 'http://localhost/marketplace/external/nutriscore_service.php';
+    private string $simulatedNutriScoreServiceUrl = 'http://localhost/2int/external/nutriscore_service.php';
 
     public function __construct() {
         $produit = new Produit();
@@ -271,8 +271,8 @@ class ApiController {
     }
 
     /**
-     * GET  /marketplace/index.php?controller=api&action=nutriscore&id=123
-     * GET  /marketplace/index.php?controller=api&action=nutriscore&id=123&force=1 (recalcule via OpenFoodFacts)
+     * GET  /2int/boutique.php?controller=api&action=nutriscore&id=123
+     * GET  /2int/boutique.php?controller=api&action=nutriscore&id=123&force=1 (recalcule via OpenFoodFacts)
      */
     public function nutriscore(): void {
         $method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
@@ -295,7 +295,7 @@ class ApiController {
 
                 $this->json([
                     'help' => 'Use ?id=PRODUCT_ID to compute/fetch Nutri-Score from OpenFoodFacts (and cache in DB).',
-                    'endpoint' => '/marketplace/index.php?controller=api&action=nutriscore',
+                    'endpoint' => '/2int/boutique.php?controller=api&action=nutriscore',
                     'items' => $items
                 ]);
             }
@@ -363,3 +363,4 @@ class ApiController {
 }
 
 ?>
+

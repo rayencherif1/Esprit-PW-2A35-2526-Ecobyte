@@ -62,10 +62,10 @@ $tunisianCities = [
     <div class="container-fluid">
         <div class="row py-3 border-bottom align-items-center">
             <div class="col-sm-4">
-                <a href="/marketplace/view/front/index2.php" class="logo-text">🌿 EcoBite</a>
+                <a href="/2int/view/front/index2.php" class="logo-text">🌿 EcoBite</a>
             </div>
             <div class="col-sm-8 text-end">
-                <a href="/marketplace/view/front/index2.php" class="btn btn-outline-secondary rounded-pill">← Continuer mes achats</a>
+                <a href="/2int/view/front/index2.php" class="btn btn-outline-secondary rounded-pill">← Continuer mes achats</a>
             </div>
         </div>
     </div>
@@ -78,7 +78,7 @@ $tunisianCities = [
         <div class="alert alert-info text-center">
             Votre panier est vide.
             <br><br>
-            <a href="/marketplace/view/front/index2.php" class="btn btn-primary rounded-pill px-4">Découvrir nos produits</a>
+            <a href="/2int/view/front/index2.php" class="btn btn-primary rounded-pill px-4">Découvrir nos produits</a>
         </div>
     <?php else: ?>
         <div class="row">
@@ -96,7 +96,7 @@ $tunisianCities = [
                                 <td><?= number_format($p['prix'], 2) ?> DT</td>
                                 <td><?= $p['quantite'] ?></td>
                                 <td><?= number_format($p['sous_total'], 2) ?> DT</td>
-                                <td><a href="/marketplace/index.php?controller=commande&action=removeFromPanier&id=<?= $p['id'] ?>" class="btn-remove" onclick="return confirm('Retirer ce produit ?')">Retirer</a></td>
+                                <td><a href="/2int/boutique.php?controller=commande&action=removeFromPanier&id=<?= $p['id'] ?>" class="btn-remove" onclick="return confirm('Retirer ce produit ?')">Retirer</a></td>
                             </tr>
                             <?php endforeach; ?>
                         </tbody>
@@ -131,7 +131,7 @@ $tunisianCities = [
                     
                     <div id="globalError" class="alert alert-danger" style="display: none;"></div>
                     
-                    <form id="checkoutForm" method="POST" action="/marketplace/index.php?controller=commande&action=checkout" onsubmit="return validateAndSubmit()">
+                    <form id="checkoutForm" method="POST" action="/2int/boutique.php?controller=commande&action=checkout" onsubmit="return validateAndSubmit()">
                         
                         <!-- ÉTAPE 1 : Informations personnelles et adresse -->
                         <div id="step1" class="form-step active">
@@ -498,3 +498,4 @@ $tunisianCities = [
 
 </body>
 </html>
+

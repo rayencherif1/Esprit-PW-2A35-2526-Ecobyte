@@ -134,13 +134,13 @@ class CommandeController {
     // ========== MÉTHODES POUR LE ROUTEUR ==========
     
     public function index() {
-        header('Location: /marketplace/view/back/pages/marketplace.php');
+        header('Location: /2int/view/back/pages/marketplace.php');
         exit();
     }
     
     public function detail() {
         $id = $_GET['id'] ?? 0;
-        header('Location: /marketplace/view/back/pages/marketplace.php?action=detail_commande&id=' . $id);
+        header('Location: /2int/view/back/pages/marketplace.php?action=detail_commande&id=' . $id);
         exit();
     }
     
@@ -151,7 +151,7 @@ class CommandeController {
             $this->deleteCommande($id);
         }
         
-        header('Location: /marketplace/view/back/pages/marketplace.php');
+        header('Location: /2int/view/back/pages/marketplace.php');
         exit();
     }
     
@@ -204,7 +204,7 @@ class CommandeController {
         $produit = $this->getProduitById($produit_id);
         
         if (!$produit) {
-            header('Location: /marketplace/view/front/index2.php');
+            header('Location: /2int/view/front/index2.php');
             exit();
         }
         
@@ -237,7 +237,7 @@ class CommandeController {
             ];
         }
         
-        header('Location: /marketplace/index.php?controller=commande&action=panier');
+        header('Location: /2int/boutique.php?controller=commande&action=panier');
         exit();
     }
     
@@ -249,14 +249,14 @@ class CommandeController {
             unset($_SESSION['panier'][$produit_id]);
         }
         
-        header('Location: /marketplace/index.php?controller=commande&action=panier');
+        header('Location: /2int/boutique.php?controller=commande&action=panier');
         exit();
     }
     
     public function clearPanier() {
         session_start();
         $_SESSION['panier'] = [];
-        header('Location: /marketplace/index.php?controller=commande&action=panier');
+        header('Location: /2int/boutique.php?controller=commande&action=panier');
         exit();
     }
     
@@ -268,7 +268,7 @@ class CommandeController {
             
             if(empty($panier)) {
                 $_SESSION['error'] = "Votre panier est vide";
-                header('Location: /marketplace/index.php?controller=commande&action=panier');
+                header('Location: /2int/boutique.php?controller=commande&action=panier');
                 exit();
             }
             
@@ -352,7 +352,7 @@ class CommandeController {
             $_SESSION['panier'] = [];
             
             // Rediriger vers la page de confirmation
-            header('Location: /marketplace/index.php?controller=commande&action=confirmation&id=' . $commande_id);
+            header('Location: /2int/boutique.php?controller=commande&action=confirmation&id=' . $commande_id);
             exit();
         }
         
@@ -365,7 +365,7 @@ class CommandeController {
         $commande = $this->getCommandeById($id);
         
         if (!$commande) {
-            header('Location: /marketplace/view/front/index2.php');
+            header('Location: /2int/view/front/index2.php');
             exit();
         }
         
@@ -376,8 +376,9 @@ class CommandeController {
     public function resetPanier() {
         session_start();
         $_SESSION['panier'] = [];
-        header('Location: /marketplace/index.php?controller=commande&action=panier');
+        header('Location: /2int/boutique.php?controller=commande&action=panier');
         exit();
     }
 }
 ?>
+

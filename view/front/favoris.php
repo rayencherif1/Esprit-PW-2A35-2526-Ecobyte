@@ -8,25 +8,25 @@ if (session_status() === PHP_SESSION_NONE) {
 function getProductImage($nom) {
     $nomLower = strtolower(trim($nom));
     if (strpos($nomLower, 'créatine') !== false || strpos($nomLower, 'creatine') !== false || strpos($nomLower, 'monohydrate') !== false) {
-        return '/marketplace/view/front/images/thumb-creatine.svg';
+        return '/2int/view/front/images/thumb-creatine.svg';
     } elseif (strpos($nomLower, 'whey') !== false || strpos($nomLower, 'protéine') !== false || strpos($nomLower, 'proteine') !== false || strpos($nomLower, 'protein') !== false) {
-        return '/marketplace/view/front/images/thumb-whey.svg';
+        return '/2int/view/front/images/thumb-whey.svg';
     } elseif (strpos($nomLower, 'collagène') !== false || strpos($nomLower, 'collagene') !== false) {
-        return '/marketplace/view/front/images/thumb-collagene.svg';
+        return '/2int/view/front/images/thumb-collagene.svg';
     } elseif (strpos($nomLower, 'vitamine') !== false || strpos($nomLower, 'vitamines') !== false) {
-        return '/marketplace/view/front/images/thumb-vitamines.svg';
+        return '/2int/view/front/images/thumb-vitamines.svg';
     } elseif (strpos($nomLower, 'poudre') !== false || strpos($nomLower, 'supplément') !== false || strpos($nomLower, 'supplement') !== false || strpos($nomLower, 'glutamine') !== false || strpos($nomLower, 'électrolytes') !== false || strpos($nomLower, 'electrolytes') !== false) {
-        return '/marketplace/view/front/images/thumb-supplement.svg';
+        return '/2int/view/front/images/thumb-supplement.svg';
     } elseif (strpos($nomLower, 'boisson') !== false || strpos($nomLower, 'jus') !== false || strpos($nomLower, 'smoothie') !== false || strpos($nomLower, 'guarana') !== false) {
-        return '/marketplace/view/front/images/product-thumb-1.png';
+        return '/2int/view/front/images/product-thumb-1.png';
     } elseif (strpos($nomLower, 'dattes') !== false || strpos($nomLower, 'pâte') !== false || strpos($nomLower, 'barre') !== false) {
-        return '/marketplace/view/front/images/thumb-biscuits.png';
+        return '/2int/view/front/images/thumb-biscuits.png';
     } elseif (strpos($nomLower, 'banane') !== false) {
-        return '/marketplace/view/front/images/thumb-bananas.png';
+        return '/2int/view/front/images/thumb-bananas.png';
     } elseif (strpos($nomLower, 'tomate') !== false) {
-        return '/marketplace/view/front/images/thumb-tomatoes.png';
+        return '/2int/view/front/images/thumb-tomatoes.png';
     } elseif (strpos($nomLower, 'lait') !== false || strpos($nomLower, 'milk') !== false) {
-        return '/marketplace/view/front/images/thumb-milk.png';
+        return '/2int/view/front/images/thumb-milk.png';
     }
     return '';
 }
@@ -39,8 +39,8 @@ function getProductImage($nom) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@9/swiper-bundle.min.css">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="/marketplace/view/front/css/vendor.css">
-    <link rel="stylesheet" href="/marketplace/view/front/style.css">
+    <link rel="stylesheet" href="/2int/view/front/css/vendor.css">
+    <link rel="stylesheet" href="/2int/view/front/style.css">
     <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700&family=Open+Sans:wght@400;700&display=swap" rel="stylesheet">
     <style>
         .admin-icon {
@@ -132,8 +132,8 @@ function getProductImage($nom) {
   <div class="container-fluid">
     <div class="row py-3 border-bottom align-items-center">
       <div class="col-sm-4 col-lg-3">
-        <a href="/marketplace/view/front/index2.php">
-          <img src="/marketplace/view/front/images/logo-ecobite.jpg" alt="EcoBite" class="logo-img">
+        <a href="/2int/view/front/index2.php">
+          <img src="/2int/view/front/images/logo-ecobite.jpg" alt="EcoBite" class="logo-img">
         </a>
       </div>
       <div class="col-sm-6 offset-sm-2 offset-md-0 col-lg-5 d-none d-lg-block">
@@ -149,13 +149,13 @@ function getProductImage($nom) {
           <span class="fs-6 text-muted">Service client</span>
           <h5 class="mb-0">+216 20 190 091</h5>
         </div>
-        <a href="/marketplace/index.php?controller=commande&action=panier" class="btn btn-outline-success rounded-pill">
+        <a href="/2int/boutique.php?controller=commande&action=panier" class="btn btn-outline-success rounded-pill">
           <svg width="20" height="20"><use xlink:href="#cart"></use></svg> Panier
         </a>
-        <a href="/marketplace/index.php?controller=favoris&action=index" class="btn btn-danger rounded-pill" title="Mes favoris">
+        <a href="/2int/boutique.php?controller=favoris&action=index" class="btn btn-danger rounded-pill" title="Mes favoris">
           ❤️ Favoris
         </a>
-        <a href="/marketplace/view/back/pages/marketplace.php" class="admin-icon" title="Administration">
+        <a href="/2int/view/back/pages/marketplace.php" class="admin-icon" title="Administration">
           <svg width="20" height="20"><use xlink:href="#lock"></use></svg>
         </a>
       </div>
@@ -166,7 +166,7 @@ function getProductImage($nom) {
 <div class="container-fluid py-5" style="min-height: 60vh;">
     <div class="d-flex justify-content-between align-items-center mb-5 border-bottom pb-3">
         <h2 class="section-title mb-0">❤️ Mes produits favoris</h2>
-        <a href="/marketplace/view/front/index2.php" class="btn btn-outline-dark rounded-pill px-4">Continuer mes achats</a>
+        <a href="/2int/view/front/index2.php" class="btn btn-outline-dark rounded-pill px-4">Continuer mes achats</a>
     </div>
 
     <?php if (empty($favoris)): ?>
@@ -176,7 +176,7 @@ function getProductImage($nom) {
             </svg>
             <h3 class="text-secondary mb-3">Votre liste de favoris est vide</h3>
             <p class="text-muted mb-4 fs-5">Découvrez nos produits frais et ajoutez-les à vos favoris en cliquant sur le cœur.</p>
-            <a href="/marketplace/view/front/index2.php" class="btn btn-success btn-lg px-5 rounded-pill shadow-sm">Découvrir nos produits</a>
+            <a href="/2int/view/front/index2.php" class="btn btn-success btn-lg px-5 rounded-pill shadow-sm">Découvrir nos produits</a>
         </div>
     <?php else: ?>
         <div class="product-grid row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 row-cols-xl-5 g-4">
@@ -232,7 +232,7 @@ function getProductImage($nom) {
     <div class="row">
       <div class="col-lg-3 col-md-6 mb-4 mb-lg-0">
         <div class="footer-menu">
-          <img src="/marketplace/view/front/images/logo-ecobite.jpg" alt="EcoBite" style="height: 40px; margin-bottom: 15px;">
+          <img src="/2int/view/front/images/logo-ecobite.jpg" alt="EcoBite" style="height: 40px; margin-bottom: 15px;">
           <p class="text-muted">Manger mieux, vivre mieux.</p>
         </div>
       </div>
@@ -267,7 +267,7 @@ function getProductImage($nom) {
     </div>
 </div>
 
-<script src="/marketplace/view/front/js/jquery-1.11.0.min.js"></script>
+<script src="/2int/view/front/js/jquery-1.11.0.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/swiper@9/swiper-bundle.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/js/bootstrap.bundle.min.js"></script>
 
@@ -307,7 +307,7 @@ document.addEventListener('DOMContentLoaded', function() {
             let productId = this.dataset.id;
             let qtyInput = this.closest('.product-item').querySelector('.input-number');
             let quantity = qtyInput ? qtyInput.value : 1;
-            window.location.href = `/marketplace/index.php?controller=commande&action=addToPanier&id=${productId}&quantite=${quantity}`;
+            window.location.href = `/2int/boutique.php?controller=commande&action=addToPanier&id=${productId}&quantite=${quantity}`;
         });
     });
 });
@@ -321,7 +321,7 @@ function removeFromFavoris(produitId, element) {
     svg.setAttribute('stroke', '#666');
 
     // Requête AJAX pour supprimer
-    fetch(`/marketplace/index.php?controller=favoris&action=remove&id=${produitId}`, {
+    fetch(`/2int/boutique.php?controller=favoris&action=remove&id=${produitId}`, {
         headers: {
             'X-Requested-With': 'XMLHttpRequest'
         }
@@ -346,10 +346,11 @@ function removeFromFavoris(produitId, element) {
         .catch(function(error) {
             console.error('Erreur lors de la suppression:', error);
             // Fallback classique en cas d'erreur AJAX
-            window.location.href = `/marketplace/index.php?controller=favoris&action=remove&id=${produitId}`;
+            window.location.href = `/2int/boutique.php?controller=favoris&action=remove&id=${produitId}`;
         });
 }
 </script>
 
 </body>
 </html>
+

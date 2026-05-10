@@ -24,10 +24,10 @@
     <div class="container-fluid">
         <div class="row py-3 border-bottom align-items-center">
             <div class="col-sm-4">
-                <a href="/marketplace/view/front/index2.php" class="logo-text">🌿 EcoBite</a>
+                <a href="/2int/view/front/index2.php" class="logo-text">🌿 EcoBite</a>
             </div>
             <div class="col-sm-8 text-end">
-                <a href="/marketplace/view/front/index2.php" class="btn btn-outline-secondary rounded-pill">← Continuer mes achats</a>
+                <a href="/2int/view/front/index2.php" class="btn btn-outline-secondary rounded-pill">← Continuer mes achats</a>
             </div>
         </div>
     </div>
@@ -235,7 +235,7 @@
         <?php endif; ?>
         
         <div class="text-center mt-4">
-            <a href="/marketplace/view/front/index2.php" class="btn-continuer d-inline-block">
+            <a href="/2int/view/front/index2.php" class="btn-continuer d-inline-block">
                 <i class="fa-solid fa-arrow-left"></i> Continuer mes achats
             </a>
         </div>
@@ -252,3 +252,4 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
+

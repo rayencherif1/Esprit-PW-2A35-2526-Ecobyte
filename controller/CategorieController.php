@@ -57,12 +57,12 @@ class CategorieController {
     // ========== MÉTHODES POUR LE ROUTEUR ==========
     
     public function index() {
-        header('Location: /marketplace/view/back/pages/marketplace.php');
+        header('Location: /2int/view/back/pages/marketplace.php');
         exit();
     }
     
     public function create() {
-        header('Location: /marketplace/view/back/pages/marketplace.php?action=add_category');
+        header('Location: /2int/view/back/pages/marketplace.php?action=add_category');
         exit();
     }
     
@@ -82,13 +82,13 @@ class CategorieController {
                 $_SESSION['error_message'] = 'Le nom de la catégorie est obligatoire';
             }
         }
-        header('Location: /marketplace/view/back/pages/marketplace.php');
+        header('Location: /2int/view/back/pages/marketplace.php');
         exit();
     }
     
     public function edit() {
         $id = $_GET['id'] ?? 0;
-        header('Location: /marketplace/view/back/pages/marketplace.php?action=edit_category&id=' . $id);
+        header('Location: /2int/view/back/pages/marketplace.php?action=edit_category&id=' . $id);
         exit();
     }
     
@@ -102,7 +102,7 @@ class CategorieController {
                 $this->updateCategorie($id, $nom, $description);
             }
         }
-        header('Location: /marketplace/view/back/pages/marketplace.php');
+        header('Location: /2int/view/back/pages/marketplace.php');
         exit();
     }
     
@@ -113,8 +113,9 @@ class CategorieController {
             $this->deleteCategorie($id);
         }
         
-        header('Location: /marketplace/view/back/pages/marketplace.php');
+        header('Location: /2int/view/back/pages/marketplace.php');
         exit();
     }
 }
 ?>
+

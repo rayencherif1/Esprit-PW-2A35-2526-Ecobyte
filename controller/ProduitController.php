@@ -46,7 +46,7 @@ class ProduitController {
             session_start();
         }
         if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
-            header('Location: /marketplace/index.php?controller=auth&action=login');
+            header('Location: /2int/boutique.php?controller=auth&action=login');
             exit();
         }
     }
@@ -191,12 +191,12 @@ class ProduitController {
     // ========== MÉTHODES POUR LE ROUTEUR ==========
     
     public function index() {
-        header('Location: /marketplace/view/back/pages/marketplace.php');
+        header('Location: /2int/view/back/pages/marketplace.php');
         exit();
     }
     
     public function create() {
-        header('Location: /marketplace/view/back/pages/marketplace.php?action=add_product');
+        header('Location: /2int/view/back/pages/marketplace.php?action=add_product');
         exit();
     }
     
@@ -227,13 +227,13 @@ class ProduitController {
                 $_SESSION['error_message'] = 'Veuillez remplir tous les champs obligatoires (nom, prix, catégorie)';
             }
         }
-        header('Location: /marketplace/view/back/pages/marketplace.php');
+        header('Location: /2int/view/back/pages/marketplace.php');
         exit();
     }
     
     public function edit() {
         $id = $_GET['id'] ?? 0;
-        header('Location: /marketplace/view/back/pages/marketplace.php?action=edit_product&id=' . $id);
+        header('Location: /2int/view/back/pages/marketplace.php?action=edit_product&id=' . $id);
         exit();
     }
     
@@ -258,7 +258,7 @@ class ProduitController {
                 $this->updateProduit($id, $nom, $prix, $stock, $description, $categorie_id, $calories, $nutriscore, $saison, $is_promo, $prix_promo);
             }
         }
-        header('Location: /marketplace/view/back/pages/marketplace.php');
+        header('Location: /2int/view/back/pages/marketplace.php');
         exit();
     }
     
@@ -269,7 +269,7 @@ class ProduitController {
             $this->deleteProduit($id);
         }
         
-        header('Location: /marketplace/view/back/pages/marketplace.php');
+        header('Location: /2int/view/back/pages/marketplace.php');
         exit();
     }
     
@@ -279,3 +279,4 @@ class ProduitController {
     }
 }
 ?>
+
