@@ -34,9 +34,9 @@ const DB_CHARSET = 'utf8mb4';
 // -------------------------------------------------------------------------
 define('ROOT_PATH', dirname(__DIR__)); // Racine du projet (parent de /config)
 define('APP_PATH', ROOT_PATH . '/app'); // Noyau technique (Core, Services, bootstrap)
-define('CONTROLLER_PATH', ROOT_PATH . '/Controllers'); // Contrôleurs MVC
-define('MODEL_PATH', ROOT_PATH . '/Models'); // Modèles MVC
-define('VIEW_PATH', ROOT_PATH . '/Views'); // Vues MVC
+define('CONTROLLER_PATH', ROOT_PATH . '/controller'); // Contrôleurs MVC
+define('MODEL_PATH', ROOT_PATH . '/model'); // Modèles MVC
+define('VIEW_PATH', ROOT_PATH . '/view'); // Vues MVC
 
 require_once APP_PATH . '/Core/EnvLoader.php';
 EnvLoader::load(ROOT_PATH . DIRECTORY_SEPARATOR . '.env');

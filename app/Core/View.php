@@ -1,6 +1,6 @@
 <?php
 /**
- * Couche View : inclut un fichier PHP dans Views/ en injectant des variables.
+ * Couche View : inclut un fichier PHP dans view/ en injectant des variables.
  * Aucune requête SQL ici — uniquement de la présentation.
  */
 
@@ -11,7 +11,7 @@ final class View
     /**
      * Affiche une vue en extrayant le tableau $data en variables locales.
      *
-     * @param string $template Chemin relatif depuis Views/ (ex: 'front/home')
+     * @param string $template Chemin relatif depuis view/ (ex: 'front/home')
      * @param array<string,mixed> $data Données passées à la vue (clé => valeur)
      */
     public static function render(string $template, array $data = []): void

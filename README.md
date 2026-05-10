@@ -31,9 +31,9 @@ Application web simple : catalogue de **programmes** et **exercices**, espace **
 | **`public/`** | Point d’entrée web : `index.php` (site) et `admin/index.php` (back-office). Les URLs pointent ici. |
 | **`public/js/training-api.js`** | JavaScript : IMC, conseil du jour, alternatives wger (muscle + vidéos / YouTube). |
 | **`public/images/mylogo.png`** | Logo affiché en haut du site (à fournir). |
-| **`Controllers/`** | Contrôleurs MVC (front + admin). |
-| **`Models/`** | Modèles PDO (accès base). |
-| **`Views/`** | Vues PHP (front + admin). |
+| **`controller/`** | Contrôleurs MVC (front + admin). |
+| **`model/`** | Modèles PDO (accès base). |
+| **`view/`** | Vues PHP (front + admin). |
 | **`app/`** | Noyau technique (bootstrap, services, classes utilitaires). |
 | **`app/Services/OllamaRecommendClient.php`** | Appel HTTP Ollama (`/api/chat`, JSON). |
 | **`app/Core/EnvLoader.php`** | Chargement du fichier **`.env`** (sans Composer). |
