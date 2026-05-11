@@ -77,4 +77,4 @@ ob_start();
 <?php
 $slot = ob_get_clean();
 $pageTitle = $isEdit ? 'Éditer programme' : 'Nouveau programme';
-require VIEW_PATH . '/admin/layout.php';
+require VIEW_PATH . '/back/layout.php';

@@ -52,4 +52,4 @@ ob_start();
 <?php
 $slot = ob_get_clean();
 $pageTitle = 'Tableau de bord — exercices';
-require VIEW_PATH . '/admin/layout.php';
+require VIEW_PATH . '/back/layout.php';

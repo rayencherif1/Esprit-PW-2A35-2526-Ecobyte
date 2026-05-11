@@ -47,7 +47,7 @@ EnvLoader::load(ROOT_PATH . DIRECTORY_SEPARATOR . '.env');
 //   http://localhost/projetselem/public/
 // -------------------------------------------------------------------------
 define('BASE_URL', 'http://localhost/2int/public'); // Sans slash final
-define('ADMIN_URL', BASE_URL . '/admin'); // Espace d’administration
+define('ADMIN_URL', BASE_URL . '/back'); // Espace d’administration
 
 // -------------------------------------------------------------------------
 // Template FoodMart (front) : dossier à la racine du projet, sans slash final.
