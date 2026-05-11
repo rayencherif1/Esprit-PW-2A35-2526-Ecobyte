@@ -1,10 +1,10 @@
 <?php
 
-require_once __DIR__ . '/controller/post.controller.php';
-require_once __DIR__ . '/controller/reply.controller.php';
-require_once __DIR__ . '/controller/image_utils.php';
-require_once __DIR__ . '/controller/ai_reply.php';
-require_once __DIR__ . '/model/reply.php';
+require_once __DIR__ . '/../../controller/post.controller.php';
+require_once __DIR__ . '/../../controller/reply.controller.php';
+require_once __DIR__ . '/../../controller/image_utils.php';
+require_once __DIR__ . '/../../controller/ai_reply.php';
+require_once __DIR__ . '/../../model/reply.php';
 
 if (session_status() !== PHP_SESSION_ACTIVE) {
     session_start();
@@ -56,7 +56,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if (!$imageValidation['valid']) {
                 $replyError = 'Image invalide: ' . $imageValidation['message'];
             } else {
-                $uploadDir = __DIR__ . '/view/uploads/';
+                $uploadDir = __DIR__ . '/../uploads/';
                 if (!is_dir($uploadDir)) {
                     mkdir($uploadDir, 0755, true);
                 }
@@ -65,7 +65,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $targetFile = $uploadDir . $fileName;
                 
                 if (move_uploaded_file($_FILES['image']['tmp_name'], $targetFile)) {
-                    $imagePath = 'view/uploads/' . $fileName;
+                    $imagePath = 'view/uploads/' . $fileName; // Mantain original path logic if handled by a specific logic, but check if it's correct
                 }
             }
         } else {
@@ -204,8 +204,9 @@ try {
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Blog</title>
-    <link rel="stylesheet" href="view/Front office/FoodMart-1.0.0/FoodMart-1.0.0/css/ai-summary.css">
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&family=Open+Sans:wght@400;600&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
     <style>
       :root { color-scheme: light; }
       * { box-sizing: border-box; }
@@ -401,32 +402,31 @@ try {
     </style>
   </head>
   <body>
-    <header>
-      <div class="container" style="display:flex;align-items:center;justify-content:space-between;gap:14px;">
+    <nav class="ecobyte-topbar" style="background: #1a1a2e; padding: 10px 32px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 1000;">
+        <a href="/2int/index.php" style="display: flex; align-items: center; gap: 8px; font-family: 'Nunito', sans-serif; font-size: 1.2rem; font-weight: 800; text-decoration: none;">
+            <span style="color: #4caf50;">🌿</span> <span style="color: #4caf50;">ECO</span><span style="color: #ff6b35;">BYTE</span>
+        </a>
+        <div style="display: flex; align-items: center; gap: 14px;">
+            <a href="/2int/index.php" style="color: #aaa; text-decoration: none; font-size: .82rem;">← Hub</a>
+            <a href="#" style="width:32px;height:32px;background:#555;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;text-decoration:none;font-size:.8rem;">U</a>
+        </div>
+    </nav>
+
+    <header style="background: #fff; border-bottom: 1px solid #e9ecef; padding: 16px 32px;">
+      <div class="container" style="display:flex;align-items:center;justify-content:space-between;gap:14px; max-width: 1200px; margin: 0 auto;">
         <div class="brand">
-          <span class="logo" aria-hidden="true"></span>
           <div>
-            <h1>Blog</h1>
-            <p>Articles récents</p>
+            <h1 style="font-family: 'Nunito', sans-serif; font-weight: 800; margin: 0;">Communauté & Blog</h1>
+            <p style="margin: 0; color: #64748b;">Partagez vos astuces nutritionnelles</p>
           </div>
         </div>
         <nav class="nav" aria-label="Navigation">
-          <a class="primary" href="ajouter_post.php">Ajouter un article</a>
-          <a href="nutrition_analyzer_test.php">🍎 Nutritionnel</a>
-          <a href="view/Front office/FoodMart-1.0.0/FoodMart-1.0.0/index.html">Retour au site</a>
+          <a class="btn btn-primary btn-sm rounded-pill px-3" href="ajouter_post.php">Ajouter un article</a>
+          <a class="btn btn-outline-secondary btn-sm rounded-pill px-3" href="/2int/index.php">Quitter</a>
         </nav>
         <form method="get" action="" style="display:flex;gap:8px;" id="search-form">
-          <input id="search-input" type="text" name="search" value="<?= htmlspecialchars($searchQuery, ENT_QUOTES, 'UTF-8') ?>" placeholder="Rechercher..." style="padding:9px 12px;border:1px solid rgba(148,163,184,0.35);border-radius:12px;background:rgba(255,255,255,0.9);font-size:14px;">
-          <select id="category-select" name="category" style="padding:9px 12px;border:1px solid rgba(148,163,184,0.35);border-radius:12px;background:rgba(255,255,255,0.9);font-size:14px;">
-            <option value="">Toutes les catégories</option>
-            <?php foreach ($categories as $cat) { ?>
-              <option value="<?= htmlspecialchars($cat, ENT_QUOTES, 'UTF-8') ?>" <?= $filterCategory === $cat ? 'selected' : '' ?>><?= htmlspecialchars($cat, ENT_QUOTES, 'UTF-8') ?></option>
-            <?php } ?>
-          </select>
-          <button type="submit" class="btn" style="padding:9px 12px;font-size:14px;">Filtrer</button>
-          <?php if ($searchQuery !== '' || $filterCategory !== '') { ?>
-            <a href="blog.php" class="btn" style="padding:9px 12px;font-size:14px;text-decoration:none;background:#e2e8f0;color:#0f172a;">Effacer</a>
-          <?php } ?>
+          <input id="search-input" type="text" name="search" value="<?= htmlspecialchars($searchQuery, ENT_QUOTES, 'UTF-8') ?>" placeholder="Rechercher..." class="form-control form-control-sm rounded-pill">
+          <button type="submit" class="btn btn-primary btn-sm rounded-pill px-3">Filtrer</button>
         </form>
       </div>
     </header>

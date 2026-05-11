@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-require_once __DIR__ . '/config.php';
-require_once __DIR__ . '/model/reply.php';
-require_once __DIR__ . '/controller/reply.controller.php';
+require_once __DIR__ . '/../../config.php';
+require_once __DIR__ . '/../../model/post.php';
+require_once __DIR__ . '/../../controller/post.controller.php';
 
 if (session_status() !== PHP_SESSION_ACTIVE) {
     session_start();
@@ -20,37 +20,49 @@ if ($id <= 0) {
     exit;
 }
 
-$replyC = new ReplyC();
-$row = $replyC->getReplyById($id);
+$postC = new PostC();
+$row = $postC->getPostById($id);
 if ($row === null) {
     header('Location: blog.php');
     exit;
 }
 
-$postId = (int) ($row['post_id'] ?? 0);
-
 $message = '';
 $error = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $titre = trim((string) ($_POST['titre'] ?? ''));
     $contenu = trim((string) ($_POST['contenu'] ?? ''));
+    $datePublication = trim((string) ($_POST['datePublication'] ?? ''));
+    $categorie = trim((string) ($_POST['categorie'] ?? ''));
+    $image = trim((string) ($_POST['image'] ?? ''));
 
-    if ($contenu === '') {
+    if ($titre === '') {
+        $error = 'Le titre est obligatoire.';
+    } elseif ($categorie === '') {
+        $error = 'La catégorie est obligatoire.';
+    } elseif ($contenu === '') {
         $error = 'Le contenu est obligatoire.';
     } else {
-        $contenu = nettoyerCommentaire($contenu);
-        $reply = new Reply($id, $contenu, null, $postId);
+        if ($datePublication === '') {
+            $datePublication = date('Y-m-d');
+        }
+        $post = new Post($id, $titre, $contenu, $datePublication, $categorie, $image === '' ? null : $image);
         try {
-            $replyC->updateReply($reply, $id);
-            $message = 'Réponse mise à jour.';
-            $row = $replyC->getReplyById($id) ?? $row;
+            $postC->updatePost($post, $id);
+            $message = 'Article mis à jour.';
+            $row = $postC->getPostById($id) ?? $row;
         } catch (Exception $e) {
             $error = $e->getMessage();
         }
     }
 }
 
-$contenu = trim((string) ($_POST['contenu'] ?? $row['contenu'] ?? ''));
+$titre = trim((string) ($_POST['titre'] ?? $row['titre'] ?? ''));
+$contenu = (string) ($_POST['contenu'] ?? $row['contenu'] ?? '');
+$categorie = trim((string) ($_POST['categorie'] ?? $row['categorie'] ?? ''));
+$datePublication = trim((string) ($_POST['datePublication'] ?? $row['datePublication'] ?? date('Y-m-d')));
+$image = trim((string) ($_POST['image'] ?? $row['image'] ?? ''));
 
 ?>
 <!DOCTYPE html>
@@ -58,7 +70,7 @@ $contenu = trim((string) ($_POST['contenu'] ?? $row['contenu'] ?? ''));
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Modifier la réponse — Ecobyte</title>
+    <title>Modifier l’article — Ecobyte</title>
     <style>
         * { box-sizing: border-box; }
         body { font-family: system-ui, sans-serif; background: #f8fafc; color: #0f172a; margin: 0; padding: 24px; }
@@ -66,10 +78,10 @@ $contenu = trim((string) ($_POST['contenu'] ?? $row['contenu'] ?? ''));
         h1 { font-size: 1.35rem; margin: 0 0 8px; }
         .lead { color: #64748b; font-size: 0.95rem; margin: 0 0 20px; }
         label { display: block; font-size: 0.875rem; font-weight: 600; margin: 14px 0 6px; }
-        input[type="text"], textarea {
+        input[type="text"], input[type="date"], textarea {
             width: 100%; padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 1rem;
         }
-        textarea { min-height: 220px; resize: vertical; font-family: inherit; line-height: 1.5; }
+        textarea { min-height: 280px; resize: vertical; font-family: inherit; line-height: 1.5; }
         .btn {
             margin-top: 20px; padding: 10px 20px; border: none; border-radius: 8px;
             background: #2563eb; color: #fff; font-weight: 600; cursor: pointer; font-size: 1rem;
@@ -87,11 +99,11 @@ $contenu = trim((string) ($_POST['contenu'] ?? $row['contenu'] ?? ''));
 <body>
     <div class="wrap">
         <div class="top">
-            <a href="blog.php<?= $postId > 0 ? '#post-' . $postId : '' ?>">← Retour au blog</a>
+            <a href="blog.php">← Retour au blog</a>
             <a href="view/Front office/FoodMart-1.0.0/FoodMart-1.0.0/index.html">Accueil du site</a>
         </div>
-        <h1>Modifier la réponse</h1>
-        <p class="lead">Modifiez le contenu et/ou la date de la réponse.</p>
+        <h1>Modifier l’article</h1>
+        <p class="lead">Modifiez le titre, la catégorie, la date, l’image ou le contenu.</p>
 
         <div class="card">
             <?php if ($message !== '') { ?>
@@ -101,11 +113,23 @@ $contenu = trim((string) ($_POST['contenu'] ?? $row['contenu'] ?? ''));
                 <div class="err"><?= htmlspecialchars($error, ENT_QUOTES, 'UTF-8') ?></div>
             <?php } ?>
             <form method="post" action="">
-                <label for="contenu">Commentaire / Réponse *</label>
-                <textarea id="contenu" name="contenu"><?= htmlspecialchars($contenu, ENT_QUOTES, 'UTF-8') ?></textarea>
+                <label for="titre">Titre *</label>
+                <input type="text" id="titre" name="titre" value="<?= htmlspecialchars($titre, ENT_QUOTES, 'UTF-8') ?>">
+
+                <label for="categorie">Catégorie</label>
+                <input type="text" id="categorie" name="categorie" value="<?= htmlspecialchars($categorie, ENT_QUOTES, 'UTF-8') ?>">
+
+                <label for="datePublication">Date</label>
+                <input type="date" id="datePublication" name="datePublication" value="<?= htmlspecialchars($datePublication, ENT_QUOTES, 'UTF-8') ?>">
+
+                <label for="image">Image (URL ou chemin)</label>
+                <input type="text" id="image" name="image" placeholder="optionnel" value="<?= htmlspecialchars($image, ENT_QUOTES, 'UTF-8') ?>">
+
+                <label for="contenu">Contenu</label>
+                <textarea id="contenu" name="contenu" placeholder="Écrivez votre article…"><?= htmlspecialchars($contenu, ENT_QUOTES, 'UTF-8') ?></textarea>
 
                 <button type="submit" class="btn">Enregistrer</button>
-                <a href="blog.php<?= $postId > 0 ? '#post-' . $postId : '' ?>" class="btn-ghost">Annuler</a>
+                <a href="blog.php" class="btn-ghost">Annuler</a>
             </form>
         </div>
     </div>

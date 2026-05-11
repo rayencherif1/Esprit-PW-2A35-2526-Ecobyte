@@ -11,7 +11,7 @@ class config
             $username = "root";
             // XAMPP: mot de passe MySQL root souvent vide. Sinon mets ton mot de passe ici.
             $password = "";
-            $dbname = "ecobyte";
+            $dbname = "gestion_allergie";
 
             try {
                 self::$pdo = new PDO(

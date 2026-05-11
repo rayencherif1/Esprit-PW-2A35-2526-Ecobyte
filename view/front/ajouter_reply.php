@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-require_once __DIR__ . '/config.php';
-require_once __DIR__ . '/controller/image_utils.php';
-require_once __DIR__ . '/model/reply.php';
-require_once __DIR__ . '/controller/reply.controller.php';
-require_once __DIR__ . '/controller/post.controller.php';
-require_once __DIR__ . '/controller/ai_reply.php';
+require_once __DIR__ . '/../../config.php';
+require_once __DIR__ . '/../../controller/image_utils.php';
+require_once __DIR__ . '/../../model/reply.php';
+require_once __DIR__ . '/../../controller/reply.controller.php';
+require_once __DIR__ . '/../../controller/post.controller.php';
+require_once __DIR__ . '/../../controller/ai_reply.php';
 
 $postId = (int) ($_GET['post_id'] ?? 0);
 if ($postId <= 0) {

@@ -1,9 +1,9 @@
 <?php
 
-require_once __DIR__ . '/controller/post.controller.php';
-require_once __DIR__ . '/controller/reply.controller.php';
-require_once __DIR__ . '/controller/image_utils.php';
-require_once __DIR__ . '/model/reply.php';
+require_once __DIR__ . '/../../controller/post.controller.php';
+require_once __DIR__ . '/../../controller/reply.controller.php';
+require_once __DIR__ . '/../../controller/image_utils.php';
+require_once __DIR__ . '/../../model/reply.php';
 
 if (session_status() !== PHP_SESSION_ACTIVE) {
     session_start();
