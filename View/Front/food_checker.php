@@ -468,8 +468,8 @@
 <div class="wrap">
 
     <nav>
-        <a href="allergie_report.php" class="logo">⬡ AllergieScan</a>
-        <a href="allergie_report.php" class="back-link">
+        <a href="/2int/index.php" class="logo">🌿 ECO BYTE Santé</a>
+        <a href="allergy_report.php" class="back-link">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5M5 12l7 7M5 12l7-7"/></svg>
             Retour au rapport
         </a>

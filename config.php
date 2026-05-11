@@ -12,7 +12,7 @@ class config
         if (!isset(self::$pdo)) {
             try {
                 self::$pdo = new PDO(
-                    'mysql:host=localhost;dbname=gestion_allergie',
+                    'mysql:host=localhost;dbname=gestion_allergie;charset=utf8',
                     'root',
                     '',
                     [

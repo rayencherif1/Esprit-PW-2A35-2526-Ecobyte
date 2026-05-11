@@ -128,6 +128,11 @@
 <body>
     <div class="chat-container">
         <div class="chat-header">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                <a href="allergy_report.php" style="color: white; text-decoration: none; font-size: 14px; display: flex; align-items: center; gap: 5px; opacity: 0.8;">
+                    ← Retour au rapport
+                </a>
+            </div>
             <h1>🤖 AllergieBot</h1>
             <p>Assistant IA - Réponses intelligentes et naturelles</p>
         </div>

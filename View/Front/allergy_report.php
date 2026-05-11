@@ -465,6 +465,41 @@ if ($selected_id) {
 
 <body class="bg-gray-50">
 
+    <!-- HEADER PREMIUM -->
+    <header class="bg-white border-b border-gray-200 sticky top-0 z-[1000] px-4 py-3 sm:px-8 flex items-center justify-between gap-4">
+        <!-- Logo -->
+        <a href="/2int/index.php" class="flex items-center gap-2 no-underline shrink-0">
+            <span class="text-2xl">🥗</span>
+            <span class="font-bold text-xl tracking-tight"><span class="text-green-600">ECO</span> <span class="text-orange-500">BYTE</span></span>
+        </a>
+
+        <!-- Barre de recherche -->
+        <div class="flex-1 max-w-2xl relative hidden md:block">
+            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+            </div>
+            <input type="text" placeholder="Rechercher des recettes, produits, exercices..." class="block w-full pl-10 pr-3 py-2 border border-gray-200 rounded-full bg-gray-50 focus:bg-white focus:ring-2 focus:ring-green-500 transition-all text-sm">
+        </div>
+
+        <!-- Actions -->
+        <div class="flex items-center gap-3 shrink-0">
+            <a href="/2int/index.php" class="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-gray-50 rounded-lg hover:bg-gray-100 transition border border-gray-100">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg>
+                Hub
+            </a>
+            
+            <div class="relative group hidden sm:block">
+                <button class="flex items-center gap-1 px-3 py-2 text-sm font-medium text-gray-700 hover:text-green-600">
+                    Rayons <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                </button>
+            </div>
+
+            <div class="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center text-gray-500 font-bold border-2 border-white shadow-sm overflow-hidden">
+                <span class="text-xs">GU</span>
+            </div>
+        </div>
+    </header>
+
     <!-- Messages toast -->
     <?php if (isset($_SESSION['email_success'])): ?>
         <div class="toast-message toast-success">✅ <?= $_SESSION['email_success'] ?></div>
@@ -478,39 +513,6 @@ if ($selected_id) {
     <!-- Hero -->
     <div class="hero-section text-white py-16">
         <div class="container mx-auto px-4 text-center relative">
-
-            <!-- Retour -->
-            <div class="absolute top-0 left-0">
-                <a href="index.html" class="back-button inline-flex items-center gap-2 bg-white/20 hover:bg-white/30 rounded-lg px-4 py-2 text-sm font-medium transition">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
-                    </svg>
-                    Retour à l'accueil
-                </a>
-            </div>
-
-            <!-- LIEN AI HEADER -->
-            <div class="absolute top-0 right-0">
-                <a href="food_checker.php" class="ai-btn-header">
-                    <span class="orbit orbit-1"></span>
-                    <span class="orbit orbit-2"></span>
-                    <span class="orbit orbit-3"></span>
-                    <span class="scan-icon">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.9)" stroke-width="1.5">
-                            <circle cx="11" cy="11" r="7"/>
-                            <path d="m21 21-4.35-4.35" stroke-linecap="round"/>
-                            <path d="M8 11h6M11 8v6" stroke="rgba(99,255,210,0.9)" stroke-linecap="round"/>
-                        </svg>
-                        <span class="scan-line"></span>
-                    </span>
-                    <span class="ai-pill">AI</span>
-                    <span class="btn-text">Analyser mes ingrédients</span>
-                    <svg class="arrow w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 7l5 5m0 0l-5 5m5-5H6"/>
-                    </svg>
-                </a>
-            </div>
-
             <div class="flex justify-center mb-4">
                 <svg class="w-16 h-16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>

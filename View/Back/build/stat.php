@@ -100,37 +100,42 @@ if ($totalAllergies > 0) {
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>Tableau de Bord Statistique - Allergies</title>
+    <title>Stats Allergies - EcoByte Santé</title>
+    <link href="https://fonts.googleapis.com/css?family=Open+Sans:300,400,600,700" rel="stylesheet" />
+    <script src="https://kit.fontawesome.com/42d5adcbca.js" crossorigin="anonymous"></script>
+    <link href="https://demos.creative-tim.com/argon-dashboard-tailwind/assets/css/nucleo-icons.css" rel="stylesheet" />
+    <link href="https://demos.creative-tim.com/argon-dashboard-tailwind/assets/css/nucleo-svg.css" rel="stylesheet" />
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        .stat-card {
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-        }
-        .stat-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
-        }
+        .stat-card { transition: transform 0.3s ease, box-shadow 0.3s ease; }
+        .stat-card:hover { transform: translateY(-5px); box-shadow: 0 10px 20px rgba(0,0,0,0.1); }
     </style>
 </head>
+<body class="m-0 font-sans text-base antialiased font-normal bg-gray-50 text-slate-500">
+    
+    <!-- Sidebar -->
+    <?php include 'sidebar.php'; ?>
 
-<body class="bg-gray-100 p-6">
+    <main class="relative h-full min-h-screen transition-all duration-200 lg:ml-64">
+        <!-- Blue Header Background -->
+        <div class="absolute top-0 left-0 w-full bg-indigo-500 h-[300px] -z-10"></div>
 
-<div class="max-w-7xl mx-auto">
-
-    <!-- Header -->
-    <div class="mb-6">
-        <div class="flex justify-between items-center">
-            <div>
-                <h1 class="text-3xl font-bold text-purple-600">📊 Tableau de Bord Statistique</h1>
-                <p class="text-gray-600 mt-1">Analyse professionnelle des données d'allergies</p>
-            </div>
-            <a href="allergies_list.php" 
-               class="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition flex items-center gap-2">
-                ← Retour à la liste
-            </a>
-        </div>
-    </div>
+        <div class="w-full px-10 py-10 mx-auto">
+            <div class="flex flex-wrap -mx-3">
+                <div class="flex-none w-full max-w-full px-3">
+                    
+            <!-- Main Content Card -->
+            <div class="relative flex flex-col min-w-0 mb-6 break-words bg-white border-0 border-transparent border-solid shadow-xl rounded-2xl bg-clip-border p-8">
+                <div class="flex justify-between items-center mb-8 border-b pb-4">
+                    <div>
+                        <h2 class="text-slate-700 font-bold text-xl mb-1">Analyses & Statistiques</h2>
+                        <p class="text-slate-400 text-sm font-semibold">Répartition et gravité des profils allergiques</p>
+                    </div>
+                    <a href="allergies_list.php" class="text-sm font-bold text-blue-600 hover:underline">
+                        ← Retour à la liste
+                    </a>
+                </div>
 
     <!-- Cartes KPI principales -->
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
@@ -217,12 +222,13 @@ if ($totalAllergies > 0) {
         </div>
     </div>
 
-    <!-- Pied de page -->
-    <div class="bg-white rounded-lg shadow p-4 text-center text-gray-500 text-sm">
-        <p>📊 Rapport généré le <?= date('d/m/Y à H:i:s') ?></p>
-        <p class="mt-1">Analyse basée sur <?= $totalAllergies ?> allergies | <?= $totalTraitements ?> traitements disponibles</p>
-    </div>
-</div>
+                    </div> <!-- Fin de la carte blanche -->
+                </div>
+            </div>
+        </div>
+    </main>
+</body>
+</html>
 
 <script>
 // Graphique de répartition par gravité
