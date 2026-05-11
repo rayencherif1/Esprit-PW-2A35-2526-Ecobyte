@@ -1,37 +1,27 @@
 <?php
 /**
- * Connexion PDO — paramètres de la base de données.
+ * Connexion PDO Singleton.
  */
-declare(strict_types=1);
-
-define('DB_HOST', 'localhost');
-define('DB_NAME', 'recette');
-define('DB_USER', 'root');
-define('DB_PASSWORD', '');
-define('DB_PORT', '3306');
-
-final class Database
+class Database
 {
-    private static ?self $instance = null;
-
-    private PDO $connection;
+    private static ?Database $instance = null;
+    private PDO $pdo;
 
     private function __construct()
     {
-        $dsn = 'mysql:host=' . DB_HOST . ';port=' . DB_PORT . ';dbname=' . DB_NAME . ';charset=utf8mb4';
+        $host = 'localhost';
+        $dbname = 'gestion_allergie';
+        $username = 'root';
+        $password = '';
+
         try {
-            $this->connection = new PDO(
-                $dsn,
-                DB_USER,
-                DB_PASSWORD,
-                [
-                    PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-                    PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-                    PDO::ATTR_EMULATE_PREPARES => false,
-                ]
-            );
+            $this->pdo = new PDO("mysql:host=$host;dbname=$dbname;charset=utf8mb4", $username, $password, [
+                PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+                PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+                PDO::ATTR_EMULATE_PREPARES => false,
+            ]);
         } catch (PDOException $e) {
-            exit('Erreur de connexion à la base de données: ' . $e->getMessage());
+            die("Erreur de connexion : " . $e->getMessage());
         }
     }
 
@@ -45,6 +35,6 @@ final class Database
 
     public function getConnection(): PDO
     {
-        return $this->connection;
+        return $this->pdo;
     }
 }

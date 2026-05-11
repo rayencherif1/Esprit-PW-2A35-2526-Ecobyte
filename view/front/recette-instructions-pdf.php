@@ -4,9 +4,9 @@
  */
 declare(strict_types=1);
 
-require_once __DIR__ . '/../controller/RecetteController.php';
-require_once __DIR__ . '/../controller/InstructionController.php';
-require_once __DIR__ . '/../lib/fpdf.php';
+require_once __DIR__ . '/../../controller/RecetteController.php';
+require_once __DIR__ . '/../../controller/InstructionController.php';
+require_once __DIR__ . '/../../lib/fpdf.php';
 
 /** Couleurs (RGB 0–255) */
 final class PdfRecipeTheme
@@ -131,8 +131,8 @@ function resolve_recipe_image_path(string $webPath): ?string
     }
     $root = project_root_path();
     $candidates = [];
-    if (str_starts_with($webPath, '/recette/')) {
-        $candidates[] = $root . DIRECTORY_SEPARATOR . str_replace('/', DIRECTORY_SEPARATOR, substr($webPath, strlen('/recette/')));
+    if (str_starts_with($webPath, '/2int/')) {
+        $candidates[] = $root . DIRECTORY_SEPARATOR . str_replace('/', DIRECTORY_SEPARATOR, substr($webPath, strlen('/2int/')));
     }
     $candidates[] = $root . DIRECTORY_SEPARATOR . str_replace('/', DIRECTORY_SEPARATOR, ltrim($webPath, '/\\'));
 

@@ -1,6 +1,6 @@
 <?php
-require_once(__DIR__ . "/../controller/RecetteController.php");
-require_once __DIR__ . '/../lib/recipe_image_options.php';
+require_once(__DIR__ . "/../../controller/RecetteController.php");
+require_once __DIR__ . '/../../lib/recipe_image_options.php';
 
 $controller = new RecetteController();
 $id = isset($_GET['id']) ? (int) $_GET['id'] : null;
@@ -8,7 +8,7 @@ $recette = $id ? $controller->getRecetteById($id) : null;
 $editing = $recette !== null;
 $formTitle = $editing ? 'Modifier la recette' : 'Ajouter une recette';
 $submitLabel = 'Confirmer';
-$imageValue = $recette['image'] ?? '/recette/public/image/salade.jpg';
+$imageValue = $recette['image'] ?? '/2int/public/image/salade.jpg';
 ?>
 
 <!DOCTYPE html>
@@ -17,7 +17,7 @@ $imageValue = $recette['image'] ?? '/recette/public/image/salade.jpg';
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?= htmlspecialchars($formTitle) ?></title>
-    <link rel="stylesheet" href="../assets/argon-dashboard-tailwind-1.0.1/argon-dashboard-tailwind-1.0.1/build/assets/css/argon-dashboard-tailwind.css">
+    <script src="https://cdn.tailwindcss.com"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"><style>body{font-family:'Open Sans',sans-serif;}</style>
     <style>
       #recette-form input:focus,
       #recette-form select:focus {
@@ -43,11 +43,20 @@ $imageValue = $recette['image'] ?? '/recette/public/image/salade.jpg';
       }
     </style>
 </head>
-<body class="min-h-screen bg-gradient-to-br from-slate-100 via-blue-50/30 to-blue-50 text-slate-900">
+<body class="m-0 font-sans text-base antialiased font-normal bg-gray-50 text-slate-500">
 <div id="form-toast" class="form-toast" role="alert" aria-live="assertive"></div>
-<div class="min-h-screen w-full px-4 py-6 sm:px-6 lg:px-8">
-    <div class="mx-auto max-w-3xl">
-        <div class="mb-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+
+<!-- Sidebar -->
+<?php include 'sidebar.php'; ?>
+
+<!-- Indigo background -->
+<div style="position:fixed; top:0; left:256px; right:0; height:300px; background:#5e72e4; z-index:0;"></div>
+
+<main style="margin-left:256px; position:relative; z-index:1; min-height:100vh;">
+
+    <div class="w-full px-10 py-10 mx-auto">
+        <div class="mx-auto max-w-3xl">
+            <div class="mb-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <div>
                 <h1 class="text-3xl font-semibold tracking-tight"><?= htmlspecialchars($formTitle) ?></h1>
                 <p class="mt-1 text-sm text-slate-500">Remplis les champs pour ajouter ou modifier une recette.</p>
@@ -62,7 +71,7 @@ $imageValue = $recette['image'] ?? '/recette/public/image/salade.jpg';
                 Recette introuvable. Utilise le bouton Retour pour revenir au tableau.
             </div>
         <?php else : ?>
-            <form id="recette-form" action="/recette/controller/RecetteController.php" method="post" class="space-y-6 rounded-[32px] border border-slate-200 bg-white p-8 shadow-lg" novalidate>
+            <form id="recette-form" action="../../controller/RecetteController.php" method="post" class="space-y-6 rounded-[32px] border border-slate-200 bg-white p-8 shadow-lg" novalidate>
                 <input type="hidden" name="save" value="1">
                 <?php if ($editing) : ?>
                     <input type="hidden" name="id" value="<?= htmlspecialchars($recette['id']) ?>">
@@ -125,6 +134,7 @@ $imageValue = $recette['image'] ?? '/recette/public/image/salade.jpg';
         <?php endif; ?>
     </div>
 </div>
+</main>
 
 <script>
     document.addEventListener('DOMContentLoaded', function () {
@@ -178,6 +188,7 @@ $imageValue = $recette['image'] ?? '/recette/public/image/salade.jpg';
         }
     });
 </script>
-<script src="../assets/argon-dashboard-tailwind-1.0.1/argon-dashboard-tailwind-1.0.1/build/assets/js/argon-dashboard-tailwind.js"></script>
+<script src="/2int/assets/argon-dashboard-tailwind-1.0.1/argon-dashboard-tailwind-1.0.1/build/assets/js/argon-dashboard-tailwind.js"></script>
 </body>
 </html>
+

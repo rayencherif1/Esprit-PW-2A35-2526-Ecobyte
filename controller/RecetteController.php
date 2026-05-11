@@ -9,8 +9,8 @@ require_once __DIR__ . '/../model/Recette.php';
 
 class RecetteController
 {
-    private const REDIRECT_TABLES = '/recette/assets/argon-dashboard-tailwind-1.0.1/argon-dashboard-tailwind-1.0.1/build/pages/tables.php';
-    private const REDIRECT_FORM = '/recette/assets/argon-dashboard-tailwind-1.0.1/argon-dashboard-tailwind-1.0.1/build/pages/recette-form.php';
+    private const REDIRECT_TABLES = '/2int/view/back/back.php';
+    private const REDIRECT_FORM = '/2int/view/back/form.php';
 
     private RecetteRepository $recettes;
 
@@ -58,7 +58,7 @@ class RecetteController
             'tempsPreparation' => (int) ($data['tempsPreparation'] ?? 0),
             'difficulte' => trim($data['difficulte'] ?? ''),
             'impactCarbone' => trim($data['impactCarbone'] ?? ''),
-            'image' => trim($data['image'] ?? '') ?: '/recette/public/image/salade.jpg',
+            'image' => trim($data['image'] ?? '') ?: '/2int/public/image/salade.jpg',
         ];
 
         $idFromPost = isset($data['id']) && $data['id'] !== '' ? (int) $data['id'] : null;

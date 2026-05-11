@@ -9,8 +9,8 @@ require_once __DIR__ . '/../model/Instruction.php';
 
 class InstructionController
 {
-    private const REDIRECT_LIST = '/recette/assets/argon-dashboard-tailwind-1.0.1/argon-dashboard-tailwind-1.0.1/build/pages/instruction-tables.php';
-    private const REDIRECT_FORM = '/recette/assets/argon-dashboard-tailwind-1.0.1/argon-dashboard-tailwind-1.0.1/build/pages/instruction-form.php';
+    private const REDIRECT_LIST = '/2int/view/back/instruction-tables.php';
+    private const REDIRECT_FORM = '/2int/view/back/instruction-form.php';
 
     private InstructionRepository $instructions;
 
@@ -46,10 +46,10 @@ class InstructionController
     {
         $this->instructions->delete($id);
         if ($returnTo === 'back') {
-            $this->redirect('/recette/index.php?message_instruction=supprime');
+            $this->redirect('/2int/view/back/back.php?message_instruction=supprime');
         }
         if ($returnTo === 'tables') {
-            $this->redirect('/recette/assets/argon-dashboard-tailwind-1.0.1/argon-dashboard-tailwind-1.0.1/build/pages/tables.php?message_instruction=supprime');
+            $this->redirect('/2int/view/back/back.php?message_instruction=supprime');
         }
         $this->redirect(self::REDIRECT_LIST . '?message=supprime');
     }
@@ -85,7 +85,7 @@ class InstructionController
         $row = [
             'recette_id' => $recetteId,
             'nom' => trim((string) ($data['nom'] ?? '')),
-            'image' => trim((string) ($data['image'] ?? '')) ?: '/recette/public/image/salade.jpg',
+            'image' => trim((string) ($data['image'] ?? '')) ?: '/2int/public/image/salade.jpg',
             'ingredients' => trim((string) ($data['ingredients'] ?? '')),
             'preparation' => trim((string) ($data['preparation'] ?? '')),
             'nombreEtapes' => (int) ($data['nombreEtapes'] ?? 0),
@@ -126,10 +126,10 @@ class InstructionController
         $message = $updated ? 'modifie' : 'ajoute';
         $returnTo = (string) ($data['return_to'] ?? '');
         if ($returnTo === 'back') {
-            $this->redirect('/recette/index.php?message_instruction=' . $message);
+            $this->redirect('/2int/view/back/back.php?message_instruction=' . $message);
         }
         if ($returnTo === 'tables') {
-            $this->redirect('/recette/assets/argon-dashboard-tailwind-1.0.1/argon-dashboard-tailwind-1.0.1/build/pages/tables.php?message_instruction=' . $message);
+            $this->redirect('/2int/view/back/back.php?message_instruction=' . $message);
         }
 
         $this->redirect(self::REDIRECT_LIST . '?message=' . $message);
@@ -149,6 +149,19 @@ class InstructionController
     public function removeByRecetteId(int $recetteId): void
     {
         $this->instructions->deleteByRecetteId($recetteId);
+    }
+
+    public function syncAll(): void
+    {
+        require_once __DIR__ . '/RecetteController.php';
+        $recetteCtl = new RecetteController();
+        $recettes = $recetteCtl->afficherRecettes();
+        foreach ($recettes as $r) {
+            if (!$this->getByRecetteId($r['id'])) {
+                $this->syncFromRecette($r);
+            }
+        }
+        $this->redirect(self::REDIRECT_LIST . '?message=restaure');
     }
 
     private function redirect(string $url): void
@@ -211,6 +224,10 @@ class InstructionController
 if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['delete_instruction'])) {
     $returnTo = (string) ($_GET['return_to'] ?? '');
     (new InstructionController())->delete((int) $_GET['delete_instruction'], $returnTo);
+}
+
+if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['sync_all'])) {
+    (new InstructionController())->syncAll();
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save_instruction'])) {

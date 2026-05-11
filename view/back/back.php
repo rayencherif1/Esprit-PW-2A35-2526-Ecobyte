@@ -1,7 +1,7 @@
 <?php
-require_once __DIR__ . "/../controller/RecetteController.php";
-require_once __DIR__ . "/../controller/InstructionController.php";
-require_once __DIR__ . "/../lib/IngredientPriceService.php";
+require_once __DIR__ . "/../../controller/RecetteController.php";
+require_once __DIR__ . "/../../controller/InstructionController.php";
+require_once __DIR__ . "/../../lib/IngredientPriceService.php";
 
 $controller = new RecetteController();
 $recettes = $controller->afficherRecettes();
@@ -46,7 +46,18 @@ function back_instruction_resume(string $text, int $max = 64): string
     return $text;
 }
 
-$instructionFormBase = '../assets/argon-dashboard-tailwind-1.0.1/argon-dashboard-tailwind-1.0.1/build/pages/instruction-form.php';
+$instructionFormBase = 'instruction-form.php';
+
+$scheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
+$host = $_SERVER['HTTP_HOST'] ?? 'localhost';
+$hostNameOnly = preg_replace('/:\d+$/', '', $host) ?? $host;
+$hostPort = '';
+if (preg_match('/:(\d+)$/', $host, $m) === 1) {
+    $hostPort = ':' . $m[1];
+} elseif (!empty($_SERVER['SERVER_PORT']) && !in_array((string) $_SERVER['SERVER_PORT'], ['80', '443'], true)) {
+    $hostPort = ':' . (string) $_SERVER['SERVER_PORT'];
+}
+$instructionPdfBase = $scheme . '://' . $hostNameOnly . $hostPort . '/2int/view/front/recette-instructions-pdf.php?id=';
 ?>
 
 <!DOCTYPE html>
@@ -54,9 +65,14 @@ $instructionFormBase = '../assets/argon-dashboard-tailwind-1.0.1/argon-dashboard
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Back Office Recettes</title>
-    <link rel="stylesheet" href="../assets/argon-dashboard-tailwind-1.0.1/argon-dashboard-tailwind-1.0.1/build/assets/css/argon-dashboard-tailwind.css">
+    <title>Back Office Recettes — EcoByte</title>
+    <!-- Tailwind CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome CDN -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <style>
+      @import url('https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;600;700&display=swap');
+      body { font-family: 'Open Sans', sans-serif; }
       #search-recette:focus {
         border-color: #3b82f6;
         box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
@@ -65,10 +81,18 @@ $instructionFormBase = '../assets/argon-dashboard-tailwind-1.0.1/argon-dashboard
     </style>
 </head>
 
-<body class="min-h-screen bg-gradient-to-br from-slate-100 via-blue-50/40 to-blue-50 text-slate-900">
+<body class="m-0 font-sans text-base antialiased font-normal bg-gray-50 text-slate-500">
 
-<div class="min-h-screen w-full px-4 py-6 sm:px-6 lg:px-8">
-    <div class="mx-auto max-w-7xl">
+    <!-- Sidebar -->
+    <?php include 'sidebar.php'; ?>
+
+    <!-- Indigo header background: fixed behind content -->
+    <div style="position:fixed; top:0; left:256px; right:0; height:300px; background:#5e72e4; z-index:0;"></div>
+
+    <main style="margin-left:256px; position:relative; z-index:1; min-height:100vh;">
+
+        <div class="w-full px-10 py-10 mx-auto">
+            <div class="mx-auto max-w-7xl">
 
         <div class="mb-6 rounded-[32px] border border-slate-200 bg-white p-6 shadow-lg flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <div>
@@ -130,6 +154,7 @@ $instructionFormBase = '../assets/argon-dashboard-tailwind-1.0.1/argon-dashboard
                             <th class="px-4 py-3 text-left font-semibold uppercase tracking-wider text-slate-600">Prix ingrédients</th>
                             <th class="px-4 py-3 text-left font-semibold uppercase tracking-wider text-slate-600">Instruction</th>
                             <th class="px-4 py-3 text-left font-semibold uppercase tracking-wider text-slate-600">Actions</th>
+                            <th class="px-4 py-3 text-left font-semibold uppercase tracking-wider text-slate-600">QR Code</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-100 bg-white">
@@ -183,6 +208,15 @@ $instructionFormBase = '../assets/argon-dashboard-tailwind-1.0.1/argon-dashboard
                                         </a>
                                     </div>
                                 </td>
+                                <td class="px-4 py-4 align-top text-center">
+                                    <?php
+                                        $pdfUrl = $instructionPdfBase . urlencode((string) $r['id']);
+                                        $qrSrc = 'https://api.qrserver.com/v1/create-qr-code/?size=56x56&data=' . rawurlencode($pdfUrl);
+                                    ?>
+                                    <a href="<?= htmlspecialchars($pdfUrl) ?>" target="_blank" rel="noopener noreferrer" title="Ouvrir le PDF des instructions">
+                                        <img src="<?= htmlspecialchars($qrSrc) ?>" alt="QR" class="h-10 w-10 rounded-md border border-slate-200 bg-white p-0.5 inline-block" loading="lazy" />
+                                    </a>
+                                </td>
                             </tr>
                         <?php endforeach; ?>
                     </tbody>
@@ -191,13 +225,11 @@ $instructionFormBase = '../assets/argon-dashboard-tailwind-1.0.1/argon-dashboard
         </div>
 
     </div>
-</div>
+            </div>
+        </div>
+    </main>
 
-<a href="form.php" class="fixed bottom-6 right-6 z-50 inline-flex h-14 w-14 items-center justify-center rounded-full text-3xl font-bold leading-none text-white shadow-2xl transition hover:scale-105 hover:opacity-95" style="background: linear-gradient(135deg, #2563eb 0%, #3b82f6 45%, #60a5fa 100%);" title="Ajouter une recette" aria-label="Ajouter une recette">
-    +
-</a>
-
-<script src="../assets/argon-dashboard-tailwind-1.0.1/argon-dashboard-tailwind-1.0.1/build/assets/js/argon-dashboard-tailwind.js"></script>
+<script src="/2int/assets/argon-dashboard-tailwind-1.0.1/argon-dashboard-tailwind-1.0.1/build/assets/js/argon-dashboard-tailwind.js"></script>
 <script>
     const searchInput = document.getElementById('search-recette');
     const recetteRows = document.querySelectorAll('#recette-table tbody tr');
