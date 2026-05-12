@@ -21,6 +21,7 @@ require __DIR__ . '/layout_header.php';
         text-align: center; box-shadow: 0 10px 40px rgba(0,0,0,0.04);
         transition: all 0.4s; position: relative; border: 2px solid transparent;
         display: flex; flex-direction: column; height: 100%;
+        text-decoration: none; color: inherit;
     }
     .card:hover { transform: translateY(-12px); box-shadow: 0 20px 60px rgba(0,0,0,0.1); }
 
@@ -76,47 +77,47 @@ require __DIR__ . '/layout_header.php';
 
 <div class="modules-section">
     <div class="modules-grid">
-        <div class="card card-cuisine">
+        <a href="index.php?section=front&action=kitchen" class="card card-cuisine">
             <div class="icon-box">🥗</div>
             <h3>Cuisine & Recettes</h3>
             <p>Découvrez des centaines de recettes saines adaptées à vos besoins nutritionnels.</p>
-            <a href="javascript:void(0)" class="btn-link">Recettes</a>
-        </div>
+            <span class="btn-link">Explorer</span>
+        </a>
 
-        <div class="card card-fitness">
+        <a href="index.php?section=front&action=fitness" class="card card-fitness">
             <div class="icon-box">🏋️</div>
             <h3>Fitness & Sport</h3>
             <p>Programmes d'entraînement personnalisés et suivi d'exercices quotidiens.</p>
-            <a href="javascript:void(0)" class="btn-link">Catalogue Sport →</a>
-        </div>
+            <span class="btn-link">S'entraîner</span>
+        </a>
 
-        <div class="card card-sante">
+        <a href="index.php?section=front&action=health" class="card card-sante">
             <div class="icon-box">⚠️</div>
             <h3>Santé & Allergies</h3>
             <p>Gérez vos allergies, analysez vos aliments avec l'IA et restez en sécurité.</p>
-            <a href="javascript:void(0)" class="btn-link">Rapports d'Allergies</a>
-        </div>
+            <span class="btn-link">Vérifier</span>
+        </a>
 
-        <div class="card card-boutique">
+        <a href="index.php?section=front&action=shop" class="card card-boutique">
             <div class="icon-box">🛒</div>
             <h3>Boutique Bio</h3>
             <p>Achetez des produits frais, bio et sains directement depuis notre plateforme.</p>
-            <a href="javascript:void(0)" class="btn-link">Boutique</a>
-        </div>
+            <span class="btn-link">Acheter</span>
+        </a>
 
-        <div class="card card-blog">
+        <a href="index.php?section=front&action=blog" class="card card-blog">
             <div class="icon-box">📝</div>
             <h3>Blog & Actu</h3>
             <p>Lisez les derniers articles sur la nutrition et partagez avec la communauté.</p>
-            <a href="javascript:void(0)" class="btn-link">Blog</a>
-        </div>
+            <span class="btn-link">Lire</span>
+        </a>
 
-        <div class="card card-ia">
+        <a href="index.php?section=front&action=ai" class="card card-ia">
             <div class="icon-box">🤖</div>
             <h3>IA Assistant</h3>
             <p>Posez vos questions à notre IA pour obtenir des conseils nutritionnels instantanés.</p>
-            <a href="javascript:void(0)" class="btn-link">Discuter avec l'IA</a>
-        </div>
+            <span class="btn-link">Discuter</span>
+        </a>
     </div>
 </div>
 
