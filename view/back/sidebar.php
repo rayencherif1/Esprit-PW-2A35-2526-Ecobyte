@@ -33,7 +33,7 @@
 
             <!-- Santé -->
             <li class="mt-0.5 w-full">
-                <a class="py-3 text-sm my-0 mx-2 flex items-center whitespace-nowrap px-4 transition-all hover:bg-gray-50 rounded-xl text-slate-600" href="/2int/View/Back/back.php">
+                <a class="py-3 text-sm my-0 mx-2 flex items-center whitespace-nowrap px-4 transition-all hover:bg-gray-50 rounded-xl text-slate-600" href="/2int/view/back/back.php">
                     <div class="mr-3 flex items-center justify-center text-lg w-8">🏥</div>
                     <span class="font-medium">Santé & Allergies</span>
                 </a>
@@ -49,7 +49,7 @@
 
             <!-- Blog (ACTIF ICI) -->
             <li class="mt-0.5 w-full">
-                <a class="py-3 text-sm my-0 mx-2 flex items-center whitespace-nowrap px-4 rounded-xl bg-blue-50 text-slate-800 transition-all shadow-sm" href="posts.php">
+                <a class="py-3 text-sm my-0 mx-2 flex items-center whitespace-nowrap px-4 rounded-xl bg-blue-50 text-slate-800 transition-all shadow-sm" href="/2int/view/back/posts.php">
                     <div class="mr-3 flex items-center justify-center text-lg w-8">📝</div>
                     <span class="font-bold text-blue-700">Communauté & Blog</span>
                 </a>
@@ -57,7 +57,7 @@
 
             <!-- IA Assistant -->
             <li class="mt-0.5 w-full">
-                <a class="py-3 text-sm my-0 mx-2 flex items-center whitespace-nowrap px-4 transition-all hover:bg-gray-50 rounded-xl text-slate-600" href="summaries.php">
+                <a class="py-3 text-sm my-0 mx-2 flex items-center whitespace-nowrap px-4 transition-all hover:bg-gray-50 rounded-xl text-slate-600" href="/2int/view/back/summaries.php">
                     <div class="mr-3 flex items-center justify-center text-lg w-8">🤖</div>
                     <span class="font-medium">IA Assistant</span>
                 </a>
@@ -69,14 +69,14 @@
             </li>
 
             <li class="mt-0.5 w-full">
-                <a class="py-2.5 text-sm my-0 mx-2 flex items-center whitespace-nowrap px-4 text-slate-600 hover:text-blue-600 hover:bg-gray-50 rounded-xl transition-all" href="posts.php">
+                <a class="py-2.5 text-sm my-0 mx-2 flex items-center whitespace-nowrap px-4 text-slate-600 hover:text-blue-600 hover:bg-gray-50 rounded-xl transition-all" href="/2int/view/back/posts.php">
                     <div class="mr-4 flex items-center justify-center w-5"><i class="fas fa-file-alt"></i></div>
                     <span>Articles</span>
                 </a>
             </li>
 
             <li class="mt-0.5 w-full">
-                <a class="py-2.5 text-sm my-0 mx-2 flex items-center whitespace-nowrap px-4 text-slate-600 hover:text-blue-600 hover:bg-gray-50 rounded-xl transition-all" href="replies.php">
+                <a class="py-2.5 text-sm my-0 mx-2 flex items-center whitespace-nowrap px-4 text-slate-600 hover:text-blue-600 hover:bg-gray-50 rounded-xl transition-all" href="/2int/view/back/replies.php">
                     <div class="mr-4 flex items-center justify-center w-5"><i class="fas fa-comments"></i></div>
                     <span>Commentaires</span>
                 </a>

@@ -160,7 +160,7 @@ declare(strict_types=1);
             <div class="module-icon-wrap">⚠️</div>
             <h3>Santé & Allergies</h3>
             <p>Gérez vos allergies et analysez vos aliments avec l'IA.</p>
-            <a href="/2int/View/Front/allergy_report.php" class="btn-module" id="btn-sante">Rapports</a>
+            <a href="/2int/view/front/allergy_report.php" class="btn-module" id="btn-sante">Rapports</a>
         </div>
 
         <!-- BOUTIQUE -->
@@ -184,7 +184,7 @@ declare(strict_types=1);
             <div class="module-icon-wrap">🤖</div>
             <h3>IA Assistant</h3>
             <p>Posez vos questions à notre IA pour des conseils instantanés.</p>
-            <a href="/2int/View/Front/chatbot.php" class="btn-module" id="btn-ia">Discuter</a>
+            <a href="/2int/view/front/chatbot.php" class="btn-module" id="btn-ia">Discuter</a>
         </div>
     </div>
 </div>
