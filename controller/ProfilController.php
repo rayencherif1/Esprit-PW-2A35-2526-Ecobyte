@@ -5,8 +5,9 @@
  * Gère désormais toutes les requêtes DB liées aux profils
  */
 
-require_once __DIR__ . '/../config.php';
-require_once __DIR__ . '/../model/Profil.php';
+require_once dirname(__DIR__) . '/config.php';
+require_once dirname(__DIR__) . '/model/Profil.php';
+require_once dirname(__DIR__) . '/model/Database.php';
 
 class ProfilController {
     private $db;

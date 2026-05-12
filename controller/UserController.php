@@ -5,8 +5,9 @@
  * Contient désormais toute la logique métier et les requêtes DB
  */
 
-require_once __DIR__ . '/../config.php';
-require_once __DIR__ . '/../model/User.php';
+require_once dirname(__DIR__) . '/config.php';
+require_once dirname(__DIR__) . '/model/User.php';
+require_once dirname(__DIR__) . '/model/Database.php';
 
 class UserController {
     private $db;

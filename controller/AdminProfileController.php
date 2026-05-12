@@ -5,8 +5,9 @@
  * Gère désormais toutes les requêtes DB liées aux profils admin
  */
 
-require_once __DIR__ . '/../config.php';
-require_once __DIR__ . '/../model/Profil.php';
+require_once dirname(__DIR__) . '/config.php';
+require_once dirname(__DIR__) . '/model/Profil.php';
+require_once dirname(__DIR__) . '/model/Database.php';
 
 class AdminProfileController {
     private $db;
