@@ -9,8 +9,8 @@ if (session_status() === PHP_SESSION_NONE) {
 }
 
 require_once __DIR__ . '/config.php';
-require_once __DIR__ . '/controllers/UserController.php';
-require_once __DIR__ . '/controllers/ProfilController.php';
+require_once __DIR__ . '/controller/UserController.php';
+require_once __DIR__ . '/controller/ProfilController.php';
 
 $section = $_GET['section'] ?? 'front';
 $action = $_GET['action'] ?? 'home';
