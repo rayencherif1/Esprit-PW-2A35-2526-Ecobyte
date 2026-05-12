@@ -1,4 +1,5 @@
 <<<<<<< HEAD
+<<<<<<< HEAD
 <?php
 <<<<<<< HEAD
 /**
@@ -412,6 +413,66 @@ declare(strict_types=1);
             background: #fff;
 =======
 >>>>>>> selem
+=======
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>EcoByte — Plateforme Nutrition & Santé</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Poppins', sans-serif; background: #f0f4f8; min-height: 100vh; }
+
+        /* ── HEADER ──────────────────────────────────────────────── */
+        header {
+            background: #fff;
+            padding: 16px 40px;
+            display: flex; align-items: center; justify-content: space-between;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+            position: sticky; top: 0; z-index: 100;
+        }
+        .logo { display: flex; align-items: center; gap: 10px; text-decoration: none; font-size: 1.5rem; font-weight: 800; color: #1a1a2e; }
+        .logo-icon { font-size: 1.8rem; }
+        .logo span.eco  { color: #4caf50; }
+        .logo span.byte { color: #ff6b35; }
+        .header-right { display: flex; align-items: center; gap: 16px; }
+        /* USER → /2int/auth/profile.php (rayen) */
+        .avatar {
+            width: 40px; height: 40px;
+            background: linear-gradient(135deg, #4caf50, #2196f3);
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            color: white; font-weight: 700; font-size: 1rem;
+            text-decoration: none; cursor: pointer;
+            box-shadow: 0 2px 8px rgba(33,150,243,0.3);
+            transition: transform .2s, box-shadow .2s;
+        }
+        .avatar:hover { transform: scale(1.1); box-shadow: 0 4px 16px rgba(33,150,243,0.4); }
+
+        /* ── HERO ────────────────────────────────────────────────── */
+        .hero {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            color: white; text-align: center; padding: 60px 20px 80px;
+            position: relative; overflow: hidden;
+        }
+        .hero::before {
+            content: ''; position: absolute; inset: 0;
+            background: radial-gradient(circle at 30% 50%, rgba(76,175,80,0.15) 0%, transparent 60%),
+                        radial-gradient(circle at 70% 50%, rgba(255,107,53,0.15) 0%, transparent 60%);
+        }
+        .hero-content { position: relative; z-index: 1; }
+        .hero h1 { font-size: 2.8rem; font-weight: 800; margin-bottom: 14px; line-height: 1.2; }
+        .hero h1 .accent { color: #4caf50; }
+        .hero p { font-size: 1.1rem; opacity: 0.8; max-width: 560px; margin: 0 auto; line-height: 1.6; }
+
+        /* ── MODULE GRID ─────────────────────────────────────────── */
+        .modules-section { max-width: 1100px; margin: -40px auto 60px; padding: 0 24px; }
+        .modules-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+
+        .module-card {
+>>>>>>> ilyess
             border-radius: 20px; padding: 36px 28px;
             text-align: center;
             box-shadow: 0 4px 20px rgba(0,0,0,0.08);
@@ -419,11 +480,14 @@ declare(strict_types=1);
             position: relative; overflow: hidden;
             border: 2px solid transparent;
 <<<<<<< HEAD
+<<<<<<< HEAD
             display: flex; flex-direction: column;
         }
         .module-card:hover { transform: translateY(-6px); box-shadow: 0 14px 40px rgba(0,0,0,0.13); }
 
 =======
+=======
+>>>>>>> ilyess
         }
         .module-card:hover { transform: translateY(-6px); box-shadow: 0 14px 40px rgba(0,0,0,0.13); }
 
@@ -500,13 +564,17 @@ declare(strict_types=1);
         }
 
         /* ── ICON WRAP ───────────────────────────────────────────── */
+<<<<<<< HEAD
 >>>>>>> selem
+=======
+>>>>>>> ilyess
         .module-icon-wrap {
             width: 72px; height: 72px; border-radius: 18px;
             display: flex; align-items: center; justify-content: center;
             font-size: 2.2rem; margin: 0 auto 20px;
         }
         .module-card h3 { font-size: 1.15rem; font-weight: 700; margin-bottom: 10px; }
+<<<<<<< HEAD
 <<<<<<< HEAD
         .module-card p { font-size: 0.875rem; color: #6b7280; line-height: 1.6; margin-bottom: 24px; flex-grow: 1; }
 
@@ -515,6 +583,11 @@ declare(strict_types=1);
 
         /* ── BUTTONS ─────────────────────────────────────────────── */
 >>>>>>> selem
+=======
+        .module-card p { font-size: 0.875rem; color: #6b7280; line-height: 1.6; margin-bottom: 24px; }
+
+        /* ── BUTTONS ─────────────────────────────────────────────── */
+>>>>>>> ilyess
         .btn-module {
             display: inline-block; padding: 12px 28px; border-radius: 50px;
             font-size: 0.9rem; font-weight: 600; text-decoration: none;
@@ -523,6 +596,7 @@ declare(strict_types=1);
         }
         .btn-module:hover { transform: scale(1.03); color: white; }
 
+<<<<<<< HEAD
 <<<<<<< HEAD
         /* Colors per module */
         #card-cuisine { border-color: #86efac; background: #f0fdf4; }
@@ -556,6 +630,8 @@ declare(strict_types=1);
         @media (max-width:900px) { .modules-grid { grid-template-columns: repeat(2,1fr); } }
         @media (max-width:600px) { .modules-grid { grid-template-columns: 1fr; } }
 =======
+=======
+>>>>>>> ilyess
         /* ── STATUS BAR ──────────────────────────────────────────── */
         .status-bar { background: #1a1a2e; color: #aaa; text-align: center; padding: 20px; font-size: 0.8rem; }
         .status-bar .modules-status { display: flex; justify-content: center; gap: 20px; flex-wrap: wrap; margin-bottom: 10px; }
@@ -572,15 +648,22 @@ declare(strict_types=1);
 
         @media (max-width:900px) { .modules-grid { grid-template-columns: repeat(2,1fr); } .hero h1 { font-size: 2rem; } }
         @media (max-width:600px) { .modules-grid { grid-template-columns: 1fr; } header { padding: 14px 20px; } }
+<<<<<<< HEAD
 >>>>>>> selem
+=======
+>>>>>>> ilyess
     </style>
 </head>
 <body>
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <!-- HEADER -->
 >>>>>>> selem
+=======
+<!-- HEADER -->
+>>>>>>> ilyess
 <header>
     <a href="/2int/index.php" class="logo">
         <span class="logo-icon">🌿</span>
@@ -588,18 +671,24 @@ declare(strict_types=1);
     </a>
     <div class="header-right">
 <<<<<<< HEAD
+<<<<<<< HEAD
         <a href="#" class="avatar">U</a>
     </div>
 </header>
 
 =======
+=======
+>>>>>>> ilyess
         <!-- USER → /2int/auth/profile.php (activer avec branche rayen) -->
         <a href="#" class="avatar" id="btn-user" title="Mon compte">U</a>
     </div>
 </header>
 
 <!-- HERO -->
+<<<<<<< HEAD
 >>>>>>> selem
+=======
+>>>>>>> ilyess
 <div class="hero">
     <div class="hero-content">
         <h1>Bienvenue sur <span class="accent">EcoByte</span> 🌱</h1>
@@ -607,6 +696,7 @@ declare(strict_types=1);
     </div>
 </div>
 
+<<<<<<< HEAD
 <<<<<<< HEAD
 <div class="modules-section">
     <div class="modules-grid">
@@ -670,6 +760,8 @@ declare(strict_types=1);
 </html>
 >>>>>>> blog
 =======
+=======
+>>>>>>> ilyess
 <!-- MODULES -->
 <div class="modules-section">
     <div class="modules-grid">
@@ -698,12 +790,20 @@ declare(strict_types=1);
             <a href="#" class="btn-module" id="btn-sante">Rapports d'Allergies</a>
         </div>
 
+<<<<<<< HEAD
         <!-- 4. BOUTIQUE — Bleu | branche: user | URL: /2int/boutique/index.php -->
+=======
+        <!-- 4. BOUTIQUE — Bleu ✅ ACTIF | branche: ilyess | URL: /2int/boutique.php -->
+>>>>>>> ilyess
         <div class="module-card" id="card-boutique">
             <div class="module-icon-wrap">🛒</div>
             <h3>Boutique Bio</h3>
             <p>Achetez des produits frais, bio et sains directement depuis notre plateforme.</p>
+<<<<<<< HEAD
             <a href="#" class="btn-module" id="btn-boutique">Boutique</a>
+=======
+            <a href="/2int/boutique.php" class="btn-module" id="btn-boutique">Boutique →</a>
+>>>>>>> ilyess
         </div>
 
         <!-- 5. BLOG — Cyan | branche: blog | URL: /2int/blog/index.php -->
@@ -731,7 +831,11 @@ declare(strict_types=1);
         <div class="status-item"><div class="dot dot-orange"></div> Fitness & Sport — En ligne</div>
         <div class="status-item"><div class="dot dot-green"></div> Cuisine & Recettes — En intégration</div>
         <div class="status-item"><div class="dot dot-red"></div> Santé & Allergies — En intégration</div>
+<<<<<<< HEAD
         <div class="status-item"><div class="dot dot-blue"></div> Boutique Bio — En intégration</div>
+=======
+        <div class="status-item"><div class="dot dot-blue"></div> Boutique Bio — En ligne</div>
+>>>>>>> ilyess
         <div class="status-item"><div class="dot dot-cyan"></div> Blog & Actu — En intégration</div>
         <div class="status-item"><div class="dot dot-purple"></div> IA Assistant — En intégration</div>
     </div>
@@ -740,4 +844,7 @@ declare(strict_types=1);
 
 </body>
 </html>
+<<<<<<< HEAD
 >>>>>>> selem
+=======
+>>>>>>> ilyess
