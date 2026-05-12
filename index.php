@@ -11,6 +11,7 @@ if (session_status() === PHP_SESSION_NONE) {
 require_once __DIR__ . '/config.php';
 require_once __DIR__ . '/controller/UserController.php';
 require_once __DIR__ . '/controller/ProfilController.php';
+require_once __DIR__ . '/model/Database.php';
 
 $section = $_GET['section'] ?? 'front';
 $action = $_GET['action'] ?? 'home';
@@ -83,12 +84,13 @@ try {
                 break;
 
             case 'fitness':
+                // Note: Fitness module handles its own routing in public/index.php
                 header('Location: /2int/public/index.php?action=home');
                 exit;
 
             case 'shop':
-                header('Location: /2int/view/back_boutique/index.php');
-                exit;
+                require __DIR__ . '/view/front/index2.php';
+                break;
 
             case 'logout':
                 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
