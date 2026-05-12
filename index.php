@@ -279,15 +279,44 @@ try {
                 exit;
 
             case 'profile':
-                // Page de profil client
+                // Page de profil utilisateur
                 require __DIR__ . '/view/front/profile.php';
                 break;
 
+            case 'kitchen':
+                // Module Cuisine
+                require __DIR__ . '/view/front/front.php';
+                break;
+
+            case 'fitness':
+                // Module Fitness
+                header('Location: /2int/public/index.php?action=home');
+                exit;
+
+            case 'health':
+                // Module Santé
+                require __DIR__ . '/view/front/allergy_report.php';
+                break;
+
             case 'shop':
+                // Redirection vers le Hub car la boutique est supprimée ou intégrée
+                header('Location: ?section=front&action=home');
+                exit;
+
+            case 'blog':
+                // Page Blog & Communauté
+                require __DIR__ . '/view/front/blog.php';
+                break;
+
+            case 'ai':
+                // Assistant IA
+                require __DIR__ . '/view/front/chatbot.php';
+                break;
+
             case 'home':
             default:
-                // Page shop/accueil front (template FoodMart)
-                require __DIR__ . '/view/front/index.php';
+                // Hub principal
+                require __DIR__ . '/view/front/hub.php';
                 break;
         }
     }

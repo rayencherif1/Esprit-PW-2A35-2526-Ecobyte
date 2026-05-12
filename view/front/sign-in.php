@@ -38,7 +38,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $user = $userController->login($email, $password);
         
         if ($user) {
-            // Admin → Back Office, Utilisateur → Front Office
             if (isset($_SESSION['admin_logged_in']) && $_SESSION['admin_logged_in'] === true) {
                 header('Location: ?section=back&action=users');
             } else {
@@ -52,367 +51,273 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 $errors = $errors ?? [];
+
+$pageTitle = "Connexion - EcoByte";
+$hideUserButton = true;
+require __DIR__ . '/layout_header.php'; 
 ?>
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="referrer" content="strict-origin-when-cross-origin">
-    <title>Connexion - FoodMart</title>
-    
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" type="text/css" href="view/front/style.css">
-    
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700&family=Open+Sans:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet">
-</head>
-<body class="bg-light">
-    <header>
-        <div class="container-fluid">
-            <div class="row py-3 border-bottom">
-                <div class="col-sm-4 col-lg-3 text-center text-sm-start">
-                    <div class="main-logo">
-                        <a href="?section=front">
-                            <img src="view/front/images/logo.png" alt="logo" class="img-fluid" style="max-height: 45px;">
-                        </a>
-                    </div>
-                </div>
-                <div class="col-sm-8 col-lg-9 d-flex justify-content-end gap-3 align-items-center mt-4 mt-sm-0">
-                    <a href="?section=front" class="btn btn-sm btn-outline-secondary">Retour au magasin</a>
-                </div>
-            </div>
+
+<style>
+    .auth-card {
+        background: #ffffff;
+        border-radius: 30px;
+        padding: 40px;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.05);
+        border: 1px solid rgba(0,0,0,0.05);
+    }
+    .form-control {
+        border-radius: 12px;
+        padding: 12px 20px;
+        border: 1px solid #e2e8f0;
+        background-color: #f8fafc;
+        font-family: 'Poppins', sans-serif;
+    }
+    .form-control:focus {
+        border-color: #4caf50;
+        box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.1);
+        background-color: #fff;
+    }
+    .btn-premium-auth {
+        background: linear-gradient(135deg, #1e293b, #334155);
+        color: white;
+        border: none;
+        border-radius: 50px;
+        padding: 14px;
+        font-weight: 700;
+        transition: all 0.3s;
+    }
+    .btn-premium-auth:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        color: white;
+    }
+    .btn-social {
+        border-radius: 12px;
+        padding: 12px;
+        font-weight: 600;
+        border: 1px solid #e2e8f0;
+        transition: all 0.2s;
+        background: white;
+    }
+    .btn-social:hover {
+        background: #f1f5f9;
+    }
+</style>
+
+<section class="py-5 min-vh-100 d-flex align-items-center" style="background: #f8fafc;">
+    <div class="container">
+        <div class="mb-4">
+            <a href="index.php?section=front&action=home" class="text-decoration-none text-muted fw-500">
+                <i class="fas fa-arrow-left me-2"></i> Retour au Hub
+            </a>
         </div>
-    </header>
+        <div class="row">
+            <div class="col-md-6 offset-md-3 col-lg-5 offset-lg-3.5">
+                <div class="auth-card">
+                    <h2 class="text-center mb-4 fw-bold" style="color: #1e293b;">Connexion</h2>
 
-    <section class="py-5 min-vh-100 d-flex align-items-center">
-        <div class="container">
-            <div class="row">
-                <div class="col-md-6 offset-md-3 col-lg-4 offset-lg-4">
-                    <div class="card shadow-lg border-0">
-                        <div class="card-body p-5">
-                            <h2 class="card-title text-center mb-4">Connexion</h2>
-
-                            <!-- Messages d'erreur -->
-                            <?php if (!empty($errors)): ?>
-                                <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                                    <strong>Erreur(s):</strong>
-                                    <ul class="mb-0 mt-2">
-                                        <?php foreach ($errors as $error): ?>
-                                            <li><?php echo htmlspecialchars($error); ?></li>
-                                        <?php endforeach; ?>
-                                    </ul>
-                                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                                </div>
-                            <?php endif; ?>
-
-                            <form method="POST" id="loginForm" novalidate>
-                                <div class="mb-3">
-                                    <label for="email" class="form-label">Email / Identifiant</label>
-                                    <input type="text" class="form-control" id="email" name="email" 
-                                           placeholder="Entrez votre email ou identifiant">
-                                </div>
-
-                                <div class="mb-3">
-                                    <div class="d-flex justify-content-between">
-                                        <label for="password" class="form-label">Mot de passe</label>
-                                        <a href="?section=front&action=forgot-password" class="text-sm text-decoration-none">Mot de passe oublié ?</a>
-                                    </div>
-                                    <input type="password" class="form-control" id="password" name="password" 
-                                           placeholder="Entrez votre mot de passe">
-                                </div>
-
-                                <button type="submit" class="btn btn-primary w-100 py-2">
-                                    Se connecter
-                                </button>
-                            </form>
-
-                            <hr class="my-4">
-
-                            <!-- Bouton Google Sign-In -->
-                            <div class="d-flex justify-content-center mb-3">
-                                <div id="g_id_onload"
-                                     data-client_id="116948001518-6dm53guvdr7bc8bjst1s1ad6hqm2mce6.apps.googleusercontent.com"
-                                     data-callback="handleCredentialResponse"
-                                     data-auto_prompt="false">
-                                </div>
-                                <div class="g_id_signin" 
-                                     data-type="standard" 
-                                     data-size="large" 
-                                     data-theme="outline" 
-                                     data-text="sign_in_with" 
-                                     data-shape="rectangular" 
-                                     data-logo_alignment="left">
-                                </div>
-                            </div>
-
-                            <!-- Bouton Facebook Sign-In -->
-                            <div class="d-flex justify-content-center mb-4">
-                                <button type="button" class="btn btn-outline-primary w-100 py-2 d-flex justify-content-center align-items-center" onclick="checkLoginState();">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-facebook me-2" viewBox="0 0 16 16">
-                                      <path d="M16 8.049c0-4.446-3.582-8.05-8-8.05C3.58 0-.002 3.603-.002 8.05c0 4.017 2.926 7.347 6.75 7.951v-5.625h-2.03V8.05H6.75V6.275c0-2.017 1.195-3.131 3.022-3.131.876 0 1.791.157 1.791.157v1.98h-1.009c-.993 0-1.303.621-1.303 1.258v1.51h2.218l-.354 2.326H9.25V16c3.824-.604 6.75-3.934 6.75-7.951z"/>
-                                    </svg>
-                                    Se connecter avec Facebook
-                                </button>
-                            </div>
-
-                            <!-- Bouton Face ID (Caméra) -->
-                            <div class="text-center mb-4">
-                                <button type="button" id="btn-login-face-id" class="btn btn-outline-dark w-100 py-2">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-camera-video me-2" viewBox="0 0 16 16">
-                                      <path fill-rule="evenodd" d="M0 5a2 2 0 0 1 2-2h7.5a2 2 0 0 1 1.983 1.738l3.11-1.382A1 1 0 0 1 16 4.269v7.462a1 1 0 0 1-1.406.913l-3.111-1.382A2 2 0 0 1 9.5 13H2a2 2 0 0 1-2-2V5zm11.5 5.175 3.5 1.556V4.269l-3.5 1.556v4.35zM2 4a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h7.5a1 1 0 0 0 1-1V5a1 1 0 0 0-1-1H2z"/>
-                                    </svg>
-                                    Se connecter avec la Caméra (Face ID)
-                                </button>
-                                
-                                <div id="login-camera-container" class="d-none mt-3">
-                                    <div class="position-relative d-inline-block">
-                                        <video id="loginVideoElement" width="320" height="240" autoplay muted class="rounded border shadow-sm"></video>
-                                        <div id="login-scan-overlay" class="position-absolute top-50 start-50 translate-middle text-white fw-bold d-none" style="background: rgba(0,0,0,0.5); padding: 5px 10px; border-radius: 5px; z-index: 10;">Analyse du visage...</div>
-                                    </div>
-                                    <p id="login-camera-status" class="form-text text-info mt-2">Initialisation de l'IA...</p>
-                                </div>
-                            </div>
-
-                            <div class="text-center">
-                                <p class="mb-2">Pas encore de compte?</p>
-                                <a href="?section=front&action=signup" class="btn btn-outline-secondary w-100 py-2">
-                                    Créer un compte
-                                </a>
-                            </div>
-
-                            <div class="text-center mt-3">
-                                <p class="text-muted text-sm">
-                                    <!-- Lien admin supprimé car la connexion est unifiée -->
-                                </p>
-                            </div>
+                    <?php if (!empty($errors)): ?>
+                        <div class="alert alert-danger border-0 rounded-4 shadow-sm mb-4">
+                            <?php foreach ($errors as $error): ?>
+                                <div class="small"><i class="fas fa-exclamation-circle me-2"></i><?php echo htmlspecialchars($error); ?></div>
+                            <?php endforeach; ?>
                         </div>
+                    <?php endif; ?>
+
+                    <form method="POST" id="loginForm">
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold text-muted">Email ou Identifiant</label>
+                            <input type="text" class="form-control" name="email" placeholder="votre@email.com">
+                        </div>
+
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between">
+                                <label class="form-label small fw-bold text-muted">Mot de passe</label>
+                                <a href="?section=front&action=forgot-password" class="small text-decoration-none text-info">Oublié ?</a>
+                            </div>
+                            <input type="password" class="form-control" name="password" placeholder="••••••••">
+                        </div>
+
+                        <button type="submit" class="btn btn-premium-auth w-100 mt-2">
+                            Se connecter
+                        </button>
+                    </form>
+
+                    <div class="text-center my-4 position-relative">
+                        <hr>
+                        <span class="position-absolute top-50 start-50 translate-middle bg-white px-3 text-muted small">ou continuer avec</span>
                     </div>
 
-                    <!-- Infos de démo -->
-                    <div class="card mt-3 bg-light border-0">
-                        <div class="card-body text-center text-muted small">
-                            <p class="mb-0"><strong>Identifiants de test:</strong></p>
-                            <p class="mb-0">Email: test@example.com</p>
-                            <p class="mb-0">Mot de passe: demo123</p>
+                    <!-- Social Buttons -->
+                    <div class="d-grid gap-3">
+                        <div class="d-flex justify-content-center">
+                            <div id="g_id_onload"
+                                 data-client_id="116948001518-6dm53guvdr7bc8bjst1s1ad6hqm2mce6.apps.googleusercontent.com"
+                                 data-callback="handleCredentialResponse"
+                                 data-auto_prompt="false">
+                            </div>
+                            <div class="g_id_signin" data-type="standard" data-shape="rectangular" data-theme="outline" data-text="signin_with" data-size="large" data-logo_alignment="left"></div>
                         </div>
+
+                        <button type="button" class="btn btn-social d-flex align-items-center justify-content-center" onclick="checkLoginState();">
+                            <i class="fab fa-facebook text-primary me-2"></i> Se connecter avec Facebook
+                        </button>
+
+                        <button type="button" id="btn-login-face-id" class="btn btn-social d-flex align-items-center justify-content-center">
+                            <i class="fas fa-camera text-info me-2"></i> Se connecter avec la Caméra
+                        </button>
+                    </div>
+
+                    <div id="login-camera-container" class="d-none mt-3 text-center">
+                        <video id="loginVideoElement" width="100%" height="auto" autoplay muted class="rounded-4 border shadow-sm"></video>
+                        <p id="login-camera-status" class="small text-info mt-2">Initialisation de l'IA...</p>
+                    </div>
+
+                    <div class="text-center mt-5">
+                        <p class="text-muted small">Pas encore de compte ?</p>
+                        <a href="?section=front&action=signup" class="text-decoration-none fw-bold" style="color: #4caf50;">Créer un compte</a>
                     </div>
                 </div>
             </div>
         </div>
-    </section>
+    </div>
+</section>
 
-    <footer class="py-5 border-top">
-        <div class="container text-center text-muted">
-            <p>© 2026 FoodMart. Tous droits réservés.</p>
-        </div>
-    </footer>
+<?php 
+$extraScripts = <<<JS
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<script src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
+<script async defer crossorigin="anonymous" src="https://connect.facebook.net/fr_FR/sdk.js"></script>
+<script>
+    // GOOGLE
+    function handleCredentialResponse(response) {
+        let form = document.createElement("form");
+        form.method = "POST";
+        form.action = "?section=front&action=sign-in";
+        let input = document.createElement("input");
+        input.type = "hidden"; input.name = "google_credential"; input.value = response.credential;
+        form.appendChild(input);
+        document.body.appendChild(form);
+        form.submit();
+    }
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="https://accounts.google.com/gsi/client" async defer></script>
-    <script src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
-    <!-- SDK Facebook -->
-    <script async defer crossorigin="anonymous" src="https://connect.facebook.net/fr_FR/sdk.js"></script>
-    <script>
-        // [...] Code Google conservé (handleCredentialResponse)
-        function handleCredentialResponse(response) {
-            let form = document.createElement('form');
-            form.method = 'POST';
-            form.action = '?section=front&action=sign-in';
-            let input = document.createElement('input');
-            input.type = 'hidden';
-            input.name = 'google_credential';
-            input.value = response.credential;
-            form.appendChild(input);
-            document.body.appendChild(form);
-            form.submit();
-        }
+    // FACEBOOK
+    window.fbAsyncInit = function() {
+        FB.init({ appId: "967417232327743", cookie: true, xfbml: true, version: "v18.0" });
+    };
 
-        // Facebook Login Init
-        window.fbAsyncInit = function() {
-            FB.init({
-                appId      : '967417232327743',
-                cookie     : true,
-                xfbml      : true,
-                version    : 'v18.0'
-            });
-        };
-
-        function checkLoginState() {
-            FB.login(function(response) {
-                if (response.status === 'connected') {
-                    FB.api('/me', {fields: 'id,name,email,first_name,last_name,picture'}, function(userInfo) {
-                        let form = document.createElement('form');
-                        form.method = 'POST';
-                        form.action = '?section=front&action=sign-in';
-
-                        let inputs = {
-                            facebook_id: userInfo.id,
-                            facebook_email: userInfo.email || '',
-                            facebook_nom: userInfo.last_name || userInfo.name || 'Inconnu',
-                            facebook_prenom: userInfo.first_name || 'Inconnu',
-                            facebook_photo: userInfo.picture?.data?.url || ''
-                        };
-
-                        for (const [key, value] of Object.entries(inputs)) {
-                            let input = document.createElement('input');
-                            input.type = 'hidden';
-                            input.name = key;
-                            input.value = value;
-                            form.appendChild(input);
-                        }
-
-                        document.body.appendChild(form);
-                        form.submit();
-                    });
-                }
-            }, {scope: 'public_profile'});
-        }
-
-        document.getElementById('loginForm').addEventListener('submit', function(e) {
-            let email = document.getElementById('email').value.trim();
-            let password = document.getElementById('password').value;
-            let emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-            if (email === "" || password === "") {
-                alert("Veuillez remplir tous les champs.");
-                e.preventDefault(); return;
+    function checkLoginState() {
+        FB.login(function(response) {
+            if (response.status === "connected") {
+                FB.api("/me", {fields: "id,name,first_name,last_name,picture"}, function(u) {
+                    let form = document.createElement("form");
+                    form.method = "POST"; form.action = "?section=front&action=sign-in";
+                    let data = { facebook_id: u.id, facebook_email: u.email||"", facebook_nom: u.last_name||u.name||"", facebook_prenom: u.first_name||"", facebook_photo: u.picture?.data?.url||"" };
+                    for (const [k, v] of Object.entries(data)) {
+                        let input = document.createElement("input"); input.type = "hidden"; input.name = k; input.value = v; form.appendChild(input);
+                    }
+                    document.body.appendChild(form); form.submit();
+                });
             }
-            if (!emailPattern.test(email) && email !== 'admin2026') {
-                alert("Veuillez entrer une adresse email valide.");
-                e.preventDefault(); return;
-            }
-        });
+        }, {scope: "public_profile"});
+    }
 
-        // Connexion Caméra (Face-API.js)
-        const btnLoginFaceId = document.getElementById('btn-login-face-id');
-        const loginCameraContainer = document.getElementById('login-camera-container');
-        const loginVideo = document.getElementById('loginVideoElement');
-        const loginCameraStatus = document.getElementById('login-camera-status');
-        const loginScanOverlay = document.getElementById('login-scan-overlay');
+    // FACE ID (VERSION OPTIMISÉE SANS BLOCAGE)
+    const btnFace = document.getElementById("btn-login-face-id");
+    const camCont = document.getElementById("login-camera-container");
+    const video = document.getElementById("loginVideoElement");
+    const status = document.getElementById("login-camera-status");
+    let modelsLoaded = false;
+    let faces = [];
+    let isDetecting = false;
+
+    btnFace.addEventListener("click", async () => {
+        btnFace.disabled = true;
+        status.innerText = "Initialisation de l'IA (Ceci peut prendre 5-10s)...";
+        camCont.classList.remove("d-none");
         
-        let loginModelsLoaded = false;
-        let registeredFaces = [];
-
-        btnLoginFaceId.addEventListener('click', async () => {
-            btnLoginFaceId.classList.add('d-none');
-            loginCameraContainer.classList.remove('d-none');
+        try {
+            if (!modelsLoaded) {
+                // Utilisation de TinyFaceDetector pour la performance (beaucoup plus léger)
+                const MODEL_URL = "https://justadudewhohacks.github.io/face-api.js/models";
+                await faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL);
+                await faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL);
+                await faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL);
+                modelsLoaded = true;
+            }
             
-            loginCameraStatus.innerText = "Téléchargement de l'IA et des profils...";
+            status.innerText = "IA Chargée. Récupération des visages...";
+            const res = await fetch("?section=front&action=get-face-descriptors");
+            const data = await res.json();
+            
+            if (!data || data.length === 0) {
+                alert("Aucun visage enregistré. Veuillez d'abord en enregistrer un dans votre profil.");
+                btnFace.disabled = false;
+                camCont.classList.add("d-none");
+                return;
+            }
+            
+            faces = data.map(d => new faceapi.LabeledFaceDescriptors(d.userId.toString(), [new Float32Array(d.descriptor)]));
+            
+            const stream = await navigator.mediaDevices.getUserMedia({ video: { width: 640, height: 480 } });
+            video.srcObject = stream;
+            status.innerText = "Prêt. Regardez la caméra.";
+            
+        } catch (e) {
+            console.error(e);
+            status.innerText = "Erreur : " + e.message;
+            btnFace.disabled = false;
+        }
+    });
+
+    video.addEventListener("play", () => {
+        const matcher = new faceapi.FaceMatcher(faces, 0.5); // Seuil de confiance moyen
+        isDetecting = true;
+        
+        const runDetection = async () => {
+            if (!isDetecting) return;
             
             try {
-                if (!loginModelsLoaded) {
-                    const MODEL_URL = 'https://justadudewhohacks.github.io/face-api.js/models';
-                    await Promise.all([
-                        faceapi.nets.ssdMobilenetv1.loadFromUri(MODEL_URL),
-                        faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL),
-                        faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL)
-                    ]);
-                    loginModelsLoaded = true;
-                }
-
-                // Récupérer tous les descripteurs de la base de données
-                const response = await fetch('?section=front&action=get-face-descriptors');
-                const data = await response.json();
-                
-                if (data.length === 0) {
-                    alert("Aucun visage n'a été enregistré dans la base de données ! Veuillez d'abord vous connecter avec un mot de passe et configurer Face ID dans votre profil.");
-                    btnLoginFaceId.classList.remove('d-none');
-                    loginCameraContainer.classList.add('d-none');
-                    return;
-                }
-
-                registeredFaces = data.map(d => {
-                    return new faceapi.LabeledFaceDescriptors(
-                        d.userId.toString(), 
-                        [new Float32Array(d.descriptor)]
-                    );
-                });
-
-                loginCameraStatus.innerText = "Allumage de la caméra...";
-                const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-                loginVideo.srcObject = stream;
-                
-            } catch (err) {
-                console.error(err);
-                loginCameraStatus.innerText = "Erreur : " + err.message;
-            }
-        });
-
-        loginVideo.addEventListener('play', () => {
-            loginCameraStatus.innerText = "Regardez la caméra pour vous connecter.";
-            
-            // Seuil strict à 0.4 + 2 matches consécutifs requis
-            const faceMatcher = new faceapi.FaceMatcher(registeredFaces, 0.4); 
-            let frameCount = 0;
-            let consecutiveMatches = 0;
-            let lastMatchedLabel = null;
-            
-            const scanInterval = setInterval(async () => {
-                frameCount++;
-                loginScanOverlay.classList.remove('d-none');
-                loginScanOverlay.style.background = 'rgba(0,0,0,0.6)';
-                loginScanOverlay.classList.remove('text-success', 'text-danger');
-                loginScanOverlay.classList.add('text-white');
-                
-                const detection = await faceapi.detectSingleFace(loginVideo).withFaceLandmarks().withFaceDescriptor();
+                // Utilisation de TinyFaceDetectorOptions pour éviter le blocage du CPU
+                const detection = await faceapi.detectSingleFace(video, new faceapi.TinyFaceDetectorOptions()).withFaceLandmarks().withFaceDescriptor();
                 
                 if (detection) {
-                    // Normaliser le descripteur avant comparaison
-                    const rawDesc = Array.from(detection.descriptor);
-                    const norm = Math.sqrt(rawDesc.reduce((s, v) => s + v * v, 0));
-                    const normalizedDesc = new Float32Array(rawDesc.map(v => v / norm));
-
-                    const bestMatch = faceMatcher.findBestMatch(normalizedDesc);
-                    const distance = bestMatch.distance.toFixed(3);
-                    
-                    if (bestMatch.label !== 'unknown') {
-                        if (bestMatch.label === lastMatchedLabel) {
-                            consecutiveMatches++;
+                    const match = matcher.findBestMatch(detection.descriptor);
+                    if (match.label !== "unknown") {
+                        isDetecting = false;
+                        status.innerText = "Visage reconnu !";
+                        if (video.srcObject) video.srcObject.getTracks().forEach(t => t.stop());
+                        
+                        const res = await fetch("?section=front&action=webauthn-login", {
+                            method: "POST",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({ userId: match.label })
+                        });
+                        
+                        const r = await res.json();
+                        if (r.success) {
+                            window.location.href = r.redirect || "?section=front&action=home";
+                            return;
                         } else {
-                            consecutiveMatches = 1;
-                            lastMatchedLabel = bestMatch.label;
-                        }
-
-                        loginScanOverlay.classList.replace('text-white', 'text-success');
-                        loginScanOverlay.innerText = `✅ Reconnu ! (${consecutiveMatches}/2)`;
-                        loginCameraStatus.innerText = `Match confirmé ${consecutiveMatches}/2 - dist: ${distance}`;
-
-                        if (consecutiveMatches >= 2) {
-                            clearInterval(scanInterval);
-                            loginCameraStatus.innerText = "Connexion en cours...";
-                            loginVideo.srcObject.getTracks().forEach(t => t.stop());
-                            
-                            const response = await fetch('?section=front&action=webauthn-login', {
-                                method: 'POST',
-                                headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify({ userId: bestMatch.label })
-                            });
-
-                            const result = await response.json();
-                            if (result.success) {
-                                window.location.href = result.redirect || '?section=front&action=home';
-                            } else {
-                                loginCameraStatus.innerText = "❌ Erreur : " + result.message;
-                                alert("Erreur de connexion : " + result.message);
-                            }
+                            status.innerText = "Erreur de connexion.";
+                            isDetecting = true;
                         }
                     } else {
-                        consecutiveMatches = 0;
-                        lastMatchedLabel = null;
-                        loginScanOverlay.classList.replace('text-white', 'text-danger');
-                        loginScanOverlay.innerText = "❌ Non reconnu (dist: " + distance + ")";
-                        loginCameraStatus.innerText = "Non reconnu. Distance: " + distance + " (seuil: 0.4). Restez bien face à la caméra.";
+                        status.innerText = "Visage non reconnu. Ajustez votre position.";
                     }
                 } else {
-                    consecutiveMatches = 0;
-                    loginScanOverlay.classList.add('d-none');
-                    loginCameraStatus.innerText = "🔍 Scan #" + frameCount + " - Aucun visage. Regardez directement la caméra.";
+                    status.innerText = "Aucun visage détecté...";
                 }
-            }, 1000);
-        });
-
-    </script>
-</body>
-</html>
+            } catch (err) {
+                console.error(err);
+            }
+            
+            if (isDetecting) setTimeout(runDetection, 600); // 1.5 FPS pour une fluidité maximale du site
+        };
+        
+        runDetection();
+    });
+</script>
+JS;
+require __DIR__ . '/layout_footer.php'; 
+?>
