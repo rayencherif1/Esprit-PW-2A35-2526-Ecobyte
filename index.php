@@ -2,6 +2,7 @@
 <<<<<<< HEAD
 <?php
 <<<<<<< HEAD
+<<<<<<< HEAD
 /**
  * Point d'entrée principal - Routeur de l'application
  * Gère le routage avec $_GET['action'] et $_GET['section']
@@ -338,16 +339,24 @@ declare(strict_types=1);
 ?>
 =======
 >>>>>>> selem
+=======
+declare(strict_types=1);
+?>
+>>>>>>> origin/mohamed
 <!DOCTYPE html>
 <html lang="fr">
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <<<<<<< HEAD
+<<<<<<< HEAD
     <title>EcoByte — Hub Nutrition & Santé</title>
 =======
     <title>EcoByte — Plateforme Nutrition & Santé</title>
 >>>>>>> selem
+=======
+    <title>EcoByte — Hub Nutrition & Santé</title>
+>>>>>>> origin/mohamed
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -366,6 +375,7 @@ declare(strict_types=1);
         .logo span.eco  { color: #4caf50; }
         .logo span.byte { color: #ff6b35; }
         .header-right { display: flex; align-items: center; gap: 16px; }
+<<<<<<< HEAD
 <<<<<<< HEAD
 =======
         /* USER → /2int/auth/profile.php (rayen) */
@@ -439,6 +449,8 @@ declare(strict_types=1);
         .logo span.byte { color: #ff6b35; }
         .header-right { display: flex; align-items: center; gap: 16px; }
         /* USER → /2int/auth/profile.php (rayen) */
+=======
+>>>>>>> origin/mohamed
         .avatar {
             width: 40px; height: 40px;
             background: linear-gradient(135deg, #4caf50, #2196f3);
@@ -472,7 +484,11 @@ declare(strict_types=1);
         .modules-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
 
         .module-card {
+<<<<<<< HEAD
 >>>>>>> ilyess
+=======
+            background: #fff;
+>>>>>>> origin/mohamed
             border-radius: 20px; padding: 36px 28px;
             text-align: center;
             box-shadow: 0 4px 20px rgba(0,0,0,0.08);
@@ -481,10 +497,14 @@ declare(strict_types=1);
             border: 2px solid transparent;
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> origin/mohamed
             display: flex; flex-direction: column;
         }
         .module-card:hover { transform: translateY(-6px); box-shadow: 0 14px 40px rgba(0,0,0,0.13); }
 
+<<<<<<< HEAD
 =======
 =======
 >>>>>>> ilyess
@@ -568,12 +588,16 @@ declare(strict_types=1);
 >>>>>>> selem
 =======
 >>>>>>> ilyess
+=======
+        /* ── ICON WRAP ───────────────────────────────────────────── */
+>>>>>>> origin/mohamed
         .module-icon-wrap {
             width: 72px; height: 72px; border-radius: 18px;
             display: flex; align-items: center; justify-content: center;
             font-size: 2.2rem; margin: 0 auto 20px;
         }
         .module-card h3 { font-size: 1.15rem; font-weight: 700; margin-bottom: 10px; }
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
         .module-card p { font-size: 0.875rem; color: #6b7280; line-height: 1.6; margin-bottom: 24px; flex-grow: 1; }
@@ -588,6 +612,11 @@ declare(strict_types=1);
 
         /* ── BUTTONS ─────────────────────────────────────────────── */
 >>>>>>> ilyess
+=======
+        .module-card p { font-size: 0.875rem; color: #6b7280; line-height: 1.6; margin-bottom: 24px; flex-grow: 1; }
+
+        /* ── BUTTONS ─────────────────────────────────────────────── */
+>>>>>>> origin/mohamed
         .btn-module {
             display: inline-block; padding: 12px 28px; border-radius: 50px;
             font-size: 0.9rem; font-weight: 600; text-decoration: none;
@@ -598,7 +627,11 @@ declare(strict_types=1);
 
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
         /* Colors per module */
+=======
+        /* ── COULEURS PAR MODULE ─────────────────────────────────── */
+>>>>>>> origin/mohamed
         #card-cuisine { border-color: #86efac; background: #f0fdf4; }
         #card-cuisine .module-icon-wrap { background: #bbf7d0; }
         #btn-cuisine { background: linear-gradient(135deg, #22c55e, #16a34a); box-shadow: 0 4px 14px rgba(34,197,94,0.3); }
@@ -623,6 +656,7 @@ declare(strict_types=1);
         #card-ia .module-icon-wrap { background: #ddd6fe; }
         #btn-ia { background: linear-gradient(135deg, #8b5cf6, #7c3aed); box-shadow: 0 4px 14px rgba(139,92,246,0.3); }
 
+<<<<<<< HEAD
         .status-bar { background: #1a1a2e; color: #aaa; text-align: center; padding: 20px; font-size: 0.8rem; }
         .status-item { display: inline-flex; align-items: center; gap: 6px; margin: 0 10px; }
         .dot { width: 8px; height: 8px; border-radius: 50%; background: #4caf50; }
@@ -632,6 +666,8 @@ declare(strict_types=1);
 =======
 =======
 >>>>>>> ilyess
+=======
+>>>>>>> origin/mohamed
         /* ── STATUS BAR ──────────────────────────────────────────── */
         .status-bar { background: #1a1a2e; color: #aaa; text-align: center; padding: 20px; font-size: 0.8rem; }
         .status-bar .modules-status { display: flex; justify-content: center; gap: 20px; flex-wrap: wrap; margin-bottom: 10px; }
@@ -639,6 +675,7 @@ declare(strict_types=1);
         .dot { width: 8px; height: 8px; border-radius: 50%; }
         .dot-green  { background: #4caf50; }
         .dot-yellow { background: #22c55e; animation: pulse 2s infinite; }
+<<<<<<< HEAD
         .dot-red    { background: #f43f5e; }
         .dot-blue   { background: #3b82f6; }
         .dot-cyan   { background: #06b6d4; }
@@ -652,10 +689,17 @@ declare(strict_types=1);
 >>>>>>> selem
 =======
 >>>>>>> ilyess
+=======
+        @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+        @media (max-width:900px) { .modules-grid { grid-template-columns: repeat(2,1fr); } }
+        @media (max-width:600px) { .modules-grid { grid-template-columns: 1fr; } }
+>>>>>>> origin/mohamed
     </style>
 </head>
 <body>
 
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 =======
@@ -664,12 +708,15 @@ declare(strict_types=1);
 =======
 <!-- HEADER -->
 >>>>>>> ilyess
+=======
+>>>>>>> origin/mohamed
 <header>
     <a href="/2int/index.php" class="logo">
         <span class="logo-icon">🌿</span>
         <span class="eco">ECO</span><span class="byte">BYTE</span>
     </a>
     <div class="header-right">
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
         <a href="#" class="avatar">U</a>
@@ -680,15 +727,20 @@ declare(strict_types=1);
 =======
 >>>>>>> ilyess
         <!-- USER → /2int/auth/profile.php (activer avec branche rayen) -->
+=======
+>>>>>>> origin/mohamed
         <a href="#" class="avatar" id="btn-user" title="Mon compte">U</a>
     </div>
 </header>
 
+<<<<<<< HEAD
 <!-- HERO -->
 <<<<<<< HEAD
 >>>>>>> selem
 =======
 >>>>>>> ilyess
+=======
+>>>>>>> origin/mohamed
 <div class="hero">
     <div class="hero-content">
         <h1>Bienvenue sur <span class="accent">EcoByte</span> 🌱</h1>
@@ -698,20 +750,29 @@ declare(strict_types=1);
 
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> origin/mohamed
 <div class="modules-section">
     <div class="modules-grid">
         <!-- CUISINE -->
         <div class="module-card" id="card-cuisine">
             <div class="module-icon-wrap">🥗</div>
             <h3>Cuisine & Recettes</h3>
+<<<<<<< HEAD
             <p>Découvrez des centaines de recettes saines adaptées à vos besoins.</p>
             <a href="/2int/view/front/front.php" class="btn-module" id="btn-cuisine">Explorer</a>
+=======
+            <p>Découvrez des centaines de recettes saines adaptées à vos besoins nutritionnels.</p>
+            <a href="/2int/view/front/front.php" class="btn-module" id="btn-cuisine">Recettes</a>
+>>>>>>> origin/mohamed
         </div>
 
         <!-- FITNESS -->
         <div class="module-card" id="card-fitness">
             <div class="module-icon-wrap">🏋️</div>
             <h3>Fitness & Sport</h3>
+<<<<<<< HEAD
             <p>Programmes d'entraînement personnalisés et suivi d'exercices.</p>
             <a href="/2int/public/index.php?action=home" class="btn-module" id="btn-fitness">Sport →</a>
         </div>
@@ -778,15 +839,22 @@ declare(strict_types=1);
         <div class="module-card" id="card-fitness">
             <div class="module-icon-wrap">🏋️</div>
             <h3>Fitness & Sport</h3>
+=======
+>>>>>>> origin/mohamed
             <p>Programmes d'entraînement personnalisés et suivi d'exercices quotidiens.</p>
             <a href="/2int/public/index.php?action=home" class="btn-module" id="btn-fitness">Catalogue Sport →</a>
         </div>
 
+<<<<<<< HEAD
         <!-- 3. SANTÉ — Rouge | branche: ilyess | URL: /2int/sante/index.php -->
+=======
+        <!-- SANTE -->
+>>>>>>> origin/mohamed
         <div class="module-card" id="card-sante">
             <div class="module-icon-wrap">⚠️</div>
             <h3>Santé & Allergies</h3>
             <p>Gérez vos allergies, analysez vos aliments avec l'IA et restez en sécurité.</p>
+<<<<<<< HEAD
             <a href="#" class="btn-module" id="btn-sante">Rapports d'Allergies</a>
         </div>
 
@@ -795,10 +863,17 @@ declare(strict_types=1);
 =======
         <!-- 4. BOUTIQUE — Bleu ✅ ACTIF | branche: ilyess | URL: /2int/boutique.php -->
 >>>>>>> ilyess
+=======
+            <a href="/2int/View/Front/allergy_report.php" class="btn-module" id="btn-sante">Rapports d'Allergies</a>
+        </div>
+
+        <!-- BOUTIQUE -->
+>>>>>>> origin/mohamed
         <div class="module-card" id="card-boutique">
             <div class="module-icon-wrap">🛒</div>
             <h3>Boutique Bio</h3>
             <p>Achetez des produits frais, bio et sains directement depuis notre plateforme.</p>
+<<<<<<< HEAD
 <<<<<<< HEAD
             <a href="#" class="btn-module" id="btn-boutique">Boutique</a>
 =======
@@ -807,6 +882,12 @@ declare(strict_types=1);
         </div>
 
         <!-- 5. BLOG — Cyan | branche: blog | URL: /2int/blog/index.php -->
+=======
+            <a href="/2int/boutique.php" class="btn-module" id="btn-boutique">Boutique</a>
+        </div>
+
+        <!-- BLOG -->
+>>>>>>> origin/mohamed
         <div class="module-card" id="card-blog">
             <div class="module-icon-wrap">📝</div>
             <h3>Blog & Actu</h3>
@@ -814,11 +895,16 @@ declare(strict_types=1);
             <a href="#" class="btn-module" id="btn-blog">Blog</a>
         </div>
 
+<<<<<<< HEAD
         <!-- 6. IA — Violet | branche: rayen | URL: /2int/ia/index.php -->
+=======
+        <!-- IA -->
+>>>>>>> origin/mohamed
         <div class="module-card" id="card-ia">
             <div class="module-icon-wrap">🤖</div>
             <h3>IA Assistant</h3>
             <p>Posez vos questions à notre IA pour obtenir des conseils nutritionnels instantanés.</p>
+<<<<<<< HEAD
             <a href="#" class="btn-module" id="btn-ia">Discuter avec l'IA</a>
         </div>
 
@@ -840,11 +926,31 @@ declare(strict_types=1);
         <div class="status-item"><div class="dot dot-purple"></div> IA Assistant — En intégration</div>
     </div>
     <p>© <?php echo date('Y'); ?> EcoByte — Esprit School Project • Groupe 2A35</p>
+=======
+            <a href="/2int/View/Front/chatbot.php" class="btn-module" id="btn-ia">Discuter avec l'IA</a>
+        </div>
+    </div>
+</div>
+
+<div class="status-bar">
+    <div class="modules-status">
+        <div class="status-item"><div class="dot dot-yellow"></div> Fitness & Sport — En ligne</div>
+        <div class="status-item"><div class="dot dot-green"></div> Cuisine & Recettes — En ligne</div>
+        <div class="status-item"><div class="dot dot-green"></div> Santé & Allergies — En ligne</div>
+        <div class="status-item"><div class="dot dot-green"></div> Boutique Bio — En ligne</div>
+        <div class="status-item"><div class="dot dot-green"></div> Blog & Actu — En ligne</div>
+        <div class="status-item"><div class="dot dot-green"></div> IA Assistant — En ligne</div>
+    </div>
+    <p>© 2026 EcoByte — Esprit School Project • Groupe 2A35</p>
+>>>>>>> origin/mohamed
 </div>
 
 </body>
 </html>
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> selem
 =======
 >>>>>>> ilyess
+=======
+>>>>>>> origin/mohamed

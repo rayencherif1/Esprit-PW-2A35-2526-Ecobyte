@@ -1,6 +1,10 @@
 <?php
 /**
+<<<<<<< HEAD
  * Connexion PDO Singleton - Standard EcoByte.
+=======
+ * Connexion PDO Singleton.
+>>>>>>> origin/mohamed
  */
 class Database
 {
@@ -23,6 +27,7 @@ class Database
             ]);
         } catch (PDOException $e) {
             die("Erreur de connexion : " . $e->getMessage());
+<<<<<<< HEAD
 =======
 class Database {
     private static $pdo = null;
@@ -48,6 +53,8 @@ class Database {
                 die('Erreur de connexion : ' . $e->getMessage());
             }
 >>>>>>> ilyess
+=======
+>>>>>>> origin/mohamed
         }
     }
 
