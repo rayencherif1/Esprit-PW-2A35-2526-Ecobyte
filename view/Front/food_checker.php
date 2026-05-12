@@ -469,7 +469,7 @@
 
     <nav>
         <a href="/2int/index.php" class="logo">🌿 ECO BYTE Santé</a>
-        <a href="allergy_report.php" class="back-link">
+        <a href="/2int/view/Front/allergy_report.php" class="back-link">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5M5 12l7 7M5 12l7-7"/></svg>
             Retour au rapport
         </a>
@@ -610,7 +610,7 @@ INGRÉDIENTS : ${text}
 
 Réponds UNIQUEMENT avec le JSON, sans aucun texte avant ou après.`;
 
-        const response = await fetch("groq_api.php", {
+        const response = await fetch("/2int/view/Front/groq_api.php", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ question: prompt })

@@ -35,7 +35,7 @@
 
             <!-- ITEM ACTIF (Santé & Allergies) -->
             <li class="mt-0.5 w-full">
-                <a class="py-3 text-sm my-0 mx-2 flex items-center whitespace-nowrap px-4 rounded-xl bg-blue-50 text-slate-800 transition-all" href="allergies_list.php">
+                <a class="py-3 text-sm my-0 mx-2 flex items-center whitespace-nowrap px-4 rounded-xl bg-blue-50 text-slate-800 transition-all" href="/2int/view/Back/build/allergies_list.php">
                     <div class="mr-3 flex items-center justify-center text-lg">
                         ⚠️
                     </div>
@@ -53,7 +53,7 @@
             </li>
 
             <li class="mt-0.5 w-full">
-                <a class="py-3 text-sm my-0 mx-2 flex items-center whitespace-nowrap px-4 transition-all hover:bg-gray-50 rounded-xl text-slate-600" href="#">
+                <a class="py-3 text-sm my-0 mx-2 flex items-center whitespace-nowrap px-4 transition-all hover:bg-gray-50 rounded-xl text-slate-600" href="/2int/view/back/back.php">
                     <div class="mr-3 flex items-center justify-center text-lg">
                         🍲
                     </div>
@@ -78,7 +78,7 @@
             <?php $current_page = basename($_SERVER['PHP_SELF']); ?>
 
             <li class="mt-0.5 w-full">
-                <a class="py-2.5 text-sm my-0 mx-2 flex items-center whitespace-nowrap px-4 <?= $current_page == 'allergies_list.php' ? 'text-blue-600 font-bold' : 'text-slate-600 hover:text-blue-600 hover:bg-gray-50' ?> rounded-xl transition-all" href="allergies_list.php">
+                <a class="py-2.5 text-sm my-0 mx-2 flex items-center whitespace-nowrap px-4 <?= $current_page == 'allergies_list.php' ? 'text-blue-600 font-bold' : 'text-slate-600 hover:text-blue-600 hover:bg-gray-50' ?> rounded-xl transition-all" href="/2int/view/Back/build/allergies_list.php">
                     <div class="mr-4 flex items-center justify-center">
                         <i class="fas fa-list-ul <?= $current_page == 'allergies_list.php' ? 'text-blue-600' : 'text-slate-400' ?>"></i>
                     </div>
@@ -87,7 +87,7 @@
             </li>
 
             <li class="mt-0.5 w-full">
-                <a class="py-2.5 text-sm my-0 mx-2 flex items-center whitespace-nowrap px-4 <?= $current_page == 'traitement_list.php' ? 'text-blue-600 font-bold' : 'text-slate-600 hover:text-blue-600 hover:bg-gray-50' ?> rounded-xl transition-all" href="traitement_list.php">
+                <a class="py-2.5 text-sm my-0 mx-2 flex items-center whitespace-nowrap px-4 <?= $current_page == 'traitement_list.php' ? 'text-blue-600 font-bold' : 'text-slate-600 hover:text-blue-600 hover:bg-gray-50' ?> rounded-xl transition-all" href="/2int/view/Back/build/traitement_list.php">
                     <div class="mr-4 flex items-center justify-center">
                         <i class="fas fa-pills <?= $current_page == 'traitement_list.php' ? 'text-blue-600' : 'text-slate-400' ?>"></i>
                     </div>
@@ -96,7 +96,7 @@
             </li>
 
             <li class="mt-0.5 w-full">
-                <a class="py-2.5 text-sm my-0 mx-2 flex items-center whitespace-nowrap px-4 <?= $current_page == 'stat.php' ? 'text-blue-600 font-bold' : 'text-slate-600 hover:text-blue-600 hover:bg-gray-50' ?> rounded-xl transition-all" href="stat.php">
+                <a class="py-2.5 text-sm my-0 mx-2 flex items-center whitespace-nowrap px-4 <?= $current_page == 'stat.php' ? 'text-blue-600 font-bold' : 'text-slate-600 hover:text-blue-600 hover:bg-gray-50' ?> rounded-xl transition-all" href="/2int/view/Back/build/stat.php">
                     <div class="mr-4 flex items-center justify-center">
                         <i class="fas fa-chart-pie <?= $current_page == 'stat.php' ? 'text-blue-600' : 'text-slate-400' ?>"></i>
                     </div>

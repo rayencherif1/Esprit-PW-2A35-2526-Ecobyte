@@ -2,9 +2,9 @@
 session_start(); // AJOUTÉ pour les messages
 
 require_once __DIR__ . '/../../config.php';
-require_once __DIR__ . '/../../Model/allergie.php';
-require_once __DIR__ . '/../../Controller/allergie.Controller.php';
-require_once __DIR__ . '/../../Controller/traitement.Controller.php';
+require_once __DIR__ . '/../../model/allergie.php';
+require_once __DIR__ . '/../../controller/allergie.Controller.php';
+require_once __DIR__ . '/../../controller/traitement.Controller.php';
 
 $controller = new AllergieC();
 $allergies = $controller->listAllergie();
@@ -628,7 +628,7 @@ if ($selected_id) {
             <p class="text-center text-gray-400 text-sm mb-5 tracking-wide uppercase" style="letter-spacing:0.1em;">
                 Un doute sur un produit ?
             </p>
-            <a href="food_checker.php" class="ai-banner">
+            <a href="/2int/view/Front/food_checker.php" class="ai-banner">
                 <div class="ai-banner-inner">
                     <span class="ai-banner-particle" style="width:4px;height:4px;background:#7c5cfc;left:10%;bottom:10%;animation-duration:4s;animation-delay:0s;"></span>
                     <span class="ai-banner-particle" style="width:3px;height:3px;background:#2afadf;left:25%;bottom:5%;animation-duration:5s;animation-delay:-2s;"></span>
@@ -765,7 +765,7 @@ if ($selected_id) {
                 <button onclick="closeShareModal()" style="background:none; border:none; color:white; font-size:28px; cursor:pointer;">&times;</button>
             </div>
             <div class="share-modal-body">
-                <form method="POST" action="send_allergie_email.php">
+                <form method="POST" action="/2int/view/Front/send_allergie_email.php">
                     <input type="hidden" name="id_allergie" id="allergieId">
                     
                     <div style="background:#f0fdf4; padding:12px; border-radius:10px; margin-bottom:15px;">

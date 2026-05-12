@@ -129,7 +129,7 @@
     <div class="chat-container">
         <div class="chat-header">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-                <a href="allergy_report.php" style="color: white; text-decoration: none; font-size: 14px; display: flex; align-items: center; gap: 5px; opacity: 0.8;">
+                <a href="/2int/view/Front/allergy_report.php" style="color: white; text-decoration: none; font-size: 14px; display: flex; align-items: center; gap: 5px; opacity: 0.8;">
                     ← Retour au rapport
                 </a>
             </div>
@@ -201,7 +201,7 @@
             addTypingIndicator();
             
             try {
-                const response = await fetch('groq_api.php', {
+                const response = await fetch('/2int/view/Front/groq_api.php', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ question: message })

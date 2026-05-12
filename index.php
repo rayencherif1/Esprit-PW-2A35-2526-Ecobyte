@@ -133,7 +133,7 @@
             <div class="icon-box">🥗</div>
             <h3>Cuisine & Recettes</h3>
             <p>Découvrez des centaines de recettes saines adaptées à vos besoins nutritionnels.</p>
-            <a href="/2int/View/front.php" class="btn">Recettes</a>
+            <a href="/2int/view/front/front.php" class="btn">Recettes</a>
         </div>
 
         <!-- FITNESS -->
@@ -149,7 +149,7 @@
             <div class="icon-box">⚠️</div>
             <h3>Santé & Allergies</h3>
             <p>Gérez vos allergies, analysez vos aliments avec l'IA et restez en sécurité.</p>
-            <a href="/2int/View/Front/allergy_report.php" class="btn">Rapports d'Allergies</a>
+            <a href="/2int/view/Front/allergy_report.php" class="btn">Rapports d'Allergies</a>
         </div>
 
         <!-- BOUTIQUE -->
@@ -165,7 +165,7 @@
             <div class="icon-box">📝</div>
             <h3>Blog & Actu</h3>
             <p>Lisez les derniers articles sur la nutrition et partagez avec la communauté.</p>
-            <a href="#" class="btn">Blog</a>
+            <a href="/2int/view/front/blog.php" class="btn">Blog</a>
         </div>
 
         <!-- IA -->
@@ -173,7 +173,7 @@
             <div class="icon-box">🤖</div>
             <h3>IA Assistant</h3>
             <p>Posez vos questions à notre IA pour obtenir des conseils nutritionnels instantanés.</p>
-            <a href="/2int/View/Front/chatbot.php" class="btn">IA Assistant</a>
+            <a href="/2int/view/Front/chatbot.php" class="btn">IA Assistant</a>
         </div>
     </div>
 </div>
